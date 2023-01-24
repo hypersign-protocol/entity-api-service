@@ -97,51 +97,49 @@ export class DidService {
   }
 
   async resolveDid(appDetail, did: string) {
-
     const didInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did,
     });
     if (!didInfo || didInfo == null) {
-
-      throw new NotFoundException([`${did} is not found`, `${did} does not belongs to the App id: ${appDetail.appId}`]);
+      throw new NotFoundException([
+        `${did} is not found`,
+        `${did} does not belongs to the App id: ${appDetail.appId}`,
+      ]);
     }
     const hypersignDid = new HypersignDID();
     const resolvedDid = await hypersignDid.resolve({ did });
     if (resolvedDid.didDocumentMetadata === null) {
-      throw new NotFoundException([`${did} does not exists on chain`])
+      throw new NotFoundException([`${did} does not exists on chain`]);
     }
     return resolvedDid;
-
   }
 
   async updateDid(updateDidDto: UpdateDidDto, appDetail) {
     // To Do :- how to validate didDoc is valid didDoc
     // To Do :- should be only update those did that are generated on studio?
 
+    const { verificationMethodId } = updateDidDto;
 
-    const { verificationMethodId } = updateDidDto
-
-
-    const didOfVmId = verificationMethodId.split('#')[0]
-
-
+    const didOfVmId = verificationMethodId.split('#')[0];
 
     if (
-
       updateDidDto.didDoc['id'] == undefined ||
       updateDidDto.didDoc['id'] == ''
     ) {
       throw new BadRequestException('Invalid didDoc');
     }
 
-    const did = updateDidDto.didDoc['id']
+    const did = updateDidDto.didDoc['id'];
     const { edvId, edvDocId } = appDetail;
     await this.edvService.init(edvId);
     const docs = await this.edvService.getDecryptedDocument(edvDocId);
     const mnemonic: string = docs.mnemonic;
 
-    const hypersignDid = await this.didSSIService.initiateHypersignDid(mnemonic, 'testnet')
+    const hypersignDid = await this.didSSIService.initiateHypersignDid(
+      mnemonic,
+      'testnet',
+    );
 
     const didInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
@@ -151,24 +149,22 @@ export class DidService {
       throw new NotFoundException([`Resource not found`]);
     }
 
-    const { didDocument: resolvedDid, didDocumentMetadata } = await hypersignDid.resolve({ did: didOfVmId });
+    const { didDocument: resolvedDid, didDocumentMetadata } =
+      await hypersignDid.resolve({ did: didOfVmId });
 
     if (didDocumentMetadata === null) {
-      throw new NotFoundException(
-        [`${didOfVmId} is not registered on the chain`],
-      );
+      throw new NotFoundException([
+        `${didOfVmId} is not registered on the chain`,
+      ]);
     }
 
-    const { didDocumentMetadata: updatedDidDocMetaData } = await hypersignDid.resolve({ did });
+    const { didDocumentMetadata: updatedDidDocMetaData } =
+      await hypersignDid.resolve({ did });
     if (updatedDidDocMetaData === null) {
-      throw new NotFoundException(
-        [`${did} is not registered on the chain`],
-      );
+      throw new NotFoundException([`${did} is not registered on the chain`]);
     }
 
-    const slipPathKeys = this.hidWallet.makeSSIWalletPath(
-      didInfo.hdPathIndex,
-    );
+    const slipPathKeys = this.hidWallet.makeSSIWalletPath(didInfo.hdPathIndex);
 
     const seed = await this.hidWallet.generateMemonicToSeedFromSlip10RawIndex(
       slipPathKeys,
@@ -193,7 +189,7 @@ export class DidService {
         });
       }
     } catch (error) {
-      throw new BadRequestException([error.message])
+      throw new BadRequestException([error.message]);
     }
 
     return updatedDid;

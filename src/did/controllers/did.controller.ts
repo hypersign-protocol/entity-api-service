@@ -24,7 +24,6 @@ import { AllExceptionsFilter } from '../../utils/utils';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
-@ApiTags('Did')
 export class DidController {
   constructor(private readonly didService: DidService) {}
 
@@ -56,7 +55,6 @@ export class DidController {
   @ApiBearerAuth('Authorization')
   @UseGuards(AuthGuard('jwt'))
   @UsePipes(ValidationPipe)
-
   @Post()
   @ApiCreatedResponse({
     description: 'DID Created',

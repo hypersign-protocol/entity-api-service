@@ -31,7 +31,7 @@ import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
     DidRepository,
     DidMetaDataRepo,
     HidWalletService,
-    DidSSIService
+    DidSSIService,
   ],
 })
 export class DidModule {}
