@@ -167,7 +167,7 @@ export class CredentialProof {
     example: 'assertionMethod',
   })
   @IsString()
-  proofPurpose: Date;
+  proofPurpose: string;
   @ApiProperty({
     name: 'proofValue',
     description: '',
@@ -297,7 +297,7 @@ export class CredDoc {
     },
   })
   @Type(() => CredentialSubject)
-  @ValidateNested()
+  @ValidateNested({ each: true })
   credentialSubject: CredentialSubject;
 
   @ApiProperty({
@@ -305,11 +305,11 @@ export class CredDoc {
     description: 'Schema detail based on which credential has issued',
     example: {
       id: 'sch:hid:testnet:...........',
-      name: 'JsonSchemaValidator2018',
+      type: 'JsonSchemaValidator2018',
     },
   })
   @Type(() => CredentialSchema)
-  @ValidateNested()
+  @ValidateNested({ each: true })
   credentialSchema: CredentialSchema;
 
   @ApiProperty({
@@ -321,7 +321,7 @@ export class CredDoc {
     },
   })
   @Type(() => CredentialStatus)
-  @ValidateNested()
+  @ValidateNested({ each: true })
   credentialStatus: CredentialStatus;
 
   @ApiProperty({
@@ -337,7 +337,7 @@ export class CredDoc {
     },
   })
   @Type(() => CredentialProof)
-  @ValidateNested()
+  @ValidateNested({ each: true })
   proof: CredentialProof;
 }
 export class CreateCredentialResponse {
@@ -383,7 +383,7 @@ export class CreateCredentialResponse {
       },
     },
   })
-  @ValidateNested()
+  @ValidateNested({ each: true })
   @Type(() => CredDoc)
   credential: CredDoc;
 
@@ -436,6 +436,6 @@ export class ResolveCredential extends CredStatus {
     },
   })
   @Type(() => CredProof)
-  @ValidateNested()
+  @ValidateNested({ each: true })
   proof: CredProof;
 }

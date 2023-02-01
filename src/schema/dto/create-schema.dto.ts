@@ -92,7 +92,7 @@ export class SchemaBody {
     description: 'Schema configuration',
     example: [{}],
   })
-  @ValidateNested({each:true})
+  @ValidateNested({ each: true })
   @Type(() => Array<Fields>)
   fields: Array<Fields>;
 }
@@ -115,7 +115,7 @@ export class CreateSchemaDto {
       additionalProperties: false,
     },
   })
-  @ValidateNested({each:true})
+  @ValidateNested({ each: true })
   @Type(() => SchemaBody)
   schema: SchemaBody;
 
