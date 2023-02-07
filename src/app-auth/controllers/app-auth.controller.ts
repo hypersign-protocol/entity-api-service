@@ -12,7 +12,7 @@ import {
   UseFilters,
   Query,
 } from '@nestjs/common';
-import { User } from '../decorator/user.decorator';
+import { ApiAuthHeader, User } from '../decorator/user.decorator';
 import { CreateAppDto } from 'src/app-auth/dtos/create-app.dto';
 import {
   GenerateTokenDto,
@@ -42,7 +42,7 @@ import { PaginationDto } from 'src/utils/pagination.dto';
 @ApiTags('App')
 @Controller('app')
 export class AppAuthController {
-  constructor(private readonly appAuthService: AppAuthService) {}
+  constructor(private readonly appAuthService: AppAuthService) { }
   @UseInterceptors(
     MongooseClassSerializerInterceptor(App, {
       excludePrefixes: ['appSecret', '_', '__'],
@@ -171,9 +171,14 @@ export class AppAuthController {
     } else throw new AppNotFoundException();
   }
 
+}
+@ApiTags('App')
+@Controller('app')
+export class AppOAuthController {
+  constructor(private readonly appAuthService: AppAuthService) { }
   @ApiHeader({
-    name: 'userId',
-    description: 'Provide userId to get app details',
+    name: 'X-API-AUTH-KEY',
+    description: 'Provide Api key to get access token',
   })
   @Post('oauth')
   @HttpCode(200)
@@ -188,9 +193,8 @@ export class AppAuthController {
   })
   @UsePipes(ValidationPipe)
   generateAccessToken(
-    @User() userId,
-    @Body() generateAccessToken: GenerateTokenDto,
+    @ApiAuthHeader() apiAuthKey,
   ): Promise<{ access_token; expiresIn; tokenType }> {
-    return this.appAuthService.generateAccessToken(generateAccessToken, userId);
+    return this.appAuthService.generateAccessToken(apiAuthKey);
   }
 }

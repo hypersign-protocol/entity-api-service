@@ -17,6 +17,10 @@ import { EdvDocsDto } from 'src/edv/dtos/create-edv.dto';
 import { AppAuthSecretService } from './app-auth-passord.service';
 import { GenerateTokenDto } from '../dtos/generate-token.dto';
 import { JwtService } from '@nestjs/jwt';
+import { KeyService } from './app-auth-key.service';
+import { ApiKeyRepository } from '../repositories/app-apikey.repository';
+import { createApiKeyResp } from '../schemas/app-apikey.schema';
+import { Transform } from 'class-transformer';
 
 @Injectable()
 export class AppAuthService {
@@ -27,7 +31,9 @@ export class AppAuthService {
     private readonly edvService: EdvService,
     private readonly appAuthSecretService: AppAuthSecretService,
     private readonly jwt: JwtService,
-  ) {}
+    private readonly appApiKeyService: KeyService,
+    private readonly appApiKeyRepository: ApiKeyRepository
+  ) { }
 
   async createAnApp(
     createAppDto: CreateAppDto,
@@ -41,26 +47,26 @@ export class AppAuthService {
       address,
     };
 
-    const appSecret = uuid();
-    const hash = await this.appAuthSecretService.hashSecrets(appSecret);
 
     const { id: edvDocId } = await this.edvService.createDocument(document);
-    const appData = await this.appRepository.create({
+    const appId = uuid()
+     const appData = await this.appRepository.create({
       ...createAppDto,
       userId,
-      appId: uuid(), // generate app id
-      appSecret: hash, // TODO: generate app secret and should be handled like password by hashing and all...
+      apiKey:null,
+      appId, // generate app id
       edvId, // generate edvId  by called hypersign edv service
       kmsId: 'demo-kms-1',
       edvDocId,
       walletAddress: address,
-    });
-
-    appData.appSecret = appSecret;
-    return appData;
+    })
+  
+    const apiKey = await this.appApiKeyService.generateApiKey([], appId,userId)
+    appData.apiKey=apiKey
+    return appData
   }
 
-  getAllApps(userId: string, paginationOption): Promise<App[]> {
+  async getAllApps(userId: string, paginationOption): Promise<App[]> {
     const skip = (paginationOption.page - 1) * paginationOption.limit;
     paginationOption.skip = skip;
     return this.appRepository.find({ userId, paginationOption });
@@ -79,14 +85,19 @@ export class AppAuthService {
   }
 
   async generateAccessToken(
-    generateTokenDto: GenerateTokenDto,
-    userId: string,
-  ): Promise<{ access_token; expiresIn; tokenType }> {
-    const { appId, grantType } = generateTokenDto;
+    apiAuthKey: string,
+  ): Promise<{ access_token; expiresIn; tokenType }> {   
+    const apikeyIndex=apiAuthKey.split('.')[0]
+    const {appId,permissions,userId,apiSecret}=await this.appApiKeyRepository.findOne({apiKey:apikeyIndex})
+    const valid=await this.appAuthSecretService.comapareSecret(apiAuthKey,apiSecret)
+    if(!valid){
+      throw new UnauthorizedException(['Invalid api key','access_denied']);
+    }
+
     const payload = {
       appId,
       userId,
-      grantType,
+      permissions,
     };
     const appDetail = await this.appRepository.findOne({
       appId,

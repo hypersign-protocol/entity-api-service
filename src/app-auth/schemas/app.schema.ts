@@ -1,7 +1,8 @@
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { Exclude } from 'class-transformer';
+import { Exclude, Transform } from 'class-transformer';
+import { IsOptional } from 'class-validator';
 
 export type AppDocument = App & Document;
 
@@ -25,10 +26,13 @@ export class App {
   })
   @Prop()
   appId: string;
-
-  @ApiHideProperty()
-  @Prop()
-  appSecret: string;
+  @ApiProperty({
+    description: 'Application Key',
+    example: 'app-secret-1',
+  })
+  @IsOptional()
+  @Prop({required:false,default:null})
+  apiKey: string;
 
   @ApiProperty({
     description: 'Data Vault Id',
@@ -55,11 +59,10 @@ export class App {
 
 export class createAppResponse extends App {
   @ApiProperty({
-    description: 'Application Secret',
+    description: 'Application Key',
     example: 'app-secret-1',
   })
-  @Prop()
-  appSecret: string;
+  apiKey: string;
 }
 
 export const AppSchema = SchemaFactory.createForClass(App);

@@ -5,7 +5,7 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { AppAuthService } from './services/app-auth.service';
-import { AppAuthController } from './controllers/app-auth.controller';
+import { AppAuthController, AppOAuthController } from './controllers/app-auth.controller';
 import { ValidateHeadersMiddleware } from './middlewares/validate-headers.middleware';
 import { MongooseModule } from '@nestjs/mongoose';
 import { App, AppSchema } from './schemas/app.schema';
@@ -18,11 +18,18 @@ import { EdvService } from 'src/edv/services/edv.service';
 import { AppAuthSecretService } from './services/app-auth-passord.service';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { KeyService } from './services/app-auth-key.service';
+import { APIKeySchema, AppAPIKey } from './schemas/app-apikey.schema';
+import { ApiKeyRepository } from './repositories/app-apikey.repository';
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: App.name, schema: AppSchema }]),
+    MongooseModule.forFeature([{ name: App.name, schema: AppSchema },{
+      name:AppAPIKey.name,schema:APIKeySchema
+    }]),
+
     HidWalletModule,
     EdvModule,
+    
     JwtModule.register({}),
   ],
   providers: [
@@ -31,10 +38,11 @@ import { JwtStrategy } from './strategy/jwt.strategy';
     HidWalletService,
     EdvService,
     AppAuthSecretService,
-    JwtStrategy,
+    JwtStrategy,KeyService,
+    ApiKeyRepository
     
   ],
-  controllers: [AppAuthController],
+  controllers: [AppAuthController,AppOAuthController],
 })
 export class AppAuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
