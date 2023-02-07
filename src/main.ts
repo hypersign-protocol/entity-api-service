@@ -5,12 +5,14 @@ import { existDir, createDir, store, deleteFile } from './utils/utils';
 import { HypersignSSISdk } from 'hs-ssi-sdk';
 const hidWallet = require('hid-hd-wallet');
 import { Bip39, EnglishMnemonic } from '@cosmjs/crypto';
-//import { Header } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  // Adding prefix to our api
-
+  // TODO: need to fix this;  should only allow whitelisted app domains
+  // WARNING:: This allowance should be done dynamically, for now allowing everything.
+  const app = await NestFactory.create(AppModule, {
+    cors: true
+  });
+  
   const walletOptions = {
     hidNodeRestUrl: process.env.HID_NETWORK_API,
     hidNodeRPCUrl: process.env.HID_NETWORK_RPC,
