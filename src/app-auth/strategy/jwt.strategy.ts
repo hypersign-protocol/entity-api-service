@@ -18,9 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
   async validate(payload) {
+    
+    
     const appDetail = await this.appRepository.findOne({
       appId: payload.appId,
     });
-    return appDetail;
+    return {...appDetail,...payload};
   }
 }

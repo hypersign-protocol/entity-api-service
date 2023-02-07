@@ -10,7 +10,7 @@ export class AppRepository {
   ) {}
 
   async findOne(appFilterQuery: FilterQuery<App>): Promise<App> {
-    return this.appModel.findOne(appFilterQuery);
+    return this.appModel.findOne(appFilterQuery).lean();
   }
 
   async find(appsFilterQuery: FilterQuery<App>): Promise<App[]> {

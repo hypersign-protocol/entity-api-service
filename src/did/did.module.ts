@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { DidService } from './services/did.service';
 import { DidController } from './controllers/did.controller';
 import { EdvService } from 'src/edv/services/edv.service';
@@ -32,6 +32,7 @@ import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
     DidMetaDataRepo,
     HidWalletService,
     DidSSIService,
+    
   ],
   exports: [DidService,
     EdvService,
@@ -40,4 +41,9 @@ import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
     HidWalletService,
     DidSSIService],
 })
-export class DidModule { }
+export class DidModule {
+
+ 
+}
+
+

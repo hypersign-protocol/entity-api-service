@@ -21,6 +21,7 @@ import { KeyService } from './app-auth-key.service';
 import { ApiKeyRepository } from '../repositories/app-apikey.repository';
 import { createApiKeyResp } from '../schemas/app-apikey.schema';
 import { Transform } from 'class-transformer';
+import { Role } from 'src/utils/Enum/roles.enum';
 
 @Injectable()
 export class AppAuthService {
@@ -61,7 +62,7 @@ export class AppAuthService {
       walletAddress: address,
     })
   
-    const apiKey = await this.appApiKeyService.generateApiKey([], appId,userId)
+    const apiKey = await this.appApiKeyService.generateApiKey([Role.DID_ADMIN], appId,userId)
     appData.apiKey=apiKey
     return appData
   }

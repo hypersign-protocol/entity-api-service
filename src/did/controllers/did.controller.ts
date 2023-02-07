@@ -12,6 +12,8 @@ import {
   ValidationPipe,
   NotFoundException,
   Query,
+  
+  
 } from '@nestjs/common';
 import { DidService } from '../services/did.service';
 import {
@@ -34,6 +36,9 @@ import {
 import { DidError, DidNotFoundError } from '../dto/error-did.dto';
 import { AllExceptionsFilter } from '../../utils/utils';
 import { PaginationDto } from 'src/utils/pagination.dto';
+import { Role } from 'src/utils/Enum/roles.enum';
+import { Roles } from 'src/utils/customDecorator/role.decorator';
+import { RolesGuard } from 'src/utils/Gurd/role.gurd';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
@@ -88,6 +93,8 @@ export class DidController {
 
   @UsePipes(ValidationPipe)
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN,Role.DID_ADMIN,Role.DID_WRITE)
   @ApiCreatedResponse({
     description: 'DID Created',
     type: CreateDidResponse,
@@ -131,3 +138,5 @@ export class DidController {
     return this.didService.updateDid(updateDidDto, appDetail);
   }
 }
+
+
