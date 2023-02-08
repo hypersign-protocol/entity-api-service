@@ -19,9 +19,10 @@ import { GenerateTokenDto } from '../dtos/generate-token.dto';
 import { JwtService } from '@nestjs/jwt';
 import { KeyService } from './app-auth-key.service';
 import { ApiKeyRepository } from '../repositories/app-apikey.repository';
-import { createApiKeyResp } from '../schemas/app-apikey.schema';
+import { ApiSecret, createApiKeyResp } from '../schemas/app-apikey.schema';
 import { Transform } from 'class-transformer';
 import { Role } from 'src/utils/Enum/roles.enum';
+import { ApiSecretDto } from '../dtos/api-secret.dto';
 
 @Injectable()
 export class AppAuthService {
@@ -51,19 +52,17 @@ export class AppAuthService {
 
     const { id: edvDocId } = await this.edvService.createDocument(document);
     const appId = uuid()
-     const appData = await this.appRepository.create({
+    const appData = await this.appRepository.create({
       ...createAppDto,
       userId,
-      apiKey:null,
       appId, // generate app id
       edvId, // generate edvId  by called hypersign edv service
       kmsId: 'demo-kms-1',
       edvDocId,
       walletAddress: address,
     })
-  
-    const apiKey = await this.appApiKeyService.generateApiKey([Role.DID_ADMIN], appId,userId)
-    appData.apiKey=apiKey
+
+
     return appData
   }
 
@@ -87,12 +86,12 @@ export class AppAuthService {
 
   async generateAccessToken(
     apiAuthKey: string,
-  ): Promise<{ access_token; expiresIn; tokenType }> {   
-    const apikeyIndex=apiAuthKey.split('.')[0]
-    const {appId,permissions,userId,apiSecret}=await this.appApiKeyRepository.findOne({apiKey:apikeyIndex})
-    const valid=await this.appAuthSecretService.comapareSecret(apiAuthKey,apiSecret)
-    if(!valid){
-      throw new UnauthorizedException(['Invalid api key','access_denied']);
+  ): Promise<{ access_token; expiresIn; tokenType }> {
+    const apikeyIndex = apiAuthKey.split('.')[0]
+    const { appId, permissions, userId, apiSecret } = await this.appApiKeyRepository.findOne({ apiKey: apikeyIndex })
+    const valid = await this.appAuthSecretService.comapareSecret(apiAuthKey, apiSecret)
+    if (!valid) {
+      throw new UnauthorizedException(['Invalid api key', 'access_denied']);
     }
 
     const payload = {
@@ -118,4 +117,48 @@ export class AppAuthService {
     const expiresIn = (4 * 1 * 60 * 60 * 1000) / 1000;
     return { access_token: token, expiresIn, tokenType: 'Bearer' };
   }
+
+
+
+
+
+
+
+
+  async createApiSecreat(app, apiSecret: ApiSecretDto) {
+
+    const {permissions} = apiSecret
+    const {expiry}=apiSecret
+    const {name}=apiSecret
+    const apiKey = await this.appApiKeyService.generateApiKey(
+      name,
+      permissions,
+      app.appId,
+      app.userId,
+      expiry
+     
+    )
+    
+    return {
+      apiKey
+    }
+    
+
+
+  }
+
+
+  async getApiKeys(appId,userId){    
+    const apiKeys=await this.appApiKeyRepository.findAll({appId:appId,userId:userId})
+    return apiKeys
+  }
+
+
+async deleteApiKeys(appId,userId,apiKey){
+  console.log(appId,userId,apiKey);
+  
+
+}
+
+
 }

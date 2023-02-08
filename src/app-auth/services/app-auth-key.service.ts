@@ -17,13 +17,15 @@ export class KeyService {
       .toString('hex')
       .slice(0, length)
   }
-  async generateApiKey(permissions: string[], appId,userId, validTill?) {
+  async generateApiKey(name,permissions: string[], appId,userId, validTill?) {
     const apiKey = this.generateRandomString(29);
     const secret = this.generateRandomString(97)
     const toHash=apiKey+"."+secret
+    
     const apiSecret = await this.appAuthService.hashSecrets(toHash)
     validTill = validTill ? new Date(validTill) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     await this.apiKeyRepository.create({
+      name,
       apiKey: apiKey, permissions, appId, apiSecret,
       userId,
       validTill

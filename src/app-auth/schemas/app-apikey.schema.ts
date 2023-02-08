@@ -5,10 +5,10 @@ import { App, AppSchema } from "./app.schema";
 import { IsOptional } from "class-validator";
 
 
-export type AppAPIKeyDocument = AppAPIKey & Document;
+export type ApiSecretDocument = ApiSecret & Document;
 
 @Schema()
-export class AppAPIKey {
+export class ApiSecret {
 
     @ApiHideProperty()
     @Prop()
@@ -33,6 +33,9 @@ export class AppAPIKey {
     @Prop({ default: () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),type:Date, required:false })
     validTill:Date
 
+    @ApiHideProperty()
+    @Prop()
+    name:string
 }
 
 
@@ -45,14 +48,14 @@ export class createApiKeyResp  {
     apiKey: string;
   }
 
-const APIKeySchema = SchemaFactory.createForClass(AppAPIKey)
-APIKeySchema.index({
+const ApiSecretSchema = SchemaFactory.createForClass(ApiSecret)
+ApiSecretSchema.index({
     apiSecret: 1,
     apiKey: 1
 }, { unique: true }
 )
 
-APIKeySchema.index({appId:1,userId:1},{unique:true})
-APIKeySchema.index({vaidTill:1},{expireAfterSeconds:0})
+ApiSecretSchema.index({appId:1,userId:1,apiKey:1},{unique:true})
+ApiSecretSchema.index({vaidTill:1},{expireAfterSeconds:0})
 
-export {APIKeySchema}
+export {ApiSecretSchema}

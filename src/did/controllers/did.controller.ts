@@ -94,7 +94,7 @@ export class DidController {
   @UsePipes(ValidationPipe)
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN,Role.DID_ADMIN,Role.DID_WRITE)
+  @Roles(Role.ADMIN,Role.DID,Role.WRITE_DID)
   @ApiCreatedResponse({
     description: 'DID Created',
     type: CreateDidResponse,

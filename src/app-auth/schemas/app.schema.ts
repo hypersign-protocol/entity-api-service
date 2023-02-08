@@ -26,13 +26,7 @@ export class App {
   })
   @Prop()
   appId: string;
-  @ApiProperty({
-    description: 'Application Key',
-    example: 'app-secret-1',
-  })
-  @IsOptional()
-  @Prop({required:false,default:null})
-  apiKey: string;
+ 
 
   @ApiProperty({
     description: 'Data Vault Id',
@@ -58,11 +52,11 @@ export class App {
 }
 
 export class createAppResponse extends App {
-  @ApiProperty({
-    description: 'Application Key',
-    example: 'app-secret-1',
-  })
-  apiKey: string;
+  // @ApiProperty({
+  //   description: 'Application Key',
+  //   example: 'app-secret-1',
+  // })
+  // apiKey: string;
 }
 
 export const AppSchema = SchemaFactory.createForClass(App);

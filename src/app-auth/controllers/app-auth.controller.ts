@@ -11,6 +11,7 @@ import {
   HttpCode,
   UseFilters,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { ApiAuthHeader, User } from '../decorator/user.decorator';
 import { CreateAppDto } from 'src/app-auth/dtos/create-app.dto';
@@ -22,9 +23,11 @@ import {
 import { AppAuthService } from 'src/app-auth/services/app-auth.service';
 import {
   ApiBadRequestResponse,
+  ApiBody,
   ApiCreatedResponse,
   ApiHeader,
   ApiNotFoundResponse,
+  ApiProperty,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -37,6 +40,8 @@ import { MongooseClassSerializerInterceptor } from '../../utils/utils';
 import { AllExceptionsFilter } from '../../utils/utils';
 import { AppError } from '../dtos/fetch-app.dto';
 import { PaginationDto } from 'src/utils/pagination.dto';
+import { ApiSecretDto } from '../dtos/api-secret.dto';
+import { Role } from 'src/utils/Enum/roles.enum';
 
 @UseFilters(AllExceptionsFilter)
 @ApiTags('App')
@@ -171,6 +176,86 @@ export class AppAuthController {
     } else throw new AppNotFoundException();
   }
 
+
+
+
+
+
+
+
+
+
+
+  @ApiHeader({
+    name: 'userId',
+    description: 'Provide userId to get app details',
+  })
+  @UsePipes(ValidationPipe)
+  @Post(':appId/secret')
+
+  async generateApiKey(
+    @User() userId,
+    @Param('appId') appId: string,
+    @Body() apiSecretDto: ApiSecretDto
+  ) {
+    const app = await this.appAuthService.getAppById(appId, userId);
+    if (!app) {
+      throw new AppNotFoundException();
+    }
+    return this.appAuthService.createApiSecreat(app, apiSecretDto)
+
+
+
+  }
+
+
+
+  @UseInterceptors(
+    MongooseClassSerializerInterceptor(App, {
+      excludePrefixes: ['apiSecret', '_', '__'],
+    }),
+  )
+  @ApiHeader({
+    name: 'userId',
+    description: 'Provide userId to get app details',
+  })
+  @UsePipes(ValidationPipe)
+  @Get(':appId/secret')
+  async getApiKeys(
+    @User() userId,
+    @Param('appId') appId: string,
+  ){
+    const app = await this.appAuthService.getAppById(appId, userId);
+    if (!app) {
+      throw new AppNotFoundException();
+    }
+    return this.appAuthService.getApiKeys(appId,userId)
+  }
+
+
+
+
+  @ApiHeader({
+    name: 'userId',
+    description: 'Provide userId to get app details',
+  })
+  @UsePipes(ValidationPipe)
+  @Delete(':appId/:apiKey')
+  async deleteApiKeys(
+    @User() userId,
+    @Param('appId') appId: string,
+    @Param('apiKey') apiKey:string, 
+  ){
+    const app = await this.appAuthService.getAppById(appId, userId);
+    if (!app) {
+      throw new AppNotFoundException();
+    }
+
+    return this.appAuthService.deleteApiKeys(appId,userId,apiKey)
+  }
+
+
+
 }
 @ApiTags('App')
 @Controller('app')
@@ -198,3 +283,19 @@ export class AppOAuthController {
     return this.appAuthService.generateAccessToken(apiAuthKey);
   }
 }
+
+
+
+
+
+// @ApiTags('App')
+// @Controller('app')
+// @UseFilters(AllExceptionsFilter)
+
+// export class ApiSecretController {
+//   constructor(private readonly appAuthService: AppAuthService) { }  
+
+ 
+
+// }
+
