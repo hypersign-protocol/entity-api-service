@@ -59,6 +59,6 @@ export class PresentationModule implements NestModule {
         },
         { path: 'presentation/template', method: RequestMethod.DELETE },
       )
-      .forRoutes(PresentationTempleteController,PresentationController);
+      .forRoutes(PresentationTempleteController, PresentationController);
   }
 }
