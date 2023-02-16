@@ -11,6 +11,7 @@ import {
   ValidationPipe,
   Query,
   UseInterceptors,
+  Headers,
 } from '@nestjs/common';
 import { PaginationDto } from 'src/utils/pagination.dto';
 import { SchemaService } from '../services/schema.service';
@@ -30,6 +31,7 @@ import {
   ApiNotFoundResponse,
   ApiBadRequestResponse,
   ApiQuery,
+  ApiHeader,
 } from '@nestjs/swagger';
 import { Schemas } from '../schemas/schemas.schema';
 import { SchemaResponseInterceptor } from '../interceptors/transformResponse.interseptor';
@@ -57,6 +59,11 @@ export class SchemaController {
     description: 'Error occured at the time of creating schema',
     type: SchemaError,
   })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
   @UsePipes(new ValidationPipe({ transform: true }))
   create(@Body() createSchemaDto: CreateSchemaDto, @Req() req: any) {
     const appDetail = req.user;
@@ -75,6 +82,11 @@ export class SchemaController {
     description: 'No schema has created',
     type: SchemaNotFoundError,
   })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
   @ApiQuery({
     name: 'page',
     description: 'Page value',
@@ -87,6 +99,7 @@ export class SchemaController {
   })
   @UseInterceptors(SchemaResponseInterceptor)
   getSchemaList(
+    @Headers('Authorization') authorization: string,
     @Req() req: any,
     @Query() paginationOption: PaginationDto,
   ): Promise<Schemas[]> {
@@ -105,7 +118,13 @@ export class SchemaController {
     description: 'schema with id sch:hid:testnet:...... not found',
     type: SchemaNotFoundError,
   })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
   resolveSchema(
+    @Headers('Authorization') authorization: string,
     @Param('schemaId') schemaId: string,
     @Req() req: any,
   ): Promise<ResolveSchema> {

@@ -48,7 +48,7 @@ async function bootstrap() {
     store(keys, process.env.EDV_KEY_FILE_PATH);
   }
   const config = new DocumentBuilder()
-    .setTitle('Entity Studio API Documentation')
+    .setTitle('Entity Studio SSI API Playground')
     .setDescription('Open API Documentation of the Entity Studio')
     .addBearerAuth(
       {

@@ -8,7 +8,10 @@ import {
   PresentationRequestService,
   PresentationService,
 } from './services/presentation.service';
-import { PresentationTempleteController } from './controllers/presentation.controller';
+import {
+  PresentationTempleteController,
+  PresentationController,
+} from './controllers/presentation.controller';
 import {
   PresentationTemplate,
   PresentationTemplateSchema,
@@ -32,7 +35,7 @@ import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
       },
     ]),
   ],
-  controllers: [PresentationTempleteController],
+  controllers: [PresentationTempleteController, PresentationController],
   providers: [
     PresentationService,
     PresentationTemplateRepository,
@@ -45,7 +48,7 @@ export class PresentationModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(WhitelistMiddleware)
-      .forRoutes(PresentationTempleteController);
+      .forRoutes(PresentationTempleteController, PresentationController);
     consumer
       .apply(TrimMiddleware)
       .exclude(
@@ -56,6 +59,6 @@ export class PresentationModule implements NestModule {
         },
         { path: 'presentation/template', method: RequestMethod.DELETE },
       )
-      .forRoutes(PresentationTempleteController);
+      .forRoutes(PresentationTempleteController,PresentationController);
   }
 }

@@ -12,6 +12,7 @@ import {
   Query,
   HttpCode,
   UseInterceptors,
+  Headers,
 } from '@nestjs/common';
 import { CredentialService } from '../services/credential.service';
 import {
@@ -32,6 +33,7 @@ import {
   ApiBadRequestResponse,
   ApiTags,
   ApiQuery,
+  ApiHeader,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { PaginationDto } from 'src/utils/pagination.dto';
@@ -61,6 +63,11 @@ export class CredentialController {
     description: 'Error in finding resource',
     type: CredentialNotFoundError,
   })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
   @ApiQuery({
     name: 'page',
     description: 'Page value',
@@ -73,6 +80,7 @@ export class CredentialController {
   })
   @UseInterceptors(CredentialResponseInterceptor)
   findAll(
+    @Headers('Authorization') authorization: string,
     @Req() req: any,
     @Query() pageOption: PaginationDto,
   ): Promise<Credential[]> {
@@ -89,11 +97,17 @@ export class CredentialController {
     description: 'Credential with id vc:hid:testnet:...... not found',
     type: CredentialNotFoundError,
   })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
   @ApiQuery({
     name: 'retrieveCredential',
     required: false,
   })
   resolveCredential(
+    @Headers('Authorization') authorization: string,
     @Req() req: any,
     @Param('credentialId') credentialId: string,
     @Query('retrieveCredential', BooleanPipe) retrieveCredential: boolean,
@@ -108,7 +122,7 @@ export class CredentialController {
   }
 
   @UsePipes(new ValidationPipe({ transform: true }))
-  @Post()
+  @Post('/issue')
   @ApiCreatedResponse({
     description: 'Credential Created',
     type: CreateCredentialResponse,
@@ -122,6 +136,11 @@ export class CredentialController {
     status: 404,
     description: 'Resource not found',
     type: CredentialNotFoundError,
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
   })
   create(@Body() createCredentialDto: CreateCredentialDto, @Req() req) {
     return this.credentialService.create(createCredentialDto, req.user);
@@ -143,6 +162,11 @@ export class CredentialController {
     status: 404,
     description: 'Resource not found',
     type: CredentialNotFoundError,
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
   })
   verify(@Body() verifyCredentialDto: VerifyCredentialDto, @Req() req) {
     return this.credentialService.verfiyCredential(
@@ -167,7 +191,13 @@ export class CredentialController {
     description: 'Error occured at the time of creating credential',
     type: CredentialError,
   })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
   update(
+    @Headers('Authorization') authorization: string,
     @Param('credentialId') credentialId: string,
     @Body() updateCredentialDto: UpdateCredentialDto,
     @Req() req,
