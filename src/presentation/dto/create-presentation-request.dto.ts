@@ -131,14 +131,14 @@ export class CreatePresentationResponse {
 
 export class CreatePresentationDto {
   @ApiProperty({
-    name: 'credentials',
+    name: 'credentialDocuments',
     description: 'list of credentials',
     type: CredDoc,
     isArray: true,
   })
   @ValidateNested({ each: true })
   @Type(() => Array<CredDoc>)
-  credentials: Array<CredDoc>;
+  credentialDocuments: Array<CredDoc>;
 
   @ApiProperty({
     name: 'holderDid',

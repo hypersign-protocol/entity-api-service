@@ -52,7 +52,7 @@ export class QueryExample {
   type: string;
 
   @ApiProperty({
-    name: 'CredentialSubject',
+    name: 'credentialSubject',
     description: 'Credential subject',
     example: {
       name: 'Random name',

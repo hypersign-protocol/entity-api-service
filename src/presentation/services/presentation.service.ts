@@ -190,10 +190,11 @@ export class PresentationRequestService {
       namespace: 'testnet',
     });
 
-    const { credentials, holderDid, challenge, domain } = credentialsDto;
+    const { credentialDocuments, holderDid, challenge, domain } =
+      credentialsDto;
 
     const unsignedverifiablePresentation = await hypersignVP.generate({
-      verifiableCredentials: credentials,
+      verifiableCredentials: credentialDocuments,
       holderDid: holderDid,
     });
 

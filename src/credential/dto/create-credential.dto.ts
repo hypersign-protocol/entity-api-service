@@ -18,10 +18,10 @@ export class CreateCredentialDto {
   @ApiProperty({
     name: 'schemaId',
     description: 'schemaId for credential Schema',
+    required: false,
   })
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   schemaId: string;
 
   @ApiProperty({
@@ -288,7 +288,7 @@ export class CredDoc {
   issuer: string;
 
   @ApiProperty({
-    name: 'CredentialSubject',
+    name: 'credentialSubject',
     description: 'Field value based on schema',
     type: CredentialSubject,
   })
@@ -325,13 +325,13 @@ export class CredDoc {
 }
 export class CreateCredentialResponse {
   @ApiProperty({
-    name: 'credential',
+    name: 'credentialDocument',
     description: 'Credential doc',
     type: CredDoc,
   })
   @ValidateNested({ each: true })
   @Type(() => CredDoc)
-  credential: CredDoc;
+  credentialDocument: CredDoc;
 
   @ApiProperty({
     name: 'credentialStatus',

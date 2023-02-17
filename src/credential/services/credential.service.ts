@@ -121,7 +121,11 @@ export class CredentialService {
         transactionHash: credentialStatusRegistrationResult.transactionHash,
         type: signedCredential.type[1], // TODO : MAYBE REMOVE HARDCODING MAYBE NOT
       });
-      return { credential: signedCredential, credentialStatus, persist };
+      return {
+        credentialDocument: signedCredential,
+        credentialStatus,
+        persist,
+      };
     } catch (e) {
       throw new BadRequestException([e.message]);
     }
@@ -250,7 +254,7 @@ export class CredentialService {
   }
 
   async verfiyCredential(verifyCredentialDto: VerifyCredentialDto, appDetail) {
-    const { id, issuer } = verifyCredentialDto.credential;
+    const { id, issuer } = verifyCredentialDto.credentialDocument;
     const credentialDetail = await this.credentialRepository.findOne({
       appId: appDetail.appId,
       credentialId: id,
@@ -275,10 +279,10 @@ export class CredentialService {
     let verificationResult;
     try {
       verificationResult = await hypersignCredential.verify({
-        credential: verifyCredentialDto.credential,
+        credential: verifyCredentialDto.credentialDocument,
         issuerDid: issuer,
         verificationMethodId:
-          verifyCredentialDto.credential.proof.verificationMethod,
+          verifyCredentialDto.credentialDocument.proof.verificationMethod,
       });
     } catch (e) {
       throw new BadRequestException([e.message]);

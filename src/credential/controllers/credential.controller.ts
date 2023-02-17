@@ -176,7 +176,7 @@ export class CredentialController {
   }
 
   @UsePipes(ValidationPipe)
-  @Patch(':credentialId')
+  @Patch('status/:credentialId')
   @ApiOkResponse({
     description: 'Credential Updated',
     type: ResolveCredential,

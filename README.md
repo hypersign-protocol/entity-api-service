@@ -74,8 +74,7 @@ $ yarn run test:e2e
 $ yarn run test:cov
 
 #Test using postman collection
- npm i -g newman
- newman run ${path}/studio-api.postman_collection.json
+ yarn test:newman
 ```
 
 ## Docs

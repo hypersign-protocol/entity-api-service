@@ -5,12 +5,12 @@ import { CredDoc, CredentialProof } from './create-credential.dto';
 
 export class VerifyCredentialDto {
   @ApiProperty({
-    name: 'credential',
+    name: 'credentialDocument',
     description: 'credential document',
   })
   @ValidateNested()
   @Type(() => CredDoc)
-  credential: CredDoc;
+  credentialDocument: CredDoc;
 }
 class StatusResult {
   @ApiProperty({
