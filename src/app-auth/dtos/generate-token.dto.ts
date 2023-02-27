@@ -1,6 +1,5 @@
 import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Trim } from '../../utils/customDecorator/trim.decorator';
 // export class GenerateTokenDto {
 //   @ApiProperty({
 //     description: 'appId',

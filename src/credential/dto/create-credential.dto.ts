@@ -7,6 +7,9 @@ import {
   IsString,
   ValidateNested,
   IsArray,
+  ValidateIf,
+  ArrayNotEmpty,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
@@ -14,6 +17,10 @@ import { IsDid } from 'src/utils/customDecorator/did.decorator';
 import { IsSchemaId } from 'src/utils/customDecorator/schemaId.deceorator';
 import { IsVcId } from 'src/utils/customDecorator/vc.decorator';
 
+export enum Namespace {
+  testnet = 'testnet',
+  // mainnet = '',
+}
 export class CreateCredentialDto {
   @ApiProperty({
     name: 'schemaId',
@@ -22,8 +29,7 @@ export class CreateCredentialDto {
   })
   @IsOptional()
   @IsString()
-  schemaId: string;
-
+  schemaId?: string;
   @ApiProperty({
     name: 'subjectDid',
     description: 'holder did of the credential',
@@ -46,11 +52,15 @@ export class CreateCredentialDto {
   subjectDidDocSigned?: JSON;
 
   @ApiHideProperty()
-  @IsOptional()
-  schemaContext: Array<string>;
+  @ValidateIf((o) => o.schemaId === undefined)
+  @IsArray()
+  @ArrayNotEmpty()
+  schemaContext?: Array<string>;
   @ApiHideProperty()
-  @IsOptional()
-  type: Array<string>;
+  @ValidateIf((o) => o.schemaId === undefined)
+  @IsArray()
+  @ArrayNotEmpty()
+  type?: Array<string>;
 
   @ApiProperty({
     name: 'expirationDate',
@@ -73,11 +83,13 @@ export class CreateCredentialDto {
 
   @ApiProperty({
     name: 'namespace',
-    description: 'Namespace to be added in did.',
+    description: 'Namespace to be added in vcId.',
     example: 'testnet',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsEnum(Namespace, {
+    message: "namespace must be one of the following values: 'testnet'",
+  })
   namespace: string;
 
   @ApiProperty({
@@ -253,6 +265,8 @@ export class CredDoc {
       'https://w3id.org/security/suites/ed25519-2020/v1',
     ],
   })
+  @IsArray()
+  @ArrayNotEmpty()
   '@context': Array<string>;
   @ApiProperty({
     description: 'id',
@@ -267,16 +281,21 @@ export class CredDoc {
     isArray: true,
   })
   @IsArray()
+  @ArrayNotEmpty()
   type: Array<string>;
   @ApiProperty({
     description: 'Expiry date of credential',
     example: '2027-12-10T18:30:00Z',
   })
+  @IsNotEmpty()
+  @IsString()
   expirationDate: Date;
   @ApiProperty({
     description: 'Credential issuance date',
     example: '2027-12-10T18:30:00Z',
   })
+  @IsNotEmpty()
+  @IsString()
   issuanceDate: Date;
 
   @ApiProperty({
@@ -292,6 +311,7 @@ export class CredDoc {
     description: 'Field value based on schema',
     type: CredentialSubject,
   })
+  @IsNotEmptyObject()
   @Type(() => CredentialSubject)
   @ValidateNested({ each: true })
   credentialSubject: CredentialSubject;
@@ -301,17 +321,20 @@ export class CredDoc {
     description: 'Schema detail based on which credential has issued',
     type: CredentialSchema,
   })
-  @Type(() => CredentialSchema)
+  @IsOptional()
+  @IsNotEmptyObject()
   @ValidateNested({ each: true })
-  credentialSchema: CredentialSchema;
+  @Type(() => CredentialSchema)
+  credentialSchema?: CredentialSchema;
 
   @ApiProperty({
     name: 'credentialStatus',
     description: 'Information of credential status',
     type: CredentialStatus,
   })
+  @IsNotEmptyObject()
+  @ValidateNested({ each: true })
   @Type(() => CredentialStatus)
-  @ValidateNested()
   credentialStatus: CredentialStatus;
 
   @ApiProperty({
@@ -319,8 +342,9 @@ export class CredDoc {
     description: 'Proof of credential',
     type: CredentialProof,
   })
-  @Type(() => CredentialProof)
+  @IsNotEmptyObject()
   @ValidateNested({ each: true })
+  @Type(() => CredentialProof)
   proof: CredentialProof;
 }
 export class CreateCredentialResponse {
@@ -356,7 +380,8 @@ class CredProof extends CredentialProof {
   @IsString()
   updated: Date;
 }
-export class ResolveCredential extends CredStatus {
+
+class ResolvedCredentialStatus extends CredStatus {
   @ApiProperty({
     name: 'proof',
     description: 'proof of credential',
@@ -365,4 +390,25 @@ export class ResolveCredential extends CredStatus {
   @Type(() => CredProof)
   @ValidateNested({ each: true })
   proof: CredProof;
+}
+export class ResolveCredential {
+  @ApiProperty({
+    name: 'credentialStatus',
+    description: 'status of the credential',
+    type: ResolvedCredentialStatus,
+  })
+  @Type(() => ResolvedCredentialStatus)
+  @ValidateNested({ each: true })
+  credentialStatus: ResolvedCredentialStatus;
+  @ApiProperty({
+    name: 'persist',
+    example: false,
+  })
+  persist: boolean;
+  @ApiProperty({
+    description: 'If set true then return credential also',
+    name: 'retrieveCredential',
+    example: false,
+  })
+  retrieveCredential: boolean;
 }

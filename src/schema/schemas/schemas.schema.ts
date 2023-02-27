@@ -1,6 +1,6 @@
 import { Document } from 'mongoose';
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
-import { ApiProperty, ApiResponse } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export type SchemaDocument = Schemas & Document;

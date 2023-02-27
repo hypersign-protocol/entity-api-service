@@ -11,13 +11,13 @@ import {
   CreatePresentationDto,
   CreatePresentationRequestDto,
 } from '../dto/create-presentation-request.dto';
-import { uuid } from 'uuidv4';
 import { HypersignVerifiablePresentation, HypersignDID } from 'hs-ssi-sdk';
 import { ConfigService } from '@nestjs/config';
 import { EdvService } from 'src/edv/services/edv.service';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { DidRepository } from 'src/did/repository/did.repository';
 import { VerifyPresentationDto } from '../dto/verify-presentation.dto';
+import { AppAuthApiKeyService } from 'src/app-auth/services/app-auth-apikey.service';
 
 @Injectable()
 export class PresentationService {
@@ -129,7 +129,10 @@ export class PresentationService {
       ]);
     }
     templateDetail = await this.presentationtempleteReopsitory.findOneAndDelete(
-      { appId: appDetail.appId, _id: templateId },
+      {
+        appId: appDetail.appId,
+        _id: templateId,
+      },
     );
     return templateDetail;
   }
@@ -143,6 +146,7 @@ export class PresentationRequestService {
     private readonly config: ConfigService,
     private readonly edvService: EdvService,
     private readonly hidWallet: HidWalletService,
+    private readonly keyService: AppAuthApiKeyService,
   ) {}
 
   async createPresentationRequest(
@@ -165,7 +169,7 @@ export class PresentationRequestService {
     body.challenge = challenge;
 
     const response = {
-      id: uuid(),
+      id: await this.keyService.generateAppId(),
       from: did,
       created_time: Number(new Date()),
       expires_time: expiresTime,
@@ -173,7 +177,6 @@ export class PresentationRequestService {
       reply_to: [did],
       body,
     };
-
     return response;
   }
 
@@ -198,7 +201,7 @@ export class PresentationRequestService {
       holderDid: holderDid,
     });
 
-    const { didDocument, didDocumentMetadata } = await hypersignDID.resolve({
+    const { didDocument } = await hypersignDID.resolve({
       did: holderDid,
     });
 
@@ -240,7 +243,7 @@ export class PresentationRequestService {
     return { presentation: signedVerifiablePresentation };
   }
 
-  async verifyPresentation(presentations: VerifyPresentationDto, appDetail) {
+  async verifyPresentation(presentations: VerifyPresentationDto) {
     const hypersignVP = new HypersignVerifiablePresentation({
       nodeRestEndpoint: this.config.get('HID_NETWORK_API'),
       nodeRpcEndpoint: this.config.get('HID_NETWORK_RPC'),
@@ -251,7 +254,7 @@ export class PresentationRequestService {
     const holderDid = presentation['holder'];
     const issuerDid = presentation['verifiableCredential'][0]['issuer'];
 
-    const domain = presentation['proof']['domain'];
+    // const domain = presentation['proof']['domain'];
     const challenge = presentation['proof']['challenge'];
     const verifiedPresentationDetail = await hypersignVP.verify({
       signedPresentation: presentation,

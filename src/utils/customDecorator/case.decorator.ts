@@ -36,7 +36,7 @@ String.prototype.toSnakeCase = function () {
 export const ToPascalCase = (): PropertyDecorator => {
   return applyDecorators(
     SetMetadata('toPascalCase', true),
-    (target: Object, propertyKey: string | symbol) => {
+    (target: object, propertyKey: string | symbol) => {
       let original = target[propertyKey];
       const descriptor: PropertyDescriptor = {
         get: () => original,
@@ -52,7 +52,7 @@ export const ToPascalCase = (): PropertyDecorator => {
 export const ToSnakeCase = (): PropertyDecorator => {
   return applyDecorators(
     SetMetadata('toSnakeCase', true),
-    (target: Object, propertyKey: string | symbol) => {
+    (target: object, propertyKey: string | symbol) => {
       let original = target[propertyKey];
       const descriptor: PropertyDescriptor = {
         get: () => original,

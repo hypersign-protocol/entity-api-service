@@ -46,3 +46,25 @@ export class DidNotFoundError {
   @IsString()
   error: string;
 }
+export class DidConflictError {
+  @ApiProperty({
+    description: 'statusCode',
+    example: 409,
+  })
+  @IsNumber()
+  statusCode: number;
+
+  @ApiProperty({
+    description: 'message',
+    example: ['Duplicate key Error'],
+  })
+  @IsString()
+  message: Array<string>;
+
+  @ApiProperty({
+    description: 'error',
+    example: 'Not Found',
+  })
+  @IsString()
+  error: string;
+}

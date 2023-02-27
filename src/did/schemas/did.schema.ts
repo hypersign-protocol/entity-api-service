@@ -11,6 +11,7 @@ export type DidDocumentMetaData = DidMetaData & Document;
 export enum RegistrationStatus {
   PROCESSING = 'PROCESSING',
   COMPLETED = 'COMPLETED',
+  UNREGISTRED = 'UNREGISTRED',
 }
 @Schema()
 export class Did {
@@ -34,7 +35,7 @@ export class Did {
     description: 'Did of user',
     example: 'did:hid:testnet:1234',
   })
-  @Prop()
+  @Prop({ unique: true, index: true })
   @IsString()
   @IsDid()
   did: string;
@@ -81,6 +82,7 @@ export class DidMetaData {
 
 const DidSchema = SchemaFactory.createForClass(Did);
 const DidMetaDataSchema = SchemaFactory.createForClass(DidMetaData);
+DidSchema.index({ did: 1 }, { unique: true });
 DidSchema.index({ appId: 1, hdPathIndex: 1, did: 1 }, { unique: true });
 DidMetaDataSchema.index({ appId: 1 }, { unique: true });
 DidMetaDataSchema.index({ appId: 1, hdPathIndex: 1, did: 1 }, { unique: true });

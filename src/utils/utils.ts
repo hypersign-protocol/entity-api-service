@@ -4,11 +4,7 @@ import {
   PlainLiteralObject,
   Type,
 } from '@nestjs/common';
-import {
-  ClassTransformOptions,
-  Exclude,
-  plainToClass,
-} from 'class-transformer';
+import { ClassTransformOptions, plainToClass } from 'class-transformer';
 import { Document } from 'mongoose';
 import {
   ExceptionFilter,
@@ -16,7 +12,6 @@ import {
   HttpException,
   ArgumentsHost,
   HttpStatus,
-  HttpExceptionOptions,
 } from '@nestjs/common';
 
 export const existDir = (dirPath) => {

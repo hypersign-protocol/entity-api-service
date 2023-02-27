@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsEnum,
   IsNotEmpty,
   IsString,
   IsUrl,
@@ -14,7 +15,6 @@ import {
 } from 'src/credential/dto/create-credential.dto';
 import { ToSnakeCase } from 'src/utils/customDecorator/case.decorator';
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
-import { Trim } from 'src/utils/customDecorator/trim.decorator';
 import { queryType } from '../schemas/presentation-template.schema';
 export class TrustedIssuer {
   @ApiProperty({
@@ -138,6 +138,7 @@ export class Query {
     example: 'QueryByExample / DIDAuthentication',
   })
   @IsString()
+  @IsEnum(queryType)
   type: queryType;
 
   @ApiProperty({

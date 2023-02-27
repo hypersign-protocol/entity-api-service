@@ -16,7 +16,7 @@ import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { CredentialRepository } from './repository/credential.repository';
 import { DidModule } from 'src/did/did.module';
 import { AppAuthModule } from 'src/app-auth/app-auth.module';
-import { WhitelistMiddleware } from 'src/utils/middleware/cors.middleware';
+import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 @Module({
   imports: [
@@ -42,7 +42,7 @@ import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 })
 export class CredentialModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(WhitelistMiddleware).forRoutes(CredentialController);
+    consumer.apply(WhitelistSSICorsMiddleware).forRoutes(CredentialController);
     consumer
       .apply(TrimMiddleware)
       .exclude(

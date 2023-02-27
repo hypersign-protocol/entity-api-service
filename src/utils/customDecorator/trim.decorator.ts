@@ -6,7 +6,7 @@ import {
 export const Trim = (): PropertyDecorator => {
   return applyDecorators(
     SetMetadata('notEmpty', true),
-    (target: Object, propertyKey: string | symbol) => {
+    (target: object, propertyKey: string | symbol) => {
       let original = target[propertyKey];
       const descriptor: PropertyDescriptor = {
         get: () => original,
@@ -27,7 +27,7 @@ export const Trim = (): PropertyDecorator => {
 export const IsEmptyTrim = (): PropertyDecorator => {
   return applyDecorators(
     SetMetadata('notEmpty', true),
-    (target: Object, propertyKey: string | symbol) => {
+    (target: object, propertyKey: string | symbol) => {
       let original = target[propertyKey];
       const descriptor: PropertyDescriptor = {
         get: () => original,

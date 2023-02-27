@@ -20,7 +20,10 @@ export class SchemaResponseInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         const modifiedResponse = {
-          totalCount: data[0]['totalCount'].length>0?data[0]['totalCount'][0].total:0,
+          totalCount:
+            data[0]['totalCount'].length > 0
+              ? data[0]['totalCount'][0].total
+              : 0,
           data: this.mapData(data[0]['data']),
         };
         return modifiedResponse;

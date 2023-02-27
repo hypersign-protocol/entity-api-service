@@ -271,10 +271,7 @@ export class PresentationController {
     description: 'Bearer <access_token>',
     required: false,
   })
-  verify(@Body() presentation: VerifyPresentationDto, @Req() req) {
-    return this.presentationRequestService.verifyPresentation(
-      presentation,
-      req.user,
-    );
+  verify(@Body() presentation: VerifyPresentationDto) {
+    return this.presentationRequestService.verifyPresentation(presentation);
   }
 }

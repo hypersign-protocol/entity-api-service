@@ -1,36 +1,30 @@
 import { Injectable, Scope } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Bip39, Slip10, Slip10RawIndex, Slip10Curve } from '@cosmjs/crypto';
-import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing'
+import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 
 @Injectable({ scope: Scope.REQUEST })
 export class HidWalletService {
   private mnemonic;
   private offlineSigner;
-  constructor(private configService: ConfigService) {
-
-  }
-
-
+  constructor(private configService: ConfigService) {}
 
   async generateWallet(mnemonic?: string): Promise<{
     mnemonic: string;
     address: string;
   }> {
-
     this.mnemonic = mnemonic;
 
     let wallet: any;
     if (!mnemonic) {
       wallet = await DirectSecp256k1HdWallet.generate(24, {
-        prefix: 'hid'
-      })
+        prefix: 'hid',
+      });
     } else {
       wallet = await DirectSecp256k1HdWallet.fromMnemonic(this.mnemonic, {
-        prefix: 'hid'
-      })
+        prefix: 'hid',
+      });
     }
-
 
     const generatedMnemonice = wallet.secret.data;
     this.offlineSigner = wallet;
@@ -61,7 +55,6 @@ export class HidWalletService {
   }
 
   async generateMemonicToSeedFromSlip10RawIndex(path: Array<Slip10RawIndex>) {
-
     const seed = Bip39.decode(this.mnemonic);
     const slipPathKeys = Slip10.derivePath(Slip10Curve.Ed25519, seed, path);
     const seedHD = slipPathKeys.privkey;
@@ -77,13 +70,4 @@ export class HidWalletService {
       Slip10RawIndex.hardened(minHardIndex),
     ];
   }
-
-
-
-
-
 }
-
-
-
-

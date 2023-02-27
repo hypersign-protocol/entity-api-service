@@ -1,42 +1,36 @@
-
-
 import { Type } from 'class-transformer';
-import { IsNumber, IsObject, IsString, Validate, ValidateNested } from 'class-validator'
+import { IsNumber, IsObject, IsString, ValidateNested } from 'class-validator';
 
 export class DidsDto {
-    @IsObject()
-    readonly doc: object;
-    @IsNumber()
-    readonly index: number;
+  @IsObject()
+  readonly doc: object;
+  @IsNumber()
+  readonly index: number;
 
-    @IsString()
-    readonly did:string;
+  @IsString()
+  readonly did: string;
 }
 
-
 export class CredsDto {
-    @IsObject()
-    readonly vc: object;
+  @IsObject()
+  readonly vc: object;
 
-    @IsString()
-    readonly vcId: string;
-
-
+  @IsString()
+  readonly vcId: string;
 }
 
 export class EdvDocsDto {
-    @IsString()
-    readonly mnemonic: string;
+  @IsString()
+  readonly mnemonic: string;
 
-    @IsString()
-    readonly address: string;
+  @IsString()
+  readonly address: string;
 
-    @ValidateNested()    
-    @Type(() => Array<DidsDto>)
-    readonly dids?: Array<DidsDto>;
+  @ValidateNested()
+  @Type(() => Array<DidsDto>)
+  readonly dids?: Array<DidsDto>;
 
-    @ValidateNested()
-    @Type(() => Array<CredsDto>)
-    readonly vcs?: Array<CredsDto>
-
+  @ValidateNested()
+  @Type(() => Array<CredsDto>)
+  readonly vcs?: Array<CredsDto>;
 }

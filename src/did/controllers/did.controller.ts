@@ -18,13 +18,14 @@ import {
 import { DidService } from '../services/did.service';
 import {
   CreateDidDto,
-  CreateDidResponse,
+  RegisterDidResponse,
+  IKeyType,
   TxnHash,
+  CreateDidResponse,
 } from '../dto/create-did.dto';
 import { UpdateDidDto, ResolvedDid } from '../dto/update-did.dto';
 import { AuthGuard } from '@nestjs/passport';
 import {
-  ApiResponse,
   ApiNotFoundResponse,
   ApiBadRequestResponse,
   ApiCreatedResponse,
@@ -33,13 +34,20 @@ import {
   ApiQuery,
   ApiOkResponse,
   ApiHeader,
+  ApiConflictResponse,
 } from '@nestjs/swagger';
-import { DidError, DidNotFoundError } from '../dto/error-did.dto';
+import { classToPlain } from 'class-transformer';
+import {
+  DidConflictError,
+  DidError,
+  DidNotFoundError,
+} from '../dto/error-did.dto';
 import { AllExceptionsFilter } from '../../utils/utils';
 import { PaginationDto } from 'src/utils/pagination.dto';
 import { Did } from '../schemas/did.schema';
 import { DidResponseInterceptor } from '../interceptors/transformResponse.interseptor';
 import { GetDidList } from '../dto/fetch-did.dto';
+import { RegisterDidDto } from '../dto/register-did.dto';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
@@ -85,7 +93,7 @@ export class DidController {
     return this.didService.getDidList(appDetail, pageOption);
   }
 
-  @Get(':did')
+  @Get('resolve/:did')
   @ApiOkResponse({
     description: 'DID Resolved',
     type: ResolvedDid,
@@ -108,7 +116,6 @@ export class DidController {
     const appDetail = req.user;
     return this.didService.resolveDid(appDetail, did);
   }
-
   @UsePipes(
     new ValidationPipe({
       whitelist: true,
@@ -116,15 +123,20 @@ export class DidController {
       forbidNonWhitelisted: true,
     }),
   )
-  @Post()
+  @Post('create')
   @ApiCreatedResponse({
     description: 'DID Created',
     type: CreateDidResponse,
   })
   @ApiBadRequestResponse({
     status: 400,
-    description: 'Error occured at the time of creating schema',
+    description: 'Error occured at the time of creating did',
     type: DidError,
+  })
+  @ApiConflictResponse({
+    status: 409,
+    description: 'Duplicate key error',
+    type: DidConflictError,
   })
   @ApiHeader({
     name: 'Authorization',
@@ -133,16 +145,54 @@ export class DidController {
   })
   create(@Body() createDidDto: CreateDidDto, @Req() req: any) {
     const { options } = createDidDto;
-    if (options?.keyType === 'EcdsaSecp256k1RecoveryMethod2020') {
-      throw new NotFoundException({
-        message: [`${options.keyType} is not supported`, `Feature coming soon`],
-        error: 'Not Supported',
-        status: 404,
-      });
-    }
     const appDetail = req.user;
-    return this.didService.create(createDidDto, appDetail);
+    switch (options?.keyType) {
+      case IKeyType.EcdsaSecp256k1RecoveryMethod2020: {
+        const response = this.didService.createByClientSpec(
+          createDidDto,
+          appDetail,
+        );
+        return classToPlain(response, { excludePrefixes: ['transactionHash'] });
+      }
+
+      case IKeyType.EcdsaSecp256k1VerificationKey2019: {
+        throw new NotFoundException({
+          message: [
+            `${options.keyType} is not supported`,
+            `Feature coming soon`,
+          ],
+          error: 'Not Supported',
+          statusCode: 404,
+        });
+      }
+
+      default:
+        const response = this.didService.create(createDidDto, appDetail);
+        return classToPlain(response, { excludePrefixes: ['transactionHash'] });
+    }
   }
+
+  @ApiCreatedResponse({
+    description: 'DID Registred',
+    type: RegisterDidResponse,
+  })
+  @ApiBadRequestResponse({
+    status: 400,
+    description: 'Error occured at the time of creating did',
+    type: DidError,
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
+  @Post('/register')
+  @UsePipes(ValidationPipe)
+  register(@Body() registerDidDto: RegisterDidDto, @Req() req: any) {
+    const appDetail = req.user;
+    return this.didService.register(registerDidDto, appDetail);
+  }
+
   @UsePipes(ValidationPipe)
   @Patch()
   @ApiOkResponse({

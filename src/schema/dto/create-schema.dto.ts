@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayMinSize,
   IsBoolean,
   IsEnum,
   IsNotEmpty,
@@ -8,7 +9,6 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { Trim } from '../../utils/customDecorator/trim.decorator';
 import { Type } from 'class-transformer';
 import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
 import { ToPascalCase } from 'src/utils/customDecorator/case.decorator';
@@ -53,8 +53,8 @@ export class Fields {
     description: 'State wheter field is required',
     example: false,
   })
-  @IsBoolean()
   @IsOptional()
+  @IsBoolean()
   isRequired: boolean;
 }
 export class SchemaBody {
@@ -95,7 +95,9 @@ export class SchemaBody {
     description: 'Schema configuration',
     type: Fields,
     isArray: true,
+    required: true,
   })
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => Array<Fields>)
   fields: Array<Fields>;

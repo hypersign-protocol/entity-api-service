@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, ValidateNested } from 'class-validator';
+import { IsNotEmptyObject, IsString, ValidateNested } from 'class-validator';
 import { CredDoc, CredentialProof } from './create-credential.dto';
 
 export class VerifyCredentialDto {
@@ -8,7 +8,8 @@ export class VerifyCredentialDto {
     name: 'credentialDocument',
     description: 'credential document',
   })
-  @ValidateNested()
+  @IsNotEmptyObject()
+  @ValidateNested({ each: true })
   @Type(() => CredDoc)
   credentialDocument: CredDoc;
 }

@@ -20,7 +20,7 @@ import {
 import { HidWalletModule } from 'src/hid-wallet/hid-wallet.module';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { AppAuthModule } from 'src/app-auth/app-auth.module';
-import { WhitelistMiddleware } from 'src/utils/middleware/cors.middleware';
+import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 @Module({
   imports: [
@@ -52,7 +52,7 @@ import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 })
 export class DidModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(WhitelistMiddleware).forRoutes(DidController);
+    consumer.apply(WhitelistSSICorsMiddleware).forRoutes(DidController);
     consumer
       .apply(TrimMiddleware)
       .exclude(

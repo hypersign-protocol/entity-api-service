@@ -14,7 +14,7 @@ import { DidModule } from 'src/did/did.module';
 import { SchemaRepository } from './repository/schema.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Schemas, SchemasSchema } from './schemas/schemas.schema';
-import { WhitelistMiddleware } from 'src/utils/middleware/cors.middleware';
+import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
 import { AppAuthModule } from 'src/app-auth/app-auth.module';
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 @Module({
@@ -37,7 +37,7 @@ import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 export class SchemaModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     //// Appy middleware on all routes
-    consumer.apply(WhitelistMiddleware).forRoutes(SchemaController);
+    consumer.apply(WhitelistSSICorsMiddleware).forRoutes(SchemaController);
     //apply middleware on all routes except mentioned in exclude()
     consumer
       .apply(TrimMiddleware)
