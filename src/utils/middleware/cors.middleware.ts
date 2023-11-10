@@ -10,8 +10,6 @@ import * as jwt from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
 @Injectable()
 export class WhitelistSSICorsMiddleware implements NestMiddleware {
-  constructor() {
-  }
   async use(req: Request, res: Response, next: NextFunction) {
     Logger.log(
       'WhitelistSSICorsMiddleware: checking if call is form whitelisted domain starts',
