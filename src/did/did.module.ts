@@ -18,13 +18,11 @@ import {
 } from './schemas/did.schema';
 import { HidWalletModule } from 'src/hid-wallet/hid-wallet.module';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
-import { AppAuthModule } from 'src/app-auth/app-auth.module';
 import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
-import { MongooseConfigService } from 'src/mongoose/mongoose.service';
-import { ConfigModule } from '@nestjs/config';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 import { didProviders } from './providers/did.provider';
+import { AppAuthModule } from 'src/app-auth/app-auth.module';
 @Module({
   imports: [EdvModule, HidWalletModule, AppAuthModule],
   controllers: [DidController],

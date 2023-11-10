@@ -11,8 +11,6 @@ import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { DidService } from 'src/did/services/did.service';
 import { DidModule } from 'src/did/did.module';
 import { SchemaRepository } from './repository/schema.repository';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Schemas, SchemasSchema } from './schemas/schemas.schema';
 import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
 import { AppAuthModule } from 'src/app-auth/app-auth.module';
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';

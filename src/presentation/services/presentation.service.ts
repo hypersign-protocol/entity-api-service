@@ -22,8 +22,8 @@ import { ConfigService } from '@nestjs/config';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { DidRepository } from 'src/did/repository/did.repository';
 import { VerifyPresentationDto } from '../dto/verify-presentation.dto';
-import { AppAuthApiKeyService } from 'src/app-auth/services/app-auth-apikey.service';
 import { getAppVault } from 'src/app-auth/services/app-vault.service';
+import { generateAppId } from 'src/utils/utils';
 @Injectable()
 export class PresentationService {
   constructor(
@@ -199,7 +199,6 @@ export class PresentationRequestService {
     private readonly didRepositiory: DidRepository,
     private readonly config: ConfigService,
     private readonly hidWallet: HidWalletService,
-    private readonly keyService: AppAuthApiKeyService,
   ) {}
 
   async createPresentationRequest(
@@ -232,7 +231,7 @@ export class PresentationRequestService {
     body.challenge = challenge;
 
     const response = {
-      id: await this.keyService.generateAppId(),
+      id: await generateAppId(),
       from: did,
       created_time: Number(new Date()),
       expires_time: expiresTime,

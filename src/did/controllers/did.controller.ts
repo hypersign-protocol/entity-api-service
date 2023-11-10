@@ -10,7 +10,6 @@ import {
   Patch,
   UsePipes,
   ValidationPipe,
-  NotFoundException,
   Query,
   UseInterceptors,
   Headers,

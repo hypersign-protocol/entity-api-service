@@ -1,9 +1,7 @@
 import * as mongoose from 'mongoose';
 import { Connection } from 'mongoose';
 import { REQUEST } from '@nestjs/core';
-import { Scope, NotFoundException, Logger } from '@nestjs/common';
-import { decode } from 'jsonwebtoken';
-import { AppAuthService } from '../app-auth/services/app-auth.service';
+import { Scope, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 export const databaseProviders = [

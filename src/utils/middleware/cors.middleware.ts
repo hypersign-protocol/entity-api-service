@@ -8,10 +8,10 @@ import {
 import * as jwt from 'jsonwebtoken';
 
 import { NextFunction, Request, Response } from 'express';
-import { AppRepository } from 'src/app-auth/repositories/app.repository';
 @Injectable()
 export class WhitelistSSICorsMiddleware implements NestMiddleware {
-  constructor(private readonly appRepositiory: AppRepository) {}
+  constructor() {
+  }
   async use(req: Request, res: Response, next: NextFunction) {
     Logger.log(
       'WhitelistSSICorsMiddleware: checking if call is form whitelisted domain starts',
@@ -82,7 +82,6 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
         subdomain: decoded['subdomain'],
         edvId: decoded['edvId'],
       };
-      console.log(appInfo);
       if (appInfo.subdomain != subdomain) {
         throw new UnauthorizedException(['Invalid subdomain']);
       }
