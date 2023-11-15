@@ -3,10 +3,10 @@ WORKDIR /usr/src/app
 COPY ./package.json .
 COPY ./yarn.lock .
 COPY ./tsconfig.json .
-RUN yarn 
+RUN yarn --production --ignore-engines
 # RUN yarn build:nest
 COPY . .
-CMD ["yarn", "start:dev"]
+CMD ["yarn", "start"]
 
 
 
