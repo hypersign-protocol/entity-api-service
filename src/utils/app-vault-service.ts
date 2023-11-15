@@ -1,6 +1,6 @@
 import { Logger } from '@nestjs/common';
-import { VaultWalletManager } from '../../edv/services/vaultWalletManager';
-import { EdvClientManagerFactoryService } from '../../edv/services/edv.clientFactory';
+import { VaultWalletManager } from '../edv/services/vaultWalletManager';
+import { EdvClientManagerFactoryService } from '../edv/services/edv.clientFactory';
 
 export async function getAppVault(kmsId, edvId) {
   Logger.log('Inside getAppVault()', 'getAppVault');

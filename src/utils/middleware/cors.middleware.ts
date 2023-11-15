@@ -15,7 +15,12 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       'WhitelistSSICorsMiddleware: checking if call is form whitelisted domain starts',
       'Middleware',
     );
-    const origin = req.header('Origin') || req.header('Referer');
+    let referer = req.header('Referer');
+    const referalUrl = new URL(referer);
+
+    // Extract the origin
+    referer = `${referalUrl.protocol}//${referalUrl.host}`;
+    const origin = req.header('Origin') || referer;
 
     Logger.debug(
       `WhitelistSSICorsMiddleware: request is comming from ${origin}`,
@@ -83,7 +88,6 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       if (appInfo.subdomain != subdomain) {
         throw new UnauthorizedException(['Invalid subdomain']);
       }
-
       if (!appInfo.whitelistedCors.includes('*')) {
         if (!appInfo['whitelistedCors'].includes(origin)) {
           throw new UnauthorizedException(['Origin mismatch']);

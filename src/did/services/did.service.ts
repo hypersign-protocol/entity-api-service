@@ -28,10 +28,7 @@ import { RegistrationStatus } from '../schemas/did.schema';
 import { RegisterDidDto } from '../dto/register-did.dto';
 import { Did as IDidDto } from '../schemas/did.schema';
 import { AddVerificationMethodDto } from '../dto/addVm.dto';
-import {
-  getAppVault,
-  getAppMenemonic,
-} from 'src/app-auth/services/app-vault.service';
+import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable({ scope: Scope.REQUEST })

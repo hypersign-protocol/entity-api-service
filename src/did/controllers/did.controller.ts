@@ -50,7 +50,6 @@ import { RegisterDidDto } from '../dto/register-did.dto';
 import { IKeyType } from 'hs-ssi-sdk';
 import { AtLeastOneParamPipe } from 'src/utils/Pipes/atleastOneParam.pipe';
 import { AddVMResponse, AddVerificationMethodDto } from '../dto/addVm.dto';
-
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
