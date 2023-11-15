@@ -122,3 +122,6 @@ Nest is [MIT licensed](LICENSE).
 ```
 
 ```
+
+
+sudo nginx -s stop && sudo nginx
