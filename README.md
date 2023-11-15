@@ -4,6 +4,7 @@
 
 ## Concepts with code commits
 
+
 Added basic project st. with following features
 
 - [Basic project st.](https://github.com/hypersign-protocol/studio-api/commit/d80f266d6ed4a458c66257b60b1df2bd84d1622b)
