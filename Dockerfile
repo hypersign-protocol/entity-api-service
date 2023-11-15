@@ -6,5 +6,5 @@ COPY ./tsconfig.json .
 # using npm instead of yarn
 RUN npm install
 COPY . .
-CMD ["npm", "start"]
+CMD ["npm","run","start:dev"]
 
