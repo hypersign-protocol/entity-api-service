@@ -2,6 +2,7 @@ FROM node:16
 WORKDIR /usr/src/app
 COPY ./package.json .
 COPY ./tsconfig.json .
-RUN npm install
+RUN yarn 
+# RUN yarn build:nest
 COPY . .
-CMD ["npm", "start"]
+CMD ["yarn", "start:dev"]
