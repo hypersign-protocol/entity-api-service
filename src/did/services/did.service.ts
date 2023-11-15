@@ -199,11 +199,9 @@ export class DidService {
         publicKeyMultibase,
         verificationRelationships,
       });
-
       // Step 3: Get app's vault using app's kmsId from kmsVault;
       /// get the app's menemonic from kmsvault and then form app's vault object
       const appVault = await getAppVault(kmsId, edvId);
-
       // Step 3: Store the menmonic and walletaddress in app's vault and get user's kmsId (docId)
       const userCredential = {
         mnemonic: userWallet.mnemonic,
@@ -213,7 +211,6 @@ export class DidService {
         { index: 'content.walletAddress', unique: false },
       ]);
       const { id: userKMSId } = await appVault.insertDocument(userEdvDoc);
-
       // Step 4: Store user's kmsId in DID db for that application. x
       await this.didRepositiory.create({
         did: didDoc.id,

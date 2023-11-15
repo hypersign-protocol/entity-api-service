@@ -14,11 +14,11 @@ import { HidWalletModule } from 'src/hid-wallet/hid-wallet.module';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { CredentialRepository } from './repository/credential.repository';
 import { DidModule } from 'src/did/did.module';
-import { AppAuthModule } from 'src/app-auth/app-auth.module';
 import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { credentialProviders } from './providers/credential.provider';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
+import { AppAuthModule } from 'src/app-auth/app-auth.module';
 
 @Module({
   imports: [EdvModule, HidWalletModule, DidModule, AppAuthModule],

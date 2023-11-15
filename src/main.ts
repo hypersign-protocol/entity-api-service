@@ -13,17 +13,10 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EdvClientKeysManager } from './edv/services/edv.singleton';
 import { VaultWalletManager } from './edv/services/vaultWalletManager';
-import { AppAuthModule } from './app-auth/app-auth.module';
 import { DidModule } from './did/did.module';
 import { SchemaModule } from './schema/schema.module';
 import { PresentationModule } from './presentation/presentation.module';
 import { CredentialModule } from './credential/credential.module';
-import { AppOauthModule } from './app-oauth/app-oauth.module';
-import { OrgUserModule } from './org-user/org-user.module';
-//import { Header } from '@nestjs/common';
-
-import * as session from 'express-session';
-import * as passport from 'passport';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.use(json({ limit: '10mb' }));
@@ -95,13 +88,6 @@ async function bootstrap() {
 
   try {
     // Swagger documentation setup
-
-    const orgDocConfig = new DocumentBuilder()
-      .setTitle('Entity Studio SSI API Playground')
-      .setDescription('Open API Documentation of the Entity Studio')
-      .setVersion('1.0')
-      .build();
-
     const tenantDocConfig = new DocumentBuilder()
       .setTitle('Entity Studio SSI API Playground')
       .setDescription('Open API Documentation of the Entity Studio')
@@ -117,17 +103,9 @@ async function bootstrap() {
       .build();
 
     const tenantDocuments = SwaggerModule.createDocument(app, tenantDocConfig, {
-      include: [
-        AppOauthModule,
-        DidModule,
-        SchemaModule,
-        CredentialModule,
-        PresentationModule,
-      ], // don't include, say, BearsModule
+      include: [DidModule, SchemaModule, CredentialModule, PresentationModule], // don't include, say, BearsModule
     });
-    const orgDocuments = SwaggerModule.createDocument(app, orgDocConfig, {
-      include: [AppAuthModule, OrgUserModule], // don't include, say, BearsModule
-    });
+
     const tenantOptions = {
       swaggerOptions: {
         defaultModelsExpandDepth: -1,
@@ -137,43 +115,10 @@ async function bootstrap() {
       customCss: ` .topbar-wrapper img {content:url(\'./Entity_full.png\'); width:135px; height:auto;margin-left: -150px;}
       .swagger-ui .topbar { background-color: #fff; }`,
     };
-    const orgOptions = tenantOptions;
     SwaggerModule.setup('/ssi', app, tenantDocuments, tenantOptions);
-    SwaggerModule.setup('/', app, orgDocuments, orgOptions);
   } catch (e) {
     Logger.error(e);
   }
-
-  try {
-    // Session for super admin
-    if (
-      !config.get('SUPER_ADMIN_USERNAME') ||
-      !config.get('SUPER_ADMIN_PASSWORD')
-    ) {
-      throw new Error(
-        'SUPER_ADMIN_USERNAME or SUPER_ADMIN_PASSWORD are not set in env',
-      );
-    }
-
-    if (!config.get('SESSION_SECRET_KEY')) {
-      throw new Error('SESSION_KEY is not set in env');
-    }
-    Logger.log('Setting up session start', 'main');
-    app.use(
-      session({
-        secret: config.get('SESSION_SECRET_KEY'),
-        resave: false,
-        saveUninitialized: false,
-        cookie: { maxAge: 3600000 },
-      }),
-    );
-    app.use(passport.initialize());
-    app.use(passport.session());
-    Logger.log('Setting up session finished', 'main');
-  } catch (e) {
-    Logger.error(e);
-  }
-
   await app.listen(process.env.PORT || 3001);
   Logger.log(
     `Server running on http://localhost:${process.env.PORT}`,
