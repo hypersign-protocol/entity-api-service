@@ -16,10 +16,12 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       'Middleware',
     );
     let referer = req.header('Referer');
-    const referalUrl = new URL(referer);
 
     // Extract the origin
-    referer = `${referalUrl.protocol}//${referalUrl.host}`;
+    if (referer) {
+      const referalUrl = new URL(referer);
+      referer = `${referalUrl.protocol}//${referalUrl.host}`;
+    }
     const origin = req.header('Origin') || referer;
 
     Logger.debug(
@@ -49,7 +51,14 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       ]);
     } else if (req.header('authorization')) {
       const token = req.header('authorization').split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (e) {
+        Logger.error(`WhitelistSSICorsMiddleware: Error ${e}`, 'Middleware');
+
+        throw new UnauthorizedException([e]);
+      }
 
       type App = {
         appId?: string;

@@ -44,7 +44,6 @@ export class DidService {
   // TODO: need to fix this once ed25519 is finished.
   async createByClientSpec(createDidDto: CreateDidDto, appDetail) {
     Logger.log('createByClientSpec() method: starts....', 'DidService');
-
     let methodSpecificId = createDidDto.methodSpecificId;
     const publicKey = createDidDto.options?.publicKey;
     const chainId = createDidDto.options.chainId;
@@ -156,7 +155,7 @@ export class DidService {
     createDidDto: CreateDidDto,
     appDetail,
   ): Promise<CreateDidResponse> {
-    Logger.log('createByClientSpec() method: starts....', 'DidService');
+    Logger.log('create() method: starts....', 'DidService');
 
     try {
       const methodSpecificId = createDidDto.methodSpecificId;
@@ -294,7 +293,6 @@ export class DidService {
       const didData = await this.didRepositiory.findOne({
         did: didDocument['id'],
       });
-
       if (!didData) {
         throw new NotFoundException([didDocument['id'] + ' not found']);
       }
