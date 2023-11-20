@@ -1,8 +1,8 @@
 {
-  "name": "studio-api",
-  "version": "2.2.4",
-  "description": "",
-  "author": "",
+  "name": "entity-api-service",
+  "version": "1.0.0",
+  "description": "A SSI API service built on multi tenant architeacture",
+  "author": "Vishwas",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
