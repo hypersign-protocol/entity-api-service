@@ -95,26 +95,26 @@ export class RegisterDidDto {
   }) // this is to validate if did is generated using empty namespace
   verificationMethodId?: string;
 
-  // @ApiProperty({
-  //   description: "IClientSpec  'eth-personalSign' or  'cosmos-ADR036'",
-  //   example: 'eth-personalSign',
-  //   name: 'clientSpec',
-  //   required: false,
-  // })
-  // @IsOptional()
-  // @IsEnum(IClientSpec)
-  // clientSpec?: IClientSpec;
+  @ApiProperty({
+    description: "IClientSpec  'eth-personalSign' or  'cosmos-ADR036'",
+    example: 'eth-personalSign',
+    name: 'clientSpec',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(IClientSpec)
+  clientSpec?: IClientSpec | undefined;
 
-  // @ApiProperty({
-  //   description: 'Signature for clientSpec',
-  //   example: 'afafljagahgp9agjagknaglkj/kagka=',
-  //   name: 'signature',
-  //   required: false,
-  // })
-  // @ValidateIf((o, value) => o.clientSpec !== undefined)
-  // @IsNotEmpty()
-  // @IsString()
-  // signature?: string;
+  @ApiProperty({
+    description: 'Signature for clientSpec',
+    example: 'afafljagahgp9agjagknaglkj/kagka=',
+    name: 'signature',
+    required: false,
+  })
+  @ValidateIf((o, value) => o.clientSpec !== undefined)
+  @IsNotEmpty()
+  @IsString()
+  signature?: string;
 
   @ApiProperty({
     description: 'Sign Info',

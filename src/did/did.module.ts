@@ -22,11 +22,12 @@ import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 import { didProviders } from './providers/did.provider';
-import { AppAuthModule } from 'src/app-auth/app-auth.module';
+import { JwtStrategy } from '../utils/jwt.strategy';
 @Module({
-  imports: [EdvModule, HidWalletModule, AppAuthModule],
+  imports: [EdvModule, HidWalletModule],
   controllers: [DidController],
   providers: [
+    JwtStrategy,
     DidService,
     DidRepository,
     DidMetaDataRepo,

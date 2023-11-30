@@ -16,6 +16,7 @@ import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.dec
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
 import { IsSchemaId } from 'src/utils/customDecorator/schemaId.deceorator';
 import { IsVcId } from 'src/utils/customDecorator/vc.decorator';
+import { subjectDID } from 'src/utils/customDecorator/SubjectDid.decorator';
 
 export enum Namespace {
   testnet = 'testnet',
@@ -36,7 +37,7 @@ export class CreateCredentialDto {
   })
   @IsString()
   @IsNotEmpty()
-  @IsDid()
+  @subjectDID()
   subjectDid: string;
   @ApiProperty({
     name: 'issuerDid',

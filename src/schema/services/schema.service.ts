@@ -19,10 +19,7 @@ import { SchemaRepository } from '../repository/schema.repository';
 import { Schemas } from '../schemas/schemas.schema';
 import { RegisterSchemaDto } from '../dto/register-schema.dto';
 import { Namespace } from 'src/did/dto/create-did.dto';
-import {
-  getAppVault,
-  getAppMenemonic,
-} from 'src/app-auth/services/app-vault.service';
+import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class SchemaService {

@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as express from 'express';
 // eslint-disable-next-line
 const hidWallet = require('hid-hd-wallet');
-import { Bip39, EnglishMnemonic } from '@cosmjs/crypto';
+import { EnglishMnemonic } from '@cosmjs/crypto';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EdvClientKeysManager } from './edv/services/edv.singleton';

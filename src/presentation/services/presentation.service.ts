@@ -22,7 +22,7 @@ import { ConfigService } from '@nestjs/config';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { DidRepository } from 'src/did/repository/did.repository';
 import { VerifyPresentationDto } from '../dto/verify-presentation.dto';
-import { getAppVault } from 'src/app-auth/services/app-vault.service';
+import { getAppVault } from '../../utils/app-vault-service';
 import { generateAppId } from 'src/utils/utils';
 @Injectable()
 export class PresentationService {
