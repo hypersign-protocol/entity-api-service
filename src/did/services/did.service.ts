@@ -182,36 +182,71 @@ export class DidService {
       }
       const { edvId, kmsId } = appDetail;
       // Step 1: Generate a new menmonic
+      Logger.log('Before calling hidWallet.generateWallet()', 'DidService')
       const userWallet = await this.hidWallet.generateWallet();
+      Logger.log('After calling hidWallet.generateWallet()', 'DidService')
 
       // Step 2: Create a DID using that mnemonic
+      Logger.log('Before calling didSSIService.initiateHypersignDid()', 'DidService')
       const hypersignDid = await this.didSSIService.initiateHypersignDid(
         userWallet.mnemonic,
         createDidDto.namespace,
       );
+      Logger.log('After calling didSSIService.initiateHypersignDid()', 'DidService')
 
+      Logger.log('Before calling .hidWallet.getSeedFromMnemonic()', 'DidService')
       const seed = await this.hidWallet.getSeedFromMnemonic(
         userWallet.mnemonic,
       );
+      Logger.log('After calling .hidWallet.getSeedFromMnemonic()', 'DidService')
+
+      Logger.log('Before calling hypersignDid.generateKeys', 'DidService')
       const { publicKeyMultibase } = await hypersignDid.generateKeys({ seed });
+      Logger.log('After calling hypersignDid.generateKeys', 'DidService')
+
+      Logger.log('Before calling hypersignDid.generate()', 'DidService')
       const didDoc = await hypersignDid.generate({
         methodSpecificId,
         publicKeyMultibase,
         verificationRelationships,
       });
+      Logger.log('After calling hypersignDid.generate()', 'DidService')
+
+      if(!didDoc){
+        throw new Error('Could not generate dIDDoc')
+      }
       // Step 3: Get app's vault using app's kmsId from kmsVault;
       /// get the app's menemonic from kmsvault and then form app's vault object
+      Logger.log('Before calling getAppVault ', 'DidService')
       const appVault = await getAppVault(kmsId, edvId);
+      Logger.log('After calling getAppVault ', 'DidService')
+      if(!appVault){
+        throw new Error('KeyManager is not null or not initialized')
+      }
+      
       // Step 3: Store the menmonic and walletaddress in app's vault and get user's kmsId (docId)
       const userCredential = {
         mnemonic: userWallet.mnemonic,
         walletAddress: userWallet.address,
       };
+      Logger.log('Before calling appVault.prepareEdvDocument() ', 'DidService')
       const userEdvDoc = appVault.prepareEdvDocument(userCredential, [
         { index: 'content.walletAddress', unique: false },
       ]);
-      const { id: userKMSId } = await appVault.insertDocument(userEdvDoc);
+      Logger.log('After calling appVault.prepareEdvDocument() ', 'DidService')
+
+      Logger.log('Before calling appVault.insertDocument() ', 'DidService')
+      const insertedDoc = await appVault.insertDocument(userEdvDoc);
+      Logger.log('After calling appVault.insertDocument() ', 'DidService')
+
+      Logger.log(JSON.stringify(insertedDoc), 'DidService')
+      if(!insertedDoc){
+        throw new Error('Could not insert document for userCredential.walletAddress' + userCredential.walletAddress)
+      }
+      const { id: userKMSId } = insertedDoc
+      
       // Step 4: Store user's kmsId in DID db for that application. x
+      Logger.log('Before calling didRepositiory.create() did ' + didDoc.id, 'DidService')
       await this.didRepositiory.create({
         did: didDoc.id,
         appId: appDetail.appId,
@@ -221,6 +256,7 @@ export class DidService {
         transactionHash: '',
         registrationStatus: RegistrationStatus.UNREGISTRED,
       });
+      Logger.log('After calling didRepositiory.create() did ' + didDoc.id, 'DidService')
 
       return {
         did: didDoc.id,

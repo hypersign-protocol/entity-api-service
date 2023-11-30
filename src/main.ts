@@ -83,6 +83,7 @@ async function bootstrap() {
 
     Logger.log('After  keymanager initialization', 'main');
   } catch (e) {
+    Logger.error('Could not initialize keymanager', 'main');
     Logger.error(e);
   }
 

@@ -12,19 +12,23 @@ export const databaseProviders = [
       request: Request,
       config: ConfigService,
     ): Promise<Connection> => {
-      Logger.log('Db connection database provider', 'database-provider');
+      Logger.log('Db connection database provider', 'tenant-mongoose-connections');
       const connections: Connection[] = mongoose.connections;
+      Logger.log('Number of open connections: ' + connections.length, 'tenant-mongoose-connections')
       const subdomain = request['user']['subdomain'];
       const tenantDB: string = subdomain;
 
-      // Find existing connection
+      // // Find existing connection
       const foundConn = connections.find((con: Connection) => {
         return con.name === tenantDB;
       });
 
       // Return the same connection if it exist
       if (foundConn && foundConn.readyState === 1) {
+        Logger.log('Found connection tenantDB = ' + tenantDB, 'tenant-mongoose-connections')
         return foundConn;
+      } else {
+        Logger.log('No connection found for tenantDB = ' + tenantDB, 'tenant-mongoose-connections')
       }
 
       // TODO: take this from env using configService
@@ -32,23 +36,17 @@ export const databaseProviders = [
       if (!BASE_DB_PATH) {
         throw new Error('No BASE_DB_PATH set in env');
       }
+
       const uri = `${BASE_DB_PATH}/${subdomain}?retryWrites=true&w=majority`;
 
-      Logger.log('Before creating new db connection...');
-      const newConnectionPerApp = mongoose.createConnection(uri);
+      Logger.log('Before creating new db connection...', 'tenant-mongoose-connections');
+      const newConnectionPerApp = await mongoose.createConnection(uri);
 
       newConnectionPerApp.on('disconnected', () => {
         Logger.log(
-          'DB connection ' + newConnectionPerApp.name + ' is disconnected',
+          'DB connection ' + newConnectionPerApp.name + ' is disconnected', 'tenant-mongoose-connections'
         );
       });
-      // Delte this connection after sometime 10 min
-      // We need to deal with this later.
-      // setTimeout(() =>{
-      //     Logger.log('setime out executed...');
-      //     newConnectionPerApp.close()
-      // }, 10000)
-
       return newConnectionPerApp;
     },
     inject: [REQUEST, ConfigService],

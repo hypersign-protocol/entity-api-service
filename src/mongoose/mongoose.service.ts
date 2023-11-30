@@ -1,4 +1,4 @@
-import { Inject, Injectable, Scope } from '@nestjs/common';
+import { Inject, Injectable, Logger, Scope } from '@nestjs/common';
 import {
   MongooseOptionsFactory,
   MongooseModuleOptions,
@@ -17,6 +17,7 @@ export class MongooseConfigService implements MongooseOptionsFactory {
 
   createMongooseOptions(): MongooseModuleOptions {
     try {
+      Logger.log('Inside createMongooseOptions ', 'mongooseService')
       const bearerJWT = this.request.headers['authorization'];
       if (!bearerJWT) {
         throw new Error('Request authorization is required');
@@ -36,7 +37,7 @@ export class MongooseConfigService implements MongooseOptionsFactory {
         throw new Error('No BASE_DB_PATH set in env');
       }
       const uri = `${BASE_DB_PATH}/${appId}?retryWrites=true&w=majority`;
-      console.log(uri);
+      Logger.log('DB Uri ' + uri, 'mongooseService')
 
       return {
         uri, // Change this to whatever you want; you have full access to the request object.

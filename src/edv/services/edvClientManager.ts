@@ -62,6 +62,7 @@ export class EdvClientManger implements IEdvClientManager {
     ];
 
     const EDV_BASE_URL = this.config.get('EDV_BASE_URL');
+    Logger.log('EDV_BASE_URL = ' + EDV_BASE_URL, 'edvClientManager')
     this.vault = new HypersignEdvClientEd25519VerificationKey2020({
       keyResolver: this.keyResolver,
       url: EDV_BASE_URL,
@@ -103,7 +104,11 @@ export class EdvClientManger implements IEdvClientManager {
       doc['recipients'] = this.recipient;
     }
     const resp: IResponse = await this.vault.insertDoc({ ...doc });
-
+    
+    if(!resp || !resp.document?.id){
+      Logger.error(JSON.stringify(resp), 'edvClientManager')
+      throw new Error('Could not insert document')
+    }
     return {
       id: resp.document.id,
     };
