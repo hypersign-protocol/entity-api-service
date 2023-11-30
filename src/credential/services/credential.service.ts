@@ -14,10 +14,7 @@ import { DidRepository } from 'src/did/repository/did.repository';
 import { HypersignDID, HypersignVerifiableCredential } from 'hs-ssi-sdk';
 import { VerifyCredentialDto } from '../dto/verify-credential.dto';
 import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
-import {
-  getAppVault,
-  getAppMenemonic,
-} from 'src/app-auth/services/app-vault.service';
+import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 
 @Injectable()
 export class CredentialService {

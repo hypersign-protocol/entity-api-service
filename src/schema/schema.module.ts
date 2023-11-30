@@ -12,13 +12,12 @@ import { DidService } from 'src/did/services/did.service';
 import { DidModule } from 'src/did/did.module';
 import { SchemaRepository } from './repository/schema.repository';
 import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
-import { AppAuthModule } from 'src/app-auth/app-auth.module';
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { schemaProviders } from './providers/schema.provider';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 
 @Module({
-  imports: [DidModule, AppAuthModule],
+  imports: [DidModule],
   controllers: [SchemaController],
   providers: [
     SchemaService,
