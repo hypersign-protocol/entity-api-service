@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Credential, CredentialModel } from '../schemas/credntial.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
@@ -6,7 +6,7 @@ import { FilterQuery, Model } from 'mongoose';
 @Injectable()
 export class CredentialRepository {
   constructor(
-    @InjectModel(Credential.name)
+    @Inject('CREDENTIAL_MODEL')
     private readonly credentialModel: Model<CredentialModel>,
   ) {}
 

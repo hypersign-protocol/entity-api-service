@@ -36,7 +36,7 @@ export class Options {
   @ApiProperty({
     name: 'chainId',
     example: '0x1',
-    description: 'Chain Id',
+    description: 'Chain Id in HEX format',
     required: false,
   })
   @IsOptional()

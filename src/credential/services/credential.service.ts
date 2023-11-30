@@ -10,21 +10,25 @@ import { ConfigService } from '@nestjs/config';
 import { CredentialSSIService } from './credential.ssi.service';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { CredentialRepository } from '../repository/credential.repository';
-import { EdvService } from 'src/edv/services/edv.service';
 import { DidRepository } from 'src/did/repository/did.repository';
 import { HypersignDID, HypersignVerifiableCredential } from 'hs-ssi-sdk';
 import { VerifyCredentialDto } from '../dto/verify-credential.dto';
 import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
+import {
+  getAppVault,
+  getAppMenemonic,
+} from 'src/app-auth/services/app-vault.service';
+
 @Injectable()
 export class CredentialService {
   constructor(
     private readonly config: ConfigService,
     private readonly credentialSSIService: CredentialSSIService,
-    private readonly edvService: EdvService,
     private readonly hidWallet: HidWalletService,
     private credentialRepository: CredentialRepository,
     private readonly didRepositiory: DidRepository,
   ) {}
+
   async create(createCredentialDto: CreateCredentialDto, appDetail) {
     Logger.log('create() method: starts....', 'CredentialService');
     const {
@@ -40,51 +44,55 @@ export class CredentialService {
     } = createCredentialDto;
     let { registerCredentialStatus } = createCredentialDto;
     const nameSpace = createCredentialDto.namespace;
-    const didOfvmId = verificationMethodId.split('#')[0];
+    const didOfvmId = verificationMethodId.split('#')[0]; // issuer's did
 
-    const { edvId, edvDocId } = appDetail;
+    const { edvId, kmsId } = appDetail;
     Logger.log(
       'create() method: before initialising edv service',
       'CredentialService',
     );
-    await this.edvService.init(edvId);
+
+    // await this.edvService.init(edvId);
+    // Step 1: Fist find the issuer exists or not
+    Logger.log({
+      appId: appDetail.appId,
+      didOfvmId,
+    });
     const didInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: didOfvmId,
     });
     if (!didInfo || didInfo == null) {
-      Logger.error('create() method: Error: No did found', 'CredentialService');
+      Logger.error(
+        'create() method: Error: No issuer did found',
+        'CredentialService',
+      );
       throw new NotFoundException([
         `${verificationMethodId} not found`,
         `${verificationMethodId} is not owned by the appId ${appDetail.appId}`,
         `Resource not found`,
       ]);
     }
-    const docs = await this.edvService.getDecryptedDocument(edvDocId);
-    const mnemonic: string = docs.mnemonic;
+
     Logger.log(
       'create() method: before generating Hid wallet',
       'CredentialService',
     );
-    await this.hidWallet.generateWallet(mnemonic);
+
     try {
-      const slipPathKeys = this.hidWallet.makeSSIWalletPath(
-        didInfo.hdPathIndex,
+      // Issuer Identity: - used for authenticating credenital
+      const appVault = await getAppVault(kmsId, edvId);
+      const { mnemonic: issuerMnemonic } = await appVault.getDecryptedDocument(
+        didInfo.kmsId,
       );
-
-      const seed = await this.hidWallet.generateMemonicToSeedFromSlip10RawIndex(
-        slipPathKeys,
-      );
-      Logger.log(
-        'create() method: before initialising HypersignDID',
-        'CredentialService',
-      );
+      const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
       const hypersignDid = new HypersignDID();
-
       const { privateKeyMultibase } = await hypersignDid.generateKeys({ seed });
 
+      // Apps Identity: - used for gas fee
+      const appMenemonic = await getAppMenemonic(kmsId);
       const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        mnemonic,
+        appMenemonic,
         nameSpace,
       );
       let credential;
@@ -136,7 +144,25 @@ export class CredentialService {
       });
       let edvData = undefined;
       if (persist) {
-        edvData = await this.edvService.createDocument({ signedCredential });
+        const creedential = {
+          ...signedCredential,
+        };
+        const creedentialEdvDoc = appVault.prepareEdvDocument(creedential, [
+          {
+            index: 'content.id',
+            unique: true,
+          },
+          {
+            index: 'content.issuer',
+            unique: false,
+          },
+          {
+            index: 'content.credentialSubject.id',
+            unique: false,
+          },
+          ,
+        ]);
+        edvData = await appVault.insertDocument(creedentialEdvDoc);
       }
       Logger.log(
         'create() method: before creating credential doc in db',
@@ -199,13 +225,13 @@ export class CredentialService {
     }
     let credential;
     if (credentialDetail.persist === true && retrieveCredential === true) {
-      const { edvId } = appDetail;
+      const { edvId, kmsId } = appDetail;
       Logger.log(
         'resolveCredential() method: before initialising edv service',
         'CredentialService',
       );
-      await this.edvService.init(edvId);
-      const { signedCredential } = await this.edvService.getDecryptedDocument(
+      const appVault = await getAppVault(kmsId, edvId);
+      const signedCredential = await appVault.getDecryptedDocument(
         credentialDetail.edvDocId,
       );
       credential = signedCredential;
@@ -221,7 +247,7 @@ export class CredentialService {
         credentialId,
       });
     } catch (e) {
-      throw new BadRequestException([e.message]);
+      credentialStatus = undefined;
     }
     Logger.log('resolveCredential() method: ends....', 'CredentialService');
 
@@ -250,12 +276,11 @@ export class CredentialService {
         : 'LIVE';
     const didOfvmId = verificationMethodId.split('#')[0];
 
-    const { edvId, edvDocId } = appDetail;
+    const { edvId, kmsId } = appDetail;
     Logger.log(
       'update() method: before initialising edv service',
       'CredentialService',
     );
-    await this.edvService.init(edvId);
     const didInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: didOfvmId,
@@ -273,23 +298,26 @@ export class CredentialService {
       ]);
     }
 
-    const docs = await this.edvService.getDecryptedDocument(edvDocId);
-    const mnemonic: string = docs.mnemonic;
-    await this.hidWallet.generateWallet(mnemonic);
-
     try {
-      const slipPathKeys = this.hidWallet.makeSSIWalletPath(
-        didInfo.hdPathIndex,
+      // Issuer Identity: - used for authenticating credenital
+      const appVault = await getAppVault(kmsId, edvId);
+      const { mnemonic: issuerMnemonic } = await appVault.getDecryptedDocument(
+        didInfo.kmsId,
       );
-      const seed = await this.hidWallet.generateMemonicToSeedFromSlip10RawIndex(
-        slipPathKeys,
-      );
-
+      const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
       const hypersignDid = new HypersignDID();
       const { privateKeyMultibase } = await hypersignDid.generateKeys({ seed });
+
+      // Apps Identity: - used for gas fee
+      const appMenemonic = await getAppMenemonic(kmsId);
+      const nameSpace = namespace
+        ? namespace
+        : this.config.get('NETWORK')
+        ? this.config.get('NETWORK')
+        : 'testnet';
       const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        mnemonic,
-        namespace,
+        appMenemonic,
+        nameSpace,
       );
       Logger.log(
         'update() method: before calling hypersignVC.resolveCredentialStatus to resolve cred status',
@@ -383,6 +411,7 @@ export class CredentialService {
     return verificationResult;
   }
 
+  // TODO: need to tested
   async registerCredentialStatus(
     registerCredentialDto: RegisterCredentialStatusDto,
     appDetail,
@@ -394,18 +423,16 @@ export class CredentialService {
 
     const { credentialStatus, credentialStatusProof, namespace } =
       registerCredentialDto;
-    const { edvId, edvDocId } = appDetail;
+    const { kmsId } = appDetail;
     Logger.log(
       'registerCredentialStatus() method: initialising edv service',
       'CredentialService',
     );
-    await this.edvService.init(edvId);
-    const docs = await this.edvService.getDecryptedDocument(edvDocId);
-    const mnemonic: string = docs.mnemonic;
     let registeredVC: { transactionHash: string };
     try {
+      const appMenemonic = await getAppMenemonic(kmsId);
       const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        mnemonic,
+        appMenemonic,
         namespace,
       );
       Logger.log(

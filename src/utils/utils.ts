@@ -1,6 +1,8 @@
 import * as fs from 'fs';
+import * as crypto from 'crypto';
 import {
   ClassSerializerInterceptor,
+  Logger,
   PlainLiteralObject,
   Type,
 } from '@nestjs/common';
@@ -105,4 +107,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     response.status(status).json(message);
   }
+}
+export async function generateAppId(length = 36) {
+  Logger.log('generateAppId() method: starts....', 'AppAuthApiKeyService');
+
+  return crypto
+    .randomBytes(Math.ceil(length / 2))
+    .toString('hex')
+    .slice(0, length);
 }

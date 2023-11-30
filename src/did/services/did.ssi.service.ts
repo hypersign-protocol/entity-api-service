@@ -32,4 +32,17 @@ export class DidSSIService {
     await hypersignDid.init();
     return hypersignDid;
   }
+
+  async initiateHypersignDidOffline(namespace: string) {
+    Logger.log('InitateHypersignDid(): starts....', 'DidSSIService');
+
+    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+    const hypersignDid = new HypersignDID({
+      nodeRpcEndpoint,
+      nodeRestEndpoint,
+      namespace: namespace,
+    });
+    return hypersignDid;
+  }
 }

@@ -19,30 +19,23 @@ import {
 import { MongooseModule } from '@nestjs/mongoose';
 import { PresentationTemplateRepository } from './repository/presentation-template.repository';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
-import { EdvService } from 'src/edv/services/edv.service';
 import { DidModule } from 'src/did/did.module';
 import { AppAuthModule } from 'src/app-auth/app-auth.module';
 import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
-@Module({
-  imports: [
-    DidModule,
-    AppAuthModule,
+import { presentationTemplateProviders } from './providers/presentation.provider';
+import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 
-    MongooseModule.forFeature([
-      {
-        name: PresentationTemplate.name,
-        schema: PresentationTemplateSchema,
-      },
-    ]),
-  ],
+@Module({
+  imports: [DidModule, AppAuthModule],
   controllers: [PresentationTempleteController, PresentationController],
   providers: [
     PresentationService,
     PresentationTemplateRepository,
     PresentationRequestService,
     HidWalletService,
-    EdvService,
+    ...databaseProviders,
+    ...presentationTemplateProviders,
   ],
 })
 export class PresentationModule implements NestModule {
