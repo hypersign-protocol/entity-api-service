@@ -15,7 +15,14 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       'WhitelistSSICorsMiddleware: checking if call is form whitelisted domain starts',
       'Middleware',
     );
-    const origin = req.header('Origin') || req.header('Referer');
+    let referer = req.header('Referer');
+
+    // Extract the origin
+    if (referer) {
+      const referalUrl = new URL(referer);
+      referer = `${referalUrl.protocol}//${referalUrl.host}`;
+    }
+    const origin = req.header('Origin') || referer;
 
     Logger.debug(
       `WhitelistSSICorsMiddleware: request is comming from ${origin}`,
@@ -44,7 +51,14 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       ]);
     } else if (req.header('authorization')) {
       const token = req.header('authorization').split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (e) {
+        Logger.error(`WhitelistSSICorsMiddleware: Error ${e}`, 'Middleware');
+
+        throw new UnauthorizedException([e]);
+      }
 
       type App = {
         appId?: string;
@@ -83,7 +97,6 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       if (appInfo.subdomain != subdomain) {
         throw new UnauthorizedException(['Invalid subdomain']);
       }
-
       if (!appInfo.whitelistedCors.includes('*')) {
         if (!appInfo['whitelistedCors'].includes(origin)) {
           throw new UnauthorizedException(['Origin mismatch']);

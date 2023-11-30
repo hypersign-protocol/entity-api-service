@@ -6,8 +6,6 @@ import {
 } from '@nestjs/common';
 import { CredentialService } from './services/credential.service';
 import { CredentialController } from './controllers/credential.controller';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Credential, CredentialSchema } from './schemas/credntial.schema';
 import { CredentialSSIService } from './services/credential.ssi.service';
 import { EdvModule } from 'src/edv/edv.module';
 import { HidWalletModule } from 'src/hid-wallet/hid-wallet.module';
@@ -18,10 +16,9 @@ import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { credentialProviders } from './providers/credential.provider';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
-import { AppAuthModule } from 'src/app-auth/app-auth.module';
 
 @Module({
-  imports: [EdvModule, HidWalletModule, DidModule, AppAuthModule],
+  imports: [EdvModule, HidWalletModule, DidModule],
   controllers: [CredentialController],
   providers: [
     CredentialService,
