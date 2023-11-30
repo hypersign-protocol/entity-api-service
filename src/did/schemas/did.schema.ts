@@ -20,6 +20,7 @@ export class Did {
   @Prop()
   @Exclude()
   slipPathKeys?: Array<Slip10RawIndex>;
+
   @ApiHideProperty()
   @IsOptional()
   @Prop()
@@ -31,6 +32,7 @@ export class Did {
   @Prop()
   @IsString()
   appId: string;
+
   @ApiProperty({
     description: 'Did of user',
     example: 'did:hid:testnet:1234',
@@ -54,6 +56,10 @@ export class Did {
   @Prop()
   @IsEnum(RegistrationStatus)
   registrationStatus: RegistrationStatus;
+
+  @Prop({ unique: true, required: false })
+  @IsString()
+  kmsId: string;
 }
 
 @Schema()

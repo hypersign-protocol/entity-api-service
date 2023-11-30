@@ -3,13 +3,13 @@ import {
   PresentationTemplateDocument,
 } from '../schemas/presentation-template.schema';
 import { FilterQuery, Model } from 'mongoose';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class PresentationTemplateRepository {
   constructor(
-    @InjectModel(PresentationTemplate.name)
+    @Inject('PRESENTATION_MODEL')
     private readonly presentationTemplateModel: Model<PresentationTemplateDocument>,
   ) {}
   async findOne(

@@ -1,12 +1,12 @@
 import { Schemas, SchemaDocument } from '../schemas/schemas.schema';
 import { FilterQuery, Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class SchemaRepository {
   constructor(
-    @InjectModel(Schemas.name)
+    @Inject('SCHEMA_MODEL')
     private readonly schemaModel: Model<SchemaDocument>,
   ) {}
 

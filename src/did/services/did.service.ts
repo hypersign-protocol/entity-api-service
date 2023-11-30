@@ -21,7 +21,6 @@ import {
   Did,
 } from 'hs-ssi-sdk';
 import { DidRepository, DidMetaDataRepo } from '../repository/did.repository';
-import { EdvService } from 'src/edv/services/edv.service';
 import { Slip10RawIndex } from '@cosmjs/crypto';
 import { HidWalletService } from '../../hid-wallet/services/hid-wallet.service';
 import { DidSSIService } from './did.ssi.service';
@@ -29,17 +28,23 @@ import { RegistrationStatus } from '../schemas/did.schema';
 import { RegisterDidDto } from '../dto/register-did.dto';
 import { Did as IDidDto } from '../schemas/did.schema';
 import { AddVerificationMethodDto } from '../dto/addVm.dto';
+import {
+  getAppVault,
+  getAppMenemonic,
+} from 'src/app-auth/services/app-vault.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable({ scope: Scope.REQUEST })
 export class DidService {
   constructor(
     private readonly didRepositiory: DidRepository,
     private readonly didMetadataRepository: DidMetaDataRepo,
-    private readonly edvService: EdvService,
     private readonly hidWallet: HidWalletService,
     private readonly didSSIService: DidSSIService,
+    private readonly config: ConfigService,
   ) {}
 
+  // TODO: need to fix this once ed25519 is finished.
   async createByClientSpec(createDidDto: CreateDidDto, appDetail) {
     Logger.log('createByClientSpec() method: starts....', 'DidService');
 
@@ -96,20 +101,21 @@ export class DidService {
       ]);
     }
 
-    const { edvId, edvDocId } = appDetail;
+    const { edvId, kmsId } = appDetail;
     Logger.log(
       'createByClientSpec() method: initialising edv service',
       'DidService',
     );
-    await this.edvService.init(edvId);
-    const docs = await this.edvService.getDecryptedDocument(edvDocId);
-    const mnemonic: string = docs.mnemonic;
+
+    // TODO: we are not storing it in db wrt to the app, we need to
+    // const appVault = await getAppVault(kmsId, edvId);
+
     Logger.log(
       'createByClientSpec() method: initialising hypersignDid',
       'DidService',
     );
-    const hypersignDid = await this.didSSIService.initiateHypersignDid(
-      mnemonic,
+
+    const hypersignDid = await this.didSSIService.initiateHypersignDidOffline(
       createDidDto.namespace,
     );
     let clientSpec: IClientSpec;
@@ -174,96 +180,109 @@ export class DidService {
           ]);
         }
       }
-      const { edvId, edvDocId } = appDetail;
-      Logger.log('create() method: initialising edv service', 'DidService');
-      await this.edvService.init(edvId);
-      const docs = await this.edvService.getDecryptedDocument(edvDocId);
-      const mnemonic: string = docs.mnemonic;
+      const { edvId, kmsId } = appDetail;
+      // Step 1: Generate a new menmonic
+      Logger.log('Before calling hidWallet.generateWallet()', 'DidService');
+      const userWallet = await this.hidWallet.generateWallet();
+      Logger.log('After calling hidWallet.generateWallet()', 'DidService');
+
+      // Step 2: Create a DID using that mnemonic
       Logger.log(
-        'create() method: initialising didSSIService service',
+        'Before calling didSSIService.initiateHypersignDid()',
         'DidService',
       );
       const hypersignDid = await this.didSSIService.initiateHypersignDid(
-        mnemonic,
+        userWallet.mnemonic,
         createDidDto.namespace,
       );
-
-      const didData = await this.didMetadataRepository.findOne({
-        appId: appDetail.appId,
-      });
-
-      let hdPathIndex;
-      if (didData === null) {
-        hdPathIndex = 0;
-      } else {
-        hdPathIndex = didData.hdPathIndex + 1;
-      }
-
-      const slipPathKeys: Array<Slip10RawIndex> =
-        this.hidWallet.makeSSIWalletPath(hdPathIndex);
-      const seed = await this.hidWallet.generateMemonicToSeedFromSlip10RawIndex(
-        slipPathKeys,
-      );
       Logger.log(
-        'create() method: before calling hypersignDid.generateKeys ',
+        'After calling didSSIService.initiateHypersignDid()',
         'DidService',
       );
-      const { publicKeyMultibase, privateKeyMultibase } =
-        await hypersignDid.generateKeys({ seed });
+
+      Logger.log(
+        'Before calling .hidWallet.getSeedFromMnemonic()',
+        'DidService',
+      );
+      const seed = await this.hidWallet.getSeedFromMnemonic(
+        userWallet.mnemonic,
+      );
+      Logger.log(
+        'After calling .hidWallet.getSeedFromMnemonic()',
+        'DidService',
+      );
+
+      Logger.log('Before calling hypersignDid.generateKeys', 'DidService');
+      const { publicKeyMultibase } = await hypersignDid.generateKeys({ seed });
+      Logger.log('After calling hypersignDid.generateKeys', 'DidService');
+
+      Logger.log('Before calling hypersignDid.generate()', 'DidService');
       const didDoc = await hypersignDid.generate({
         methodSpecificId,
         publicKeyMultibase,
         verificationRelationships,
       });
+      Logger.log('After calling hypersignDid.generate()', 'DidService');
 
-      const params = {
-        didDocument: didDoc,
-        privateKeyMultibase,
-        verificationMethodId: didDoc['verificationMethod'][0].id,
-      };
-      let registerDidDoc;
-      //we aree not registering did at the time of creating it
-      // Will remove this code later
-      if (createDidDto.options?.register === true) {
-        registerDidDoc = await hypersignDid.register(params);
+      if (!didDoc) {
+        throw new Error('Could not generate dIDDoc');
       }
-      this.didMetadataRepository.findAndReplace(
-        { appId: appDetail.appId },
-        {
-          did: didDoc.id,
-          slipPathKeys,
-          hdPathIndex,
-          appId: appDetail.appId,
-        },
-      );
+      // Step 3: Get app's vault using app's kmsId from kmsVault;
+      /// get the app's menemonic from kmsvault and then form app's vault object
+      Logger.log('Before calling getAppVault ', 'DidService');
+      const appVault = await getAppVault(kmsId, edvId);
+      Logger.log('After calling getAppVault ', 'DidService');
+      if (!appVault) {
+        throw new Error('KeyManager is not null or not initialized');
+      }
+
+      // Step 3: Store the menmonic and walletaddress in app's vault and get user's kmsId (docId)
+      const userCredential = {
+        mnemonic: userWallet.mnemonic,
+        walletAddress: userWallet.address,
+      };
+      Logger.log('Before calling appVault.prepareEdvDocument() ', 'DidService');
+      const userEdvDoc = appVault.prepareEdvDocument(userCredential, [
+        { index: 'content.walletAddress', unique: false },
+      ]);
+      Logger.log('After calling appVault.prepareEdvDocument() ', 'DidService');
+
+      Logger.log('Before calling appVault.insertDocument() ', 'DidService');
+      const insertedDoc = await appVault.insertDocument(userEdvDoc);
+      Logger.log('After calling appVault.insertDocument() ', 'DidService');
+
+      Logger.log(JSON.stringify(insertedDoc), 'DidService');
+      if (!insertedDoc) {
+        throw new Error(
+          'Could not insert document for userCredential.walletAddress' +
+            userCredential.walletAddress,
+        );
+      }
+      const { id: userKMSId } = insertedDoc;
+
+      // Step 4: Store user's kmsId in DID db for that application. x
       Logger.log(
-        'create() method: before creating new document in db',
+        'Before calling didRepositiory.create() did ' + didDoc.id,
         'DidService',
       );
       await this.didRepositiory.create({
         did: didDoc.id,
         appId: appDetail.appId,
-        slipPathKeys,
-        hdPathIndex,
-        transactionHash:
-          registerDidDoc && registerDidDoc?.transactionHash
-            ? registerDidDoc.transactionHash
-            : '',
-        registrationStatus:
-          registerDidDoc && registerDidDoc?.transactionHash
-            ? RegistrationStatus.COMPLETED
-            : RegistrationStatus.UNREGISTRED,
+        kmsId: userKMSId,
+        slipPathKeys: null,
+        hdPathIndex: null,
+        transactionHash: '',
+        registrationStatus: RegistrationStatus.UNREGISTRED,
       });
+      Logger.log(
+        'After calling didRepositiory.create() did ' + didDoc.id,
+        'DidService',
+      );
+
       return {
         did: didDoc.id,
-        registrationStatus:
-          registerDidDoc && registerDidDoc?.transactionHash
-            ? RegistrationStatus.COMPLETED
-            : RegistrationStatus.UNREGISTRED,
-        transactionHash:
-          registerDidDoc && registerDidDoc?.transactionHash
-            ? registerDidDoc.transactionHash
-            : '',
+        registrationStatus: RegistrationStatus.UNREGISTRED,
+        transactionHash: '',
         metaData: {
           didDocument: didDoc,
         },
@@ -283,14 +302,14 @@ export class DidService {
   ): Promise<RegisterDidResponse> {
     Logger.log('createByClientSpec() method: starts....', 'DidService');
     let registerDidDoc;
-    const { edvId, edvDocId } = appDetail;
+    const { edvId, kmsId } = appDetail;
     Logger.log('register() method: initialising edv service', 'DidService');
-    await this.edvService.init(edvId);
-    const docs = await this.edvService.getDecryptedDocument(edvDocId);
 
-    const mnemonic: string = docs.mnemonic;
-
-    const namespace = registerDidDto.didDocument['id'].split(':')[2]; // Todo Remove this worst way of doing it
+    // TODO: Once we implemnt authz, we can ask user' to do this tranction
+    const appMenemonic = await getAppMenemonic(kmsId);
+    const namespace = this.config.get('NETWORK')
+      ? this.config.get('NETWORK')
+      : 'testnet';
     const DidInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: registerDidDto.didDocument['id'],
@@ -305,11 +324,12 @@ export class DidService {
       'DidService',
     );
     const hypersignDid = await this.didSSIService.initiateHypersignDid(
-      mnemonic,
+      appMenemonic,
       namespace,
     );
     let data;
     const { didDocument, signInfos, verificationMethodId } = registerDidDto;
+
     if (!verificationMethodId && signInfos) {
       registerDidDoc = await hypersignDid.registerByClientSpec({
         didDocument,
@@ -320,6 +340,7 @@ export class DidService {
         appId: appDetail.appId,
         slipPathKeys: null,
         hdPathIndex: null,
+        kmsId: DidInfo.kmsId,
         transactionHash:
           registerDidDoc && registerDidDoc?.transactionHash
             ? registerDidDoc.transactionHash
@@ -338,17 +359,16 @@ export class DidService {
         throw new NotFoundException([didDocument['id'] + ' not found']);
       }
 
-      const hdPathIndex = didData.hdPathIndex;
-
-      const slipPathKeys: Array<Slip10RawIndex> =
-        this.hidWallet.makeSSIWalletPath(hdPathIndex);
-
-      const seed = await this.hidWallet.generateMemonicToSeedFromSlip10RawIndex(
-        slipPathKeys,
+      const appVault = await getAppVault(kmsId, edvId);
+      const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
+        didData.kmsId,
       );
-      const { privateKeyMultibase } = await hypersignDid.generateKeys({
-        seed: seed,
-      });
+
+      const seed = await this.hidWallet.getSeedFromMnemonic(userMnemonic);
+      const { privateKeyMultibase, publicKeyMultibase } =
+        await hypersignDid.generateKeys({
+          seed: seed,
+        });
       const regDidDocument = registerDidDto.didDocument as Did;
       const params = {
         didDocument: regDidDocument,
@@ -365,8 +385,8 @@ export class DidService {
         {
           did: didDocument['id'],
           appId: appDetail.appId,
-          slipPathKeys,
-          hdPathIndex,
+          slipPathKeys: null,
+          hdPathIndex: null,
           transactionHash:
             registerDidDoc && registerDidDoc?.transactionHash
               ? registerDidDoc.transactionHash
@@ -415,11 +435,10 @@ export class DidService {
     });
     let resolvedDid;
     if (didInfo !== null && didInfo.registrationStatus !== 'COMPLETED') {
-      const { edvId, edvDocId } = appDetail;
+      const { edvId, kmsId } = appDetail;
       Logger.log('resolveDid() method: initialising edv service', 'DidService');
-      await this.edvService.init(edvId);
-      const docs = await this.edvService.getDecryptedDocument(edvDocId);
-      const mnemonic: string = docs.mnemonic;
+
+      const mnemonic = await getAppMenemonic(kmsId);
       const didSplitedArray = did.split(':'); // Todo Remove this worst way of doing it
       const namespace = didSplitedArray[2];
       const methodSpecificId = didSplitedArray[3];
@@ -483,10 +502,9 @@ export class DidService {
     }
     if (!updateDidDto.verificationMethodId) {
       const did = updateDidDto.didDocument['id'];
-      const { edvId, edvDocId } = appDetail;
-      await this.edvService.init(edvId);
-      const docs = await this.edvService.getDecryptedDocument(edvDocId);
-      const mnemonic: string = docs.mnemonic;
+      const { edvId, kmsId } = appDetail;
+
+      const mnemonic = await getAppMenemonic(kmsId);
       const hypersignDid = await this.didSSIService.initiateHypersignDid(
         mnemonic,
         'testnet',
@@ -546,14 +564,17 @@ export class DidService {
       }
 
       const did = updateDidDto.didDocument['id'];
-      const { edvId, edvDocId } = appDetail;
-      await this.edvService.init(edvId);
-      const docs = await this.edvService.getDecryptedDocument(edvDocId);
-      const mnemonic: string = docs.mnemonic;
+      const { edvId, kmsId } = appDetail;
+
+      const { mnemonic: appMenemonic } =
+        await global.kmsVault.getDecryptedDocument(kmsId);
+      const namespace = this.config.get('NETWORK')
+        ? this.config.get('NETWORK')
+        : 'testnet';
 
       const hypersignDid = await this.didSSIService.initiateHypersignDid(
-        mnemonic,
-        'testnet',
+        appMenemonic,
+        namespace,
       );
 
       const didInfo = await this.didRepositiory.findOne({
@@ -582,17 +603,16 @@ export class DidService {
       if (updatedDidDocMetaData === null) {
         throw new NotFoundException([`${did} is not registered on the chain`]);
       }
-      const slipPathKeys = this.hidWallet.makeSSIWalletPath(
-        didInfo.hdPathIndex,
-      );
 
-      const seed = await this.hidWallet.generateMemonicToSeedFromSlip10RawIndex(
-        slipPathKeys,
+      const appVault = await getAppVault(kmsId, edvId);
+      const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
+        didInfo.kmsId,
       );
-
+      const seed = await this.hidWallet.getSeedFromMnemonic(userMnemonic);
       const { privateKeyMultibase } = await hypersignDid.generateKeys({
         seed,
       });
+
       try {
         if (!updateDidDto.deactivate) {
           Logger.debug(

@@ -10,7 +10,6 @@ import {
   Patch,
   UsePipes,
   ValidationPipe,
-  NotFoundException,
   Query,
   UseInterceptors,
   Headers,
@@ -51,6 +50,7 @@ import { RegisterDidDto } from '../dto/register-did.dto';
 import { IKeyType } from 'hs-ssi-sdk';
 import { AtLeastOneParamPipe } from 'src/utils/Pipes/atleastOneParam.pipe';
 import { AddVMResponse, AddVerificationMethodDto } from '../dto/addVm.dto';
+
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
@@ -58,6 +58,7 @@ import { AddVMResponse, AddVerificationMethodDto } from '../dto/addVm.dto';
 @UseGuards(AuthGuard('jwt'))
 export class DidController {
   constructor(private readonly didService: DidService) {}
+
   @UsePipes(new ValidationPipe({ transform: true }))
   @Get()
   @ApiOkResponse({
@@ -99,6 +100,7 @@ export class DidController {
   ): Promise<Did[]> {
     Logger.log('getDidList() method: starts', 'DidController');
     const appDetail = req.user;
+
     return this.didService.getDidList(appDetail, pageOption);
   }
 

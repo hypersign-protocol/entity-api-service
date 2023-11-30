@@ -19,12 +19,11 @@ import {
   IVerifiablePresentation,
 } from 'hs-ssi-sdk';
 import { ConfigService } from '@nestjs/config';
-import { EdvService } from 'src/edv/services/edv.service';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { DidRepository } from 'src/did/repository/did.repository';
 import { VerifyPresentationDto } from '../dto/verify-presentation.dto';
-import { AppAuthApiKeyService } from 'src/app-auth/services/app-auth-apikey.service';
-
+import { getAppVault } from 'src/app-auth/services/app-vault.service';
+import { generateAppId } from 'src/utils/utils';
 @Injectable()
 export class PresentationService {
   constructor(
@@ -199,9 +198,7 @@ export class PresentationRequestService {
     private readonly presentationtempleteReopsitory: PresentationTemplateRepository,
     private readonly didRepositiory: DidRepository,
     private readonly config: ConfigService,
-    private readonly edvService: EdvService,
     private readonly hidWallet: HidWalletService,
-    private readonly keyService: AppAuthApiKeyService,
   ) {}
 
   async createPresentationRequest(
@@ -234,7 +231,7 @@ export class PresentationRequestService {
     body.challenge = challenge;
 
     const response = {
-      id: await this.keyService.generateAppId(),
+      id: await generateAppId(),
       from: did,
       created_time: Number(new Date()),
       expires_time: expiresTime,
@@ -280,6 +277,7 @@ export class PresentationRequestService {
       'PresentationRequestService',
     );
 
+    // TODO:  domain should be concidered
     const unsignedverifiablePresentation = await hypersignVP.generate({
       verifiableCredentials: credentialDocuments as any,
       holderDid: holderDid,
@@ -288,14 +286,12 @@ export class PresentationRequestService {
       did: holderDid,
     });
 
-    const verificationMethodIdforAssert = didDocument.assertionMethod[0]; //remove hardcoding
-
-    const { edvId, edvDocId } = appDetail;
+    // TODO: Remove hardcoing
+    const verificationMethodIdforAssert = didDocument.assertionMethod[0];
     Logger.log(
       'createPresentation() method: initialising edv service',
       'PresentationRequestService',
     );
-    await this.edvService.init(edvId);
     const didInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: verificationMethodIdforAssert.split('#')[0],
@@ -307,21 +303,16 @@ export class PresentationRequestService {
         `Resource not found`,
       ]);
     }
-
-    const docs = await this.edvService.getDecryptedDocument(edvDocId);
-    const mnemonic: string = docs.mnemonic;
-    Logger.log(
-      'createPresentation() method: before calling generateWallet',
-      'PresentationRequestService',
+    // Holder Identity: - used for authenticating presentation
+    const { edvId, kmsId } = appDetail;
+    const appVault = await getAppVault(kmsId, edvId);
+    const { mnemonic: holderMnemonic } = await appVault.getDecryptedDocument(
+      didInfo.kmsId,
     );
-    await this.hidWallet.generateWallet(mnemonic);
+    const seed = await this.hidWallet.getSeedFromMnemonic(holderMnemonic);
+    const hypersignDid = new HypersignDID();
+    const { privateKeyMultibase } = await hypersignDid.generateKeys({ seed });
 
-    const slipPathKeys = this.hidWallet.makeSSIWalletPath(didInfo.hdPathIndex);
-
-    const seed = await this.hidWallet.generateMemonicToSeedFromSlip10RawIndex(
-      slipPathKeys,
-    );
-    const { privateKeyMultibase } = await hypersignDID.generateKeys({ seed });
     Logger.log(
       'createPresentation() method: before calling hypersignVP.sign',
       'PresentationRequestService',

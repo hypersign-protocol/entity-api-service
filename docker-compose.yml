@@ -1,121 +1,58 @@
-version: '3.9'
-
-services: 
-
-  # MongoDB services
-  entity_db: 
-    container_name: entity_db
-    image: mongo:latest
-    restart: always
-    volumes: 
-      - entity_db:/data/db
-
-  # EDV service 
-  edv.service.id: 
-    container_name: edv.service.id
-    build: /Users/hermit/code/hm/hs/hypersign-edv-service
+version: "3.9"
+services:
+  issuer-database:
+    container_name: "issuer-database"
+    image: "mongo:latest"
+    ports:
+      - "27017:27017"
+    restart: "always"
+    volumes:
+      - "issuer-database:/data/db"
+  edv.entity.id:
+    container_name: "edv.entity.id"
+    image: "ghcr.io/hypersign-protocol/hypersign-data-vault-service:latest"
     environment:
-      PORT: 3002
-      HOST: edv.service.id:3002
+      PORT: 3000
+      HOST: "edv.entity.id:3000"
       SSL: false
-      ABSOULTE_URL: edv.service.id:3002
-      DATA_VAULT: './.encData'
-      DB_URL: mongodb://entity_db:27017/test
-    depends_on: 
-      - entity_db
-  
-  # Entity API service
-  api.entity.id: 
-    container_name: api.entity.id
-    build: .
-    ports: 
-      - 3001:3001
+      ABSOLUTE_URL: "edv.entity.id:3000"
+      DATA_VAULT: "./.encData"
+      DB_URL: "mongodb://issuer-database:27017"
+    depends_on:
+      - "issuer-database"
+  api.entity.id:
+    container_name: "api.entity.id"
+    image: "ghcr.io/hypersign-protocol/studio-api:latest"
     environment:
-      DATABASE_CONNECTION_PATH: mongodb://entity_db:27017/admin
-      HID_NETWORK_RPC: https://rpc.jagrat.hypersign.id/
-      HID_NETWORK_API: https://api.jagrat.hypersign.id/
-      HID_NETWORK_NAMESPACE: testnet
-      EDV_BASE_URL: http://edv.service.id:3002
-      EDV_CONFIG_DIR: '.api-edv-config'
-      EDV_DID_FILE_PATH: '.api-edv-config/edv-did.json'
-      EDV_KEY_FILE_PATH: '.api-edv-config/edv-keys.json'
-      MNEMONIC: 'parade erase firm goose old elegant sausage sweet stuff view goddess total museum hidden worry usual rug foster uncover cradle govern swing muscle unable'
-      JWT_SECRET: '76JpMGuSf0ejzi4OFHpe'
-      WHITELISTED_CORS: '["http://localhost:9001","https://entity.hypersign.id","http://localhost:3001","https://api.entity.hypersign.id"]'
-      STUDIO_SERVER_JWT_SECRET: 00c2c433-a077-4e68-b19c-1234f014a510
-    depends_on: 
-      - entity_db
-      - edv.service.id
-
-  # Entity Studio Service 
-  studio.server.id: 
-    container_name: studio.server.id
-    build: /Users/hermit/code/hm/hs/studio/server
-    ports: 
-      - 9000:9000
-    environment:
-      NODE_ENV: development
-      PORT: 9000
-      HOST: localhost
-      LOG_FILEPATH: ./log/studio-server.log
-      LOG_DIR: ./log
-      LOG_TIMESTAMP_FORMAT: 'YYYY-MM-DD HH:mm:ss.SSS'
-      LOG_LEVEL: debug
-      DATABASE_FILEPATH: ./db/studio-server.db
-      DID_METHOD_NAME: hs
-      DID_PREFIX: did
-      JWT_SECRET: my\$ecreEtKeY@123
-      STUDIO_SERVER_BASE_URL: http://studio.server.id
-      NODE_SERVER_BASE_URL: http://localhost:5000/
-      NODE_SERVER_DID_CREATE_EP: api/did/create_tmp
-      NODE_SERVER_SCHEMA_CREATE_EP: api/schema/create
-      MAIL_HOST: smtp.gmail.com
-      MAIL_PORT: 65
-      MAIL_USERNAME: example@gmail.com
-      MAIL_PASSWORD: examplePassw00rd1@
-      MAIL_NAME: 'Hypersign Admin'
-      DB_URL: mongodb://entity_db:27017/studio-server
-      WALLET_WEB_HOOK: http://studio.server.id/api/v1/schema/status
-      WALLET_WEB_HOOK_CREAD: http://studio.server.id/api/v1/credential/status
-      ACCEPTANCE_URL: http://studio.server.id/deeplink.html?deeplink=hypersign:deeplink?url=
-      PATH_TO_ISSUE_CRED: api/v1/credential/walletAccepct
-      WALLET_WEB_HOOK_ORG_DID: http://studio.server.id/api/v1/org/status
-      ORG_SERVICE_END_POINT: http://studio.server.id/api/v1/org/
-      SSE_CLIENT_URL: http://localhost:9001
-      WHITELISTED_CORS: '["http://studio.server.id","http://localhost:9001","http://192.168.29.12:9001", "https://localhost:9001", "http://192.168.29.209:9001", "http://entity.hypersign.id","https://entity.hypersign.id","http://localhost:9001", "https://wallet-stage.hypersign.id", "http://localhost:4999","192.168.29.13","http://localhost:1234","http://localhost:4000", "*"]'
-      SCHEMA_RESOLVER: https://api.jagrat.hypersign.id/hypersign-protocol/hidnode/ssi/schema/
-    depends_on: 
-      - entity_db
-
-  # Entity Studio FrontEnd
-  studio.ui:
-    container_name: studio.ui
-    build: /Users/hermit/code/hm/hs/studio-frontend
-    ports: 
-      - 9001:80
-    environment: 
-      NODE_ENV: development
-      VUE_APP_TITLE: 'Entity Studio'
-      VUE_APP_DESC: 'A portal to issue and verify credentials on Hypersign Identity network!'
-      VUE_APP_VERSION: v1.0
-      VUE_APP_STUDIO_SERVER_BASE_URL: http://localhost:9000/
-      VUE_APP_STUDIO_SERVER_BASE_WS: ws://localhost:9000/
-      VUE_APP_NODE_SERVER_BASE_URL: https://rpc.jagrat.hypersign.id/
-      VUE_APP_NODE_SERVER_BASE_URL_REST: https://api.jagrat.hypersign.id/
-      VUE_APP_SCHEMA_GET_EP_REST: hypersign-protocol/hidnode/ssi/schema/
-      VUE_APP_ACCPCT_CRED_EP: api/v1/credential/send
-      VUE_APP_EXPLORER_BASE_URL: https://explorer.hypersign.id/
-      VUE_APP_STUDIO_SERVER_SAVE_SCHEMA: api/v1/schema
-      VUE_APP_SCHEMA_LIST_EP: api/v1/schema
-      VUE_APP_STUDIO_SERVER_CRED_LIST_EP: api/v1/credential/org
-      VUE_APP_STUDIO_SERVER_CRED_ISSUE_EP: api/v1/credential
-      VUE_APP_WEB_WALLET_ADDRESS: https://wallet-stage.hypersign.id
-      VUE_APP_PRESENTATION_TEMPLATE_EP: api/v1/presentation/template
-      VUE_APP_SSE: http://localhost:9000/
-      VUE_APP_STUDIO_API_SERVER_HOST: http://localhost:3001
-    depends_on: 
-      - studio.server.id
-      - api.entity.id
-
-volumes: 
-  entity_db: {}
+      PORT: 3001
+      ENTITY_API_SERVICE_BASE_URL: "http://localhost:8080/"
+      DATABASE_CONNECTION_PATH: "mongodb://issuer-database:27017/api?retryWrites=true&w=majority"
+      BASE_DB_PATH: "mongodb://issuer-database:27017"
+      HID_NETWORK_RPC: "https://rpc.jagrat.hypersign.id/"
+      HID_NETWORK_API: "https://api.jagrat.hypersign.id/"
+      HID_NETWORK_NAMESPACE: "testnet"
+      EDV_BASE_URL: "http://edv.entity.id:3000/"
+      EDV_CONFIG_DIR: ".api-edv-config"
+      EDV_DID_FILE_PATH: ".api-edv-config/edv-did.json"
+      EDV_KEY_FILE_PATH: ".api-edv-config/edv-keys.json"
+      MNEMONIC: "parade erase firm goose old elegant sausage sweet stuff view goddess total museum hidden worry usual rug foster uncover cradle govern swing muscle unable"
+      JWT_SECRET: "43bf9ba55e72565c35a2cd5ac52792ca965cb806be2027c5d83bd11ab826aaf250c8bcedc851cf54b059fbe800daeb02f801c395f306bc42a6f28be15b94e0ed"
+      WHITELISTED_CORS: "[\"http://localhost:9001\",\"https://entity.hypersign.id\",\"http://localhost:3001\",\"https://api.entity.hypersign.id\"]"
+      STUDIO_SERVER_JWT_SECRET: "caXHr6Xhz3teM2S75HmgNzjgpp7EHnrFyga6jWgyjpgSvqKCv1"
+      SUPER_ADMIN_USERNAME: "root"
+      SUPER_ADMIN_PASSWORD: "root"
+      SESSION_SECRET_KEY: "43bf9ba55e72565d"
+    depends_on:
+      - "issuer-database"
+      - "edv.entity.id"
+  web:
+    container_name: "nginx"
+    image: "nginx:latest"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "api.entity.id"
+    volumes:
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+volumes:
+  issuer-database: {}

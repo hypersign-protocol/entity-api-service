@@ -38,6 +38,7 @@ export class HidWalletService {
     const hidWalletAddress = await wallet.getAccounts();
     Logger.log('generateWallet() method: ends....', 'generateWallet');
 
+    this.mnemonic = generatedMnemonice;
     return {
       mnemonic: generatedMnemonice,
       address: hidWalletAddress[0].address,
@@ -90,5 +91,9 @@ export class HidWalletService {
       Slip10RawIndex.hardened(0),
       Slip10RawIndex.hardened(minHardIndex),
     ];
+  }
+
+  getSeedFromMnemonic(mnemonic = this.mnemonic) {
+    return Bip39.decode(mnemonic);
   }
 }
