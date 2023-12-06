@@ -228,6 +228,7 @@ export class CredStatus {
     description: ' ',
     type: Claim,
   })
+  @Type(() => Claim)
   claim: Claim | undefined;
   @ApiProperty({
     name: 'issuer',

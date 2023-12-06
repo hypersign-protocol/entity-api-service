@@ -14,6 +14,7 @@ import {
 } from 'class-validator';
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
 import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
+import { SignInfo } from './register-did.dto';
 export enum IClientSpec {
   'eth-personalSign' = 'eth-personalSign',
   'cosmos-ADR036' = 'cosmos-ADR036',
@@ -39,43 +40,43 @@ export class ClientSpec {
   adr036SignerAddress: string;
 }
 
-export class SignInfo {
-  @ApiProperty({
-    description: 'Verification Method id for did registration',
-    example: 'did:hid:testnet:........#key-${idx}',
-    required: true,
-  })
-  @ValidateVerificationMethodId()
-  @IsString()
-  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
-    message: "Did's namespace should be testnet",
-  })
-  verification_method_id: string;
+// export class SignInfo {
+//   @ApiProperty({
+//     description: 'Verification Method id for did registration',
+//     example: 'did:hid:testnet:........#key-${idx}',
+//     required: true,
+//   })
+//   @ValidateVerificationMethodId()
+//   @IsString()
+//   @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
+//     message: "Did's namespace should be testnet",
+//   })
+//   verification_method_id: string;
 
-  @ApiProperty({
-    description: 'Signature for clientSpec',
-    example: 'afafljagahgp9agjagknaglkj/kagka=',
-    name: 'signature',
-    required: true,
-  })
-  @ValidateIf((o, value) => o.clientSpec !== undefined)
-  @IsNotEmpty()
-  @IsString()
-  signature: string;
+//   @ApiProperty({
+//     description: 'Signature for clientSpec',
+//     example: 'afafljagahgp9agjagknaglkj/kagka=',
+//     name: 'signature',
+//     required: true,
+//   })
+//   @ValidateIf((o, value) => o.clientSpec !== undefined)
+//   @IsNotEmpty()
+//   @IsString()
+//   signature: string;
 
-  @ApiProperty({
-    description: 'ClienSpec ',
-    example: {
-      type: IClientSpec['cosmos-ADR036'],
-      adr036SignerAddress: 'bech32address',
-    },
-    type: ClientSpec,
-    name: 'clientSpec',
-  })
-  @Type(() => ClientSpec)
-  @ValidateNested({ each: true })
-  clientSpec: ClientSpec;
-}
+//   @ApiProperty({
+//     description: 'ClienSpec ',
+//     example: {
+//       type: IClientSpec['cosmos-ADR036'],
+//       adr036SignerAddress: 'bech32address',
+//     },
+//     type: ClientSpec,
+//     name: 'clientSpec',
+//   })
+//   @Type(() => ClientSpec)
+//   @ValidateNested({ each: true })
+//   clientSpec: ClientSpec;
+// }
 export class verificationMethod {
   @ApiProperty({
     description: 'Verification Method id',
@@ -147,9 +148,9 @@ export class DidDoc {
   @IsArray()
   '@context'?: Array<string>;
 
-  @IsOptional()
-  @IsArray()
-  'context': Array<string>;
+  // @IsOptional()
+  // @IsArray()
+  // 'context': Array<string>;
   @ApiProperty({
     description: 'id',
     example: 'did:hid:method:......',
@@ -177,7 +178,7 @@ export class DidDoc {
   })
   @Type(() => verificationMethod)
   @ValidateNested({ each: true })
-  verificationMethod: Array<verificationMethod>;
+  verificationMethod: Array<Partial<verificationMethod>>;
   @ApiProperty({
     description: 'authentication',
     example: ['did:hid:method:......'],
@@ -222,7 +223,7 @@ export class DidDoc {
   @Type(() => Array<Service>)
   @ValidateNested()
   @IsArray()
-  service: Array<Service>;
+  service: Array<Partial<Service>>;
 }
 
 export class DidDocumentMetaData {
