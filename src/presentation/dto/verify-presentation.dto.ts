@@ -33,10 +33,24 @@ class PResultProof {
     example: [
       'https://www.w3.org/2018/credentials/v1',
       {
-        hs: 'https://api.jagrat.hypersign.id/hypersign-protocol/hidnode/ssi/schema/sch:hid:testnet:z9ZsntaFoFdEp4dF89JYYERoJPMSaxQZgDk1yCkETJqYu:1.0:',
-      },
-      {
-        hobby: 'hs:hobby',
+        '@context': {
+          '@protected': true,
+          '@version': 1.1,
+          id: '@id',
+          type: '@type',
+          RailwayTicketSchema: {
+            '@context': {
+              '@propagate': true,
+              '@protected': true,
+              xsd: 'http://www.w3.org/2001/XMLSchema#',
+              name: {
+                '@id': 'https://hypersign-schema.org/name',
+                '@type': 'xsd:string',
+              },
+            },
+            '@id': 'https://hypersign-schema.org',
+          },
+        },
       },
       'https://w3id.org/security/suites/ed25519-2020/v1',
     ],
@@ -228,23 +242,177 @@ class CredentialResults {
   @IsVcId()
   credentialId: string;
 }
-export class VerifyPresentationResponse {
+
+class PresentationResultProof {
+  @ApiProperty({
+    name: '@context',
+    description: 'context',
+    example: [
+      'https://www.w3.org/2018/credentials/v1',
+      'https://w3id.org/security/suites/ed25519-2020/v1',
+    ],
+  })
+  '@context': Array<string>;
+  @ApiProperty({
+    name: 'type',
+    description: 'type using which credential has signed',
+    example: 'Ed25519Signature2020',
+  })
+  @IsString()
+  type: string;
+  @ApiProperty({
+    name: 'created',
+    description: 'Date on which credential has issued',
+    example: '2023-02-25T17:01:02Z',
+  })
+  @IsString()
+  created: Date;
+  @ApiProperty({
+    name: 'verificationMethod',
+    description: 'Verification id using which credential has signed',
+    example: 'did:hid:testnet:...............#key-${id}',
+  })
+  @IsString()
+  @ValidateVerificationMethodId()
+  verificationMethod: string;
+  @ApiProperty({
+    name: 'proofPurpose',
+    description: '',
+    example: 'assertionMethod',
+  })
+  @IsString()
+  proofPurpose: string;
+  @ApiProperty({
+    name: 'challenge',
+    description: 'random challenge',
+    example: 'skfdhldklgjh-gaghkdhgaskda-aisgkjheyi',
+  })
+  @IsString()
+  challenge: string;
+  @ApiProperty({
+    name: 'proofValue',
+    description: '',
+    example:
+      'z5LairjrBYkc5FtPWeDVuLdQUzpMTBULcp3Q5YDnrLh63UuBuY6BpdiQYhTEcKBFW76TEXFHm37aDvcMtCvnYfmvQ',
+  })
+  @IsString()
+  proofValue: string;
+}
+class AuthController {
+  @ApiProperty({
+    name: '@context',
+    description: 'context',
+    example: 'https://w3id.org/security/v2',
+  })
+  @IsString()
+  @IsNotEmpty()
+  '@context': string;
+  @ApiProperty({
+    name: 'id',
+    description: 'did in controller',
+    example: 'did:hid:testnet:.........',
+  })
+  @IsString()
+  @IsDid()
+  'id': string;
+  @ApiProperty({
+    name: 'authentication',
+    description: 'verification method id for authentication',
+    example: ['did:hid:testnet:........#key-${id}'],
+    isArray: true,
+  })
+  @IsString()
+  @ValidateVerificationMethodId()
+  'authentication': Array<string>;
+}
+class AuthenticationPurposeResult {
+  @ApiProperty({
+    name: 'valid',
+    description: '',
+    example: true,
+  })
+  @IsBoolean()
+  valid: boolean;
+  @ApiProperty({
+    name: 'controller',
+    description: ' controller',
+    type: AuthController,
+  })
+  @ValidateNested({ each: true })
+  @Type(() => AuthController)
+  controller: AuthController;
+}
+class PresentationResults {
+  @ApiProperty({
+    name: 'proof',
+    description: 'result of presentation verification',
+    type: PresentationResultProof,
+  })
+  @ValidateNested({ each: true })
+  @Type(() => PresentationResultProof)
+  proof: PresentationResultProof;
   @ApiProperty({
     name: 'verified',
-    description: 'resul of verification',
+    description: 'result of presentation verification',
+    example: true,
+  })
+  @IsBoolean()
+  verified: boolean;
+
+  @ApiProperty({
+    name: 'verificationMethod',
+    description: 'verificationMethod',
+    type: VerificationMethod,
+  })
+  @ValidateNested({ each: true })
+  @Type(() => VerificationMethod)
+  verificationMethod: VerificationMethod;
+  @ApiProperty({
+    name: 'purposeResult',
+    description: 'result of th purpose',
+    type: AuthenticationPurposeResult,
+  })
+  @ValidateNested({ each: true })
+  @Type(() => AuthenticationPurposeResult)
+  purposeResult: AuthenticationPurposeResult;
+}
+
+class PresentationResult {
+  @ApiProperty({
+    name: 'verified',
+    description: 'result of verification',
     example: true,
   })
   @IsBoolean()
   verified: boolean;
   @ApiProperty({
     name: 'results',
-    description: 'detailed information of verification',
-    type: Presentation,
+    description: 'verification result of presentation',
+    type: PresentationResults,
     isArray: true,
   })
   @ValidateNested({ each: true })
-  @Type(() => Presentation)
-  results: Array<Presentation>;
+  @Type(() => PresentationResults)
+  results: PresentationResults;
+}
+
+export class VerifyPresentationResponse {
+  @ApiProperty({
+    name: 'presentationResult',
+    description: 'verification result of presentation',
+    type: PresentationResult,
+    isArray: true,
+  })
+  @ValidateNested({ each: true })
+  @Type(() => PresentationResult)
+  presentationResult: PresentationResult;
+  @ApiProperty({
+    name: 'verified',
+    description: 'result of presentation verification',
+    example: true,
+  })
+  @IsBoolean()
+  verified: boolean;
   @ApiProperty({
     name: 'credentialResults',
     description: 'verification result of credential',
