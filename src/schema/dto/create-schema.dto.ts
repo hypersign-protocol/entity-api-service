@@ -12,7 +12,6 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
-import { ToPascalCase } from 'src/utils/customDecorator/case.decorator';
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
 import { Namespace } from 'src/did/dto/create-did.dto';
 
@@ -66,7 +65,6 @@ export class SchemaBody {
   })
   @IsString()
   @IsNotEmpty()
-  @ToPascalCase()
   name: string;
 
   @ApiProperty({
@@ -132,6 +130,7 @@ export class CreateSchemaDto {
   })
   @ValidateVerificationMethodId()
   @IsString()
+  @IsNotEmpty()
   verificationMethodId: string;
 }
 
