@@ -6,11 +6,9 @@ interface EnvironmentData {
 }
 
 const baseUrl: string = readlineSync.question(
-  'Enter api server Base URL with api/v1: ',
+  'Enter api server Base URL with api/v1/: ',
 );
-console.log(baseUrl);
 const authToken: string = readlineSync.question('Enter Api Server AuthToken: ');
-
 const environmentData: EnvironmentData = {
   name: 'environment',
   values: [
