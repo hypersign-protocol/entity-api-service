@@ -24,7 +24,7 @@ spec:
               cpu: "1000m"
           env:
             - name: PORT
-              value: __PORT__
+              value: "__PORT__"
             - name: BASE_DB_PATH
               value: __BASE_DB_PATH__
             - name: HID_NETWORK_RPC

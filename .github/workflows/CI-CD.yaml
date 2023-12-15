@@ -44,7 +44,7 @@ jobs:
 
           docker push $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:latest
 
-  Deply:
+  Deploy:
     needs: [Build]
     runs-on: ubuntu-latest
     environment: production
