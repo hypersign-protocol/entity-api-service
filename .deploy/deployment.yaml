@@ -86,7 +86,7 @@ spec:
     spec:
       containers:
         - name: nginx-entity
-          image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/nginx-entity:1
+          image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/nginx-entity:2
           resources:
             limits:
               memory: "256m"
