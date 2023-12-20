@@ -3,7 +3,7 @@ name: API service build and deploy
 on:
   push:
     branches:
-      - "master"
+      - "develop"
 
 jobs:
   Build:
