@@ -22,20 +22,7 @@ async function bootstrap() {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.use(express.static(path.join(__dirname, '../public')));
-  app.use(
-    async (
-      req: express.Request,
-      res: express.Response,
-      next: express.NextFunction,
-    ) => {
-      // log request domains and redirects
-      Logger.log(req.header('Referer'), 'Referer');
-      Logger.log(req.subdomains, 'subdomains');
-      Logger.log(req.hostname, 'hostname');
-      Logger.log(req.route, 'route');
-      next();
-    },
-  );
+
   // Adding prefix to our api
 
   const walletOptions = {

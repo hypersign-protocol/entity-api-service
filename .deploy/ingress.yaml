@@ -27,23 +27,23 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: nginx-entity-service
+                name: entity-api-service
                 port:
-                  number: 8080
+                  number: 3001
           - path: /ssi/
             pathType: Prefix
             backend:
               service:
-                name: nginx-entity-service
+                name: entity-api-service
                 port:
-                  number: 8080
+                  number: 3001
           - path: /api/
             pathType: Prefix
             backend:
               service:
-                name: nginx-entity-service
+                name: entity-api-service
                 port:
-                  number: 8080
+                  number: 3001
     - host: "*.api.entity-stage.hypersign.id"
       http:
         paths:
@@ -51,20 +51,20 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: nginx-entity-service
+                name: entity-api-service
                 port:
-                  number: 8080
+                  number: 3001
           - path: /ssi/
             pathType: Prefix
             backend:
               service:
-                name: nginx-entity-service
+                name: entity-api-service
                 port:
-                  number: 8080
+                  number: 3001
           - path: /api/
             pathType: Prefix
             backend:
               service:
-                name: nginx-entity-service
+                name: entity-api-service
                 port:
-                  number: 8080
+                  number: 3001

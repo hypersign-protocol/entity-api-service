@@ -29,7 +29,8 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       'Middleware',
     );
 
-    const subdomain = req.headers['x-subdomain'];
+    const subdomain =
+      req.subdomains.length > 0 ? req.subdomains.at(-1) : undefined;
     Logger.debug(`Subdomain ${subdomain} `, 'Middleware');
 
     if (!subdomain) {
