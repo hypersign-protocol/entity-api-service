@@ -1,0 +1,11 @@
+# secret.yaml
+apiVersion: v1
+kind: Secret
+
+metadata:
+  name: entity-ssl
+  namespace: hypermine-development
+type: kubernetes.io/tls
+stringData:
+  tls.key: ""
+  tls.crt: ""

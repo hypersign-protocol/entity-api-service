@@ -1,0 +1,70 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: entity-ingress
+  namespace: hypermine-development
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/force-ssl-redirect: redirect
+    ingressClassName: "gce"
+    kubernetes.io/ingress.global-static-ip-name: entity-ip
+    cert-manager.io/issuer: letsencrypt-production
+  labels:
+    name: ingress
+
+spec:
+  tls:
+    - secretName: entity-ssl
+      hosts:
+        - "api.entity-stage.hypersign.id"
+        - "*.api.entity-stage.hypersign.id"
+
+  rules:
+    - host: "api.entity-stage.hypersign.id"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-entity-service
+                port:
+                  number: 8080
+          - path: /ssi/
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-entity-service
+                port:
+                  number: 8080
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-entity-service
+                port:
+                  number: 8080
+    - host: "*.api.entity-stage.hypersign.id"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-entity-service
+                port:
+                  number: 8080
+          - path: /ssi/
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-entity-service
+                port:
+                  number: 8080
+          - path: /api/
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-entity-service
+                port:
+                  number: 8080

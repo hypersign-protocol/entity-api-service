@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+      name: entity-ssl
+      namespace: hypermine-development
+spec:
+      dnsNames:
+            - api.entity-stage.hypersign.id
+            - "*.api.entity-stage.hypersign.id"
+      issuerRef:
+            kind: Issuer
+            name: letsencrypt-production
+      secretName: entity-ssl
