@@ -18,6 +18,8 @@ spec:
       containers:
         - name: entity-api
           image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-service:latest
+          imagePullPolicy: Always
+
           resources:
             limits:
               memory: "1Gi"
@@ -86,7 +88,9 @@ spec:
     spec:
       containers:
         - name: nginx-entity
-          image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/nginx-entity:3
+          image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/nginx-entity:latest
+          imagePullPolicy: Always
+
           resources:
             limits:
               memory: "256m"
