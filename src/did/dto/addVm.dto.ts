@@ -99,6 +99,7 @@ export class AddVMResponse extends DidDoc {
       },
     ],
   })
+  @Type(() => verificationMethod)
   verificationMethod: Array<verificationMethod>;
   @ApiProperty({
     description: 'authentication',

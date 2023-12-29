@@ -70,6 +70,13 @@ export class SignInfo {
   @Type(() => ClientSpec)
   @ValidateNested({ each: true })
   clientSpec: ClientSpec;
+  @ApiProperty({
+    description: 'created',
+    example: '2023-01-23T13:45:17Z',
+  })
+  @IsString()
+  @IsNotEmpty()
+  created: string;
 }
 export class RegisterDidDto {
   @ApiProperty({
@@ -80,7 +87,7 @@ export class RegisterDidDto {
   @IsNotEmptyObject()
   @Type(() => DidDoc)
   @ValidateNested({ each: true })
-  didDocument: DidDoc;
+  didDocument: Partial<DidDoc>;
 
   @ApiProperty({
     description: 'Verification Method id for did registration',

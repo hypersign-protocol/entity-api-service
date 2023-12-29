@@ -200,7 +200,16 @@ export class CredentialProof {
   proofValue: string;
 }
 
-class Claim {
+export class CredStatus {
+  @ApiProperty({
+    name: '@context',
+    description: 'context',
+    example: [
+      'https://raw.githubusercontent.com/hypersign-protocol/hypersign-contexts/main/CredentialStatus.jsonld',
+      'https://w3id.org/security/suites/ed25519-2020/v1',
+    ],
+  })
+  '@context': Array<string>;
   @ApiProperty({
     name: 'id',
     description: 'Credential id',
@@ -209,26 +218,6 @@ class Claim {
   @IsString()
   @IsVcId()
   id: string;
-  @ApiProperty({
-    name: 'currentStatus',
-    description: 'Status of credential',
-    example: 'vc:hid:testnet:................',
-  })
-  currentStatus: string;
-  @ApiProperty({
-    name: 'statusReason',
-    description: 'Reason of current status',
-    example: 'Credential is active',
-  })
-  statusReason: string;
-}
-export class CredStatus {
-  @ApiProperty({
-    name: 'claim',
-    description: ' ',
-    type: Claim,
-  })
-  claim: Claim | undefined;
   @ApiProperty({
     name: 'issuer',
     description: 'did of the one who issue the credential',
@@ -244,20 +233,32 @@ export class CredStatus {
   })
   @IsString()
   issuanceDate: string;
+
   @ApiProperty({
-    name: 'expirationDate',
-    description: 'Date on which credential will expire',
-    example: '2023-01-25T16:59:21Z',
+    name: 'remarks',
+    description: 'Reason of current status',
+    example: 'Credential is active',
   })
   @IsString()
-  expirationDate: string;
+  @IsNotEmpty()
+  remarks: string;
+
   @ApiProperty({
-    name: 'credentialHash',
-    description: 'Hash of credential',
-    example: 'ae93886f2a............3f6d1c6ae4..........393d43730',
+    name: 'credentialMerkleRootHash',
+    description: 'Merkle root hash of the credential',
+    example:
+      'c20c512a0e5a12616faa0911dde385fb57fac2f5aad6173a6b1010fngrgtlhkjtrrjowlrjttryju',
   })
   @IsString()
-  credentialHash: string;
+  @IsNotEmpty()
+  credentialMerkleRootHash: string;
+
+  @ApiProperty({
+    name: 'proof',
+    description: 'Proof of credential',
+    type: CredentialProof,
+  })
+  proof: CredentialProof;
 }
 export class CredDoc {
   @ApiProperty({
@@ -265,10 +266,24 @@ export class CredDoc {
     example: [
       'https://www.w3.org/2018/credentials/v1',
       {
-        hs: 'https://api.jagrat.hypersign.id/hypersign-protocol/hidnode/ssi/schema/sch:hid:testnet:...........:1.0:',
-      },
-      {
-        name: 'hs:name',
+        '@context': {
+          '@protected': true,
+          '@version': 1.1,
+          id: '@id',
+          type: '@type',
+          RailwayTicketSchema: {
+            '@context': {
+              '@propagate': true,
+              '@protected': true,
+              xsd: 'http://www.w3.org/2001/XMLSchema#',
+              name: {
+                '@id': 'https://hypersign-schema.org/name',
+                '@type': 'xsd:string',
+              },
+            },
+            '@id': 'https://hypersign-schema.org',
+          },
+        },
       },
       'https://w3id.org/security/suites/ed25519-2020/v1',
     ],
@@ -379,25 +394,27 @@ export class CreateCredentialResponse {
   persist: boolean;
 }
 
-export class CredProof extends CredentialProof {
+export class ResolvedCredentialStatus extends CredStatus {
   @ApiProperty({
-    name: 'updated',
-    description: 'Date on which credential has updated',
-    example: '2023-01-25T17:01:02Z',
+    name: 'revoked',
+    description: 'Set to true if credential is revoked',
+    example: false,
   })
-  @IsString()
-  updated: string;
-}
-
-class ResolvedCredentialStatus extends CredStatus {
+  revoked: boolean;
+  @ApiProperty({
+    name: 'suspended',
+    description: 'Set to true if credential is suspended',
+    example: false,
+  })
+  suspended: boolean;
   @ApiProperty({
     name: 'proof',
     description: 'proof of credential',
-    type: CredProof,
+    type: CredentialProof,
   })
-  @Type(() => CredProof)
+  @Type(() => CredentialProof)
   @ValidateNested({ each: true })
-  proof: CredProof;
+  proof: CredentialProof;
 }
 export class ResolveCredential {
   @ApiProperty({

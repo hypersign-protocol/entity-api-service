@@ -418,8 +418,7 @@ export class CredentialService {
       'CredentialService',
     );
 
-    const { credentialStatus, credentialStatusProof, namespace } =
-      registerCredentialDto;
+    const { credentialStatus, namespace } = registerCredentialDto;
     const { kmsId } = appDetail;
     Logger.log(
       'registerCredentialStatus() method: initialising edv service',
@@ -436,9 +435,11 @@ export class CredentialService {
         'registerCredentialStatus() method: before calling hypersignVC.registerCredentialStatus to register credential status on chain',
         'CredentialService',
       );
+      const { proof } = credentialStatus;
+      delete credentialStatus['proof'];
       registeredVC = await hypersignVC.registerCredentialStatus({
         credentialStatus,
-        credentialStatusProof,
+        credentialStatusProof: proof,
       });
     } catch (e) {
       Logger.error(

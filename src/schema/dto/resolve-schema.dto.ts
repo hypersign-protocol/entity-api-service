@@ -118,11 +118,11 @@ export class ResolveSchema {
     description: 'Resolved schema Document',
     example: schemaDetail,
   })
-  schema: schemaDetail;
+  schema: Partial<schemaDetail>;
   @ApiProperty({
     name: 'proof',
     description: 'proof of schema',
     example: Proof,
   })
-  proof: Proof;
+  proof: Partial<Proof>;
 }

@@ -1,5 +1,5 @@
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { Exclude, Transform, Type } from 'class-transformer';
+import { Exclude, Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -137,7 +137,7 @@ class MetaData {
   })
   @ValidateNested()
   @Type(() => DidDoc)
-  didDocument: DidDoc;
+  didDocument: Partial<DidDoc>;
 }
 export class CreateDidResponse {
   @ApiProperty({
