@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CredProof, CredStatus, Namespace } from './create-credential.dto';
+import { CredStatus, Namespace } from './create-credential.dto';
 import { Type } from 'class-transformer';
 import { IsEnum, ValidateNested } from 'class-validator';
 
@@ -13,15 +13,6 @@ export class RegisterCredentialStatusDto {
   @Type(() => CredStatus)
   @ValidateNested({ each: true })
   credentialStatus: CredStatus;
-  @ApiProperty({
-    name: 'credentialStatusProof',
-    description: 'Status proof of the credential',
-    required: true,
-    type: CredProof,
-  })
-  @Type(() => CredProof)
-  @ValidateNested({ each: true })
-  credentialStatusProof: CredProof;
   @ApiProperty({
     name: 'namespace',
     description: 'Namespace',

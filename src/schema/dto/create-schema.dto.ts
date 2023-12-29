@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   ArrayMinSize,
   IsBoolean,
+  IsDefined,
   IsEnum,
   IsNotEmpty,
   IsNotEmptyObject,
@@ -11,8 +12,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
-import { ToPascalCase } from 'src/utils/customDecorator/case.decorator';
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
+import { Namespace } from 'src/did/dto/create-did.dto';
 
 export enum DataType {
   string = 'string',
@@ -64,13 +65,13 @@ export class SchemaBody {
   })
   @IsString()
   @IsNotEmpty()
-  @ToPascalCase()
   name: string;
 
   @ApiProperty({
     description: 'Issuer Did',
     example: 'did:hid:namespace:................',
   })
+  @IsDefined()
   @IsString()
   @IsNotEmpty()
   @IsDid()
@@ -121,6 +122,7 @@ export class CreateSchemaDto {
   })
   @IsString()
   @IsNotEmpty()
+  @IsEnum(Namespace)
   namespace: string;
   @ApiProperty({
     description: 'Verification Method id for did updation',
@@ -128,6 +130,7 @@ export class CreateSchemaDto {
   })
   @ValidateVerificationMethodId()
   @IsString()
+  @IsNotEmpty()
   verificationMethodId: string;
 }
 

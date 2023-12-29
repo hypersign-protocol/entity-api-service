@@ -20,6 +20,7 @@ import {
   CreateCredentialDto,
   CreateCredentialResponse,
   ResolveCredential,
+  ResolvedCredentialStatus,
 } from '../dto/create-credential.dto';
 import { UpdateCredentialDto } from '../dto/update-credential.dto';
 import {
@@ -246,7 +247,7 @@ export class CredentialController {
   @Patch('status/:credentialId')
   @ApiOkResponse({
     description: 'Credential Updated',
-    type: ResolveCredential,
+    type: ResolvedCredentialStatus,
   })
   @ApiNotFoundResponse({
     status: 404,

@@ -28,16 +28,52 @@ class CredResultProof extends CredentialProof {
     description: '',
     example: [
       'https://www.w3.org/2018/credentials/v1',
+      'https://raw.githubusercontent.com/hypersign-protocol/hypersign-contexts/main/HypersignCredentialStatus2023.jsonld',
       {
-        hs: 'https://api.jagrat.hypersign.id/hypersign-protocol/hidnode/ssi/schema/sch:hid:testnet:z3KX4ZqoizKTaED645aV4aE8dBbnSpmQYe3xfzVBJadPY:1.0:',
-      },
-      {
-        name: 'hs:name',
+        '@context': {
+          '@protected': true,
+          '@version': 1.1,
+          id: '@id',
+          type: '@type',
+          RailwayTicketSchema: {
+            '@context': {
+              '@propagate': true,
+              '@protected': true,
+              xsd: 'http://www.w3.org/2001/XMLSchema#',
+              name: {
+                '@id': 'https://hypersign-schema.org/name',
+                '@type': 'xsd:string',
+              },
+            },
+            '@id': 'https://hypersign-schema.org',
+          },
+        },
       },
       'https://w3id.org/security/suites/ed25519-2020/v1',
     ],
   })
   '@context': Array<string>;
+}
+
+class Controller {
+  @ApiProperty({
+    name: '@context',
+    description: 'issuer didDoc id',
+    example: ['https://www.w3.org/ns/did/v1'],
+  })
+  '@contexts': string[];
+  @ApiProperty({
+    name: 'id',
+    description: 'issuer didDoc id',
+    example: 'did:hid:testnet:zrstybdkfbjg..........',
+  })
+  id: boolean;
+  @ApiProperty({
+    name: 'assertionMethod',
+    description: '',
+    example: ['did:hid:testnet:zrstybdkfbjg..........'],
+  })
+  assertionMethod: string[];
 }
 class PurposeResult {
   @ApiProperty({
@@ -46,6 +82,12 @@ class PurposeResult {
     example: true,
   })
   valid: boolean;
+  @ApiProperty({
+    name: 'controller',
+    description: '',
+    type: Controller,
+  })
+  controller: Controller;
 }
 class VerificationMethod {
   @ApiProperty({

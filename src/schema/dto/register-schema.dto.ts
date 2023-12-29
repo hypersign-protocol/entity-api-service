@@ -205,5 +205,5 @@ export class RegisterSchemaDto {
   @IsNotEmptyObject()
   @Type(() => SchemaProof)
   @ValidateNested({ each: true })
-  schemaProof;
+  schemaProof: SchemaProof;
 }

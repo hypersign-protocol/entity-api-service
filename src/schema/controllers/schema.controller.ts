@@ -152,7 +152,7 @@ export class SchemaController {
   resolveSchema(
     @Headers('Authorization') authorization: string,
     @Param('schemaId') schemaId: string,
-  ): Promise<ResolveSchema> {
+  ): Promise<Partial<ResolveSchema>> {
     Logger.log('resolveSchema() method: starts', 'SchemaController');
 
     return this.schemaService.resolveSchema(schemaId);
