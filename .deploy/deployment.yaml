@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: entity-api
-          image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-service:latest
+          image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-service:__LATEST_RELEASE_TAG__
           imagePullPolicy: Always
 
           resources:
