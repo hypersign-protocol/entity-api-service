@@ -48,7 +48,7 @@ spec:
             - name: JWT_SECRET
               value: __JWT_SECRET__
             - name: WHITELISTED_CORS
-              value: "['https://entity.hypersign.id','https://entity.hypersign.id','https://entity-stage.hypersign.id','https://api.entity-stage.hypersign.id','https://wallet-jagrat.hypersign.id','https://wallet-prajna.hypersign.id']"
+              value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://wallet-prajna.hypersign.id']"
 
           ports:
             - containerPort: __PORT__

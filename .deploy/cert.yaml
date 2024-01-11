@@ -5,8 +5,8 @@ metadata:
       namespace: hypermine-development
 spec:
       dnsNames:
-            - api.entity-stage.hypersign.id
-            - "*.api.entity-stage.hypersign.id"
+            - api.entity.hypersign.id
+            - "*.api.entity.hypersign.id"
       issuerRef:
             kind: Issuer
             name: letsencrypt-production
