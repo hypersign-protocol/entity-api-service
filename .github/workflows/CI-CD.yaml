@@ -88,6 +88,8 @@ jobs:
       - name: "Replace secrets"
         run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__BASE_DB_PATH__#${{ secrets.BASE_DB_PATH }}#" {} \;
       - name: "Replace secrets"
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__DB_CONFIG__#${{ secrets.DB_CONFIG }}#" {} \;
+      - name: "Replace secrets"
         run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_RPC__#${{ secrets.HID_NETWORK_RPC }}#" {} \;
       - name: "Replace secrets"
         run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_API__#${{ secrets.HID_NETWORK_API }}#" {} \;

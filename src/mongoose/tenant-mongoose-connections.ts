@@ -45,18 +45,17 @@ export const databaseProviders = [
 
       // TODO: take this from env using configService
       const BASE_DB_PATH = config.get('BASE_DB_PATH');
+      const CONFIG_DB = config.get('DB_CONFIG');
       if (!BASE_DB_PATH) {
         throw new Error('No BASE_DB_PATH set in env');
       }
 
-      const uri = `${BASE_DB_PATH}`;
+      const uri = `${BASE_DB_PATH}/${subdomain}+${CONFIG_DB}`;
       Logger.log(
         'Before creating new db connection...',
         'tenant-mongoose-connections',
       );
-      const newConnectionPerApp = await mongoose
-        .createConnection(uri)
-        .useDb(subdomain);
+      const newConnectionPerApp = await mongoose.createConnection(uri);
 
       newConnectionPerApp.on('disconnected', () => {
         Logger.log(
