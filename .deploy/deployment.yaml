@@ -52,6 +52,9 @@ spec:
 
           ports:
             - containerPort: __PORT__
+          volumeMounts:
+            - name: mongo
+              mountPath: "/data"
 ---
 apiVersion: v1
 kind: Service

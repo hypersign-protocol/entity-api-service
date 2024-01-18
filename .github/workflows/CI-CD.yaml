@@ -38,10 +38,7 @@ jobs:
           GOOGLE_ARTIFACT_URL: ${{secrets.GOOGLE_ARTIFACT_URL}}
 
         run: gcloud auth configure-docker $GOOGLE_ARTIFACT_URL
-      - name: "Get CA"
-        run: echo ${{ secrets.CA}}  >> ca.pem
-      - name: "Get CLIENT"
-        run: echo ${{ secrets.CLIENT}}  >> client.pem
+
       - name: "Docker Build and Push"
         env:
           GOOGLE_PROJECT_ID: ${{secrets.GOOGLE_PROJECT_ID}}
