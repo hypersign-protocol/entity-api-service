@@ -24,6 +24,8 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
+          ports:
+            - containerPort: __PORT__
           env:
             - name: PORT
               value: "__PORT__"
@@ -49,9 +51,6 @@ spec:
               value: __JWT_SECRET__
             - name: WHITELISTED_CORS
               value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://wallet-prajna.hypersign.id']"
-
-          ports:
-            - containerPort: __PORT__
 
 ---
 apiVersion: v1
