@@ -51,7 +51,13 @@ spec:
               value: __JWT_SECRET__
             - name: WHITELISTED_CORS
               value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://wallet-prajna.hypersign.id']"
-
+          volumeMounts:
+            - name: mongo
+              mountPath: "/data"
+      volumes:
+        - name: mongo
+          secret:
+            secretName: mongo
 ---
 apiVersion: v1
 kind: Service
