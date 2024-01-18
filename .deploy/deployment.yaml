@@ -55,6 +55,10 @@ spec:
           volumeMounts:
             - name: mongo
               mountPath: "/data"
+      volumes:
+        - name: mongo
+          secret:
+            secretName: mongo
 ---
 apiVersion: v1
 kind: Service
