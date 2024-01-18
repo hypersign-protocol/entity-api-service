@@ -49,13 +49,14 @@ export const databaseProviders = [
         throw new Error('No BASE_DB_PATH set in env');
       }
 
-      const uri = `${BASE_DB_PATH}/${subdomain}?retryWrites=true&w=majority`;
-
+      const uri = `${BASE_DB_PATH}`;
       Logger.log(
         'Before creating new db connection...',
         'tenant-mongoose-connections',
       );
-      const newConnectionPerApp = await mongoose.createConnection(uri);
+      const newConnectionPerApp = await mongoose
+        .createConnection(uri)
+        .useDb(subdomain);
 
       newConnectionPerApp.on('disconnected', () => {
         Logger.log(
