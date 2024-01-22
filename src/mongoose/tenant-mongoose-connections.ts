@@ -50,7 +50,7 @@ export const databaseProviders = [
         throw new Error('No BASE_DB_PATH set in env');
       }
 
-      const uri = `${BASE_DB_PATH}/${subdomain}+${CONFIG_DB}`;
+      const uri = `${BASE_DB_PATH}/${tenantDB}${CONFIG_DB}`;
       Logger.log(
         'Before creating new db connection...',
         'tenant-mongoose-connections',
