@@ -29,12 +29,17 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       'Middleware',
     );
 
-    const subdomain =
+    let subdomain =
       req.subdomains.length > 0 ? req.subdomains.at(-1) : undefined;
     Logger.debug(`Subdomain ${subdomain} `, 'Middleware');
+    Logger.debug(`Origin ${origin} `, 'Middleware');
 
-    if (!subdomain) {
-      throw new BadRequestException(['Invalid subdomain']);
+    if (!(origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      if (!subdomain) {
+        throw new BadRequestException(['Invalid subdomain']);
+      }
+    } else {
+      subdomain = origin.split('.')[0].split('://')[1];
     }
 
     if (
@@ -95,6 +100,7 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
         subdomain: decoded['subdomain'],
         edvId: decoded['edvId'],
       };
+
       if (appInfo.subdomain != subdomain) {
         throw new UnauthorizedException(['Invalid subdomain']);
       }

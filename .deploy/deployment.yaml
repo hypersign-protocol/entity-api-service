@@ -17,18 +17,22 @@ spec:
     spec:
       containers:
         - name: entity-api
-          image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-service:latest
+          image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-service:__LATEST_RELEASE_TAG__
           imagePullPolicy: Always
 
           resources:
             limits:
               memory: "1Gi"
               cpu: "1000m"
+          ports:
+            - containerPort: __PORT__
           env:
             - name: PORT
               value: "__PORT__"
             - name: BASE_DB_PATH
               value: __BASE_DB_PATH__
+            - name: DB_CONFIG
+              value: __DB_CONFIG__
             - name: HID_NETWORK_RPC
               value: __HID_NETWORK_RPC__
             - name: HID_NETWORK_API
@@ -48,10 +52,14 @@ spec:
             - name: JWT_SECRET
               value: __JWT_SECRET__
             - name: WHITELISTED_CORS
-              value: "['https://entity.hypersign.id','https://entity.hypersign.id','https://entity-stage.hypersign.id','https://api.entity-stage.hypersign.id','https://wallet-jagrat.hypersign.id','https://wallet-prajna.hypersign.id']"
-
-          ports:
-            - containerPort: __PORT__
+              value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://wallet-prajna.hypersign.id']"
+          volumeMounts:
+            - name: mongo
+              mountPath: "/data"
+      volumes:
+        - name: mongo
+          secret:
+            secretName: mongo
 ---
 apiVersion: v1
 kind: Service

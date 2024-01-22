@@ -36,7 +36,7 @@ export class MongooseConfigService implements MongooseOptionsFactory {
       if (!BASE_DB_PATH) {
         throw new Error('No BASE_DB_PATH set in env');
       }
-      const uri = `${BASE_DB_PATH}/${appId}?retryWrites=true&w=majority`;
+      const uri = `${BASE_DB_PATH}/${appId}${this.config.get('DB_CONFIG')}`;
       Logger.log('DB Uri ' + uri, 'mongooseService');
 
       return {
