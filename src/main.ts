@@ -117,7 +117,7 @@ async function bootstrap() {
       customCss: ` .topbar-wrapper img {content:url(\'./Entity_full.png\'); width:135px; height:auto;margin-left: -150px;}
       .swagger-ui .topbar { background-color: #fff; }`,
     };
-    SwaggerModule.setup('/ssi', app, tenantDocuments, tenantOptions);
+    SwaggerModule.setup('/', app, tenantDocuments, tenantOptions);
   } catch (e) {
     Logger.error(e);
   }
