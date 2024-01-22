@@ -91,8 +91,8 @@ async function bootstrap() {
   try {
     // Swagger documentation setup
     const tenantDocConfig = new DocumentBuilder()
-      .setTitle('Entity Studio SSI API Playground')
-      .setDescription('Open API Documentation of the Entity Studio')
+      .setTitle('Entity Self Sovereign Identity (SSI) APIs')
+      .setDescription('Open API Documentation for Entity SSI')
       .addBearerAuth(
         {
           type: 'http',
