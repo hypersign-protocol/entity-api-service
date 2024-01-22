@@ -16,11 +16,11 @@ spec:
   tls:
     - secretName: entity-ssl
       hosts:
-        - "api.entity-stage.hypersign.id"
-        - "*.api.entity-stage.hypersign.id"
+        - "api.entity.hypersign.id"
+        - "*.api.entity.hypersign.id"
 
   rules:
-    - host: "api.entity-stage.hypersign.id"
+    - host: "api.entity.hypersign.id"
       http:
         paths:
           - path: /
@@ -44,7 +44,7 @@ spec:
                 name: entity-api-service
                 port:
                   number: 3001
-    - host: "*.api.entity-stage.hypersign.id"
+    - host: "*.api.entity.hypersign.id"
       http:
         paths:
           - path: /
