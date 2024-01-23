@@ -25,10 +25,7 @@ export const databaseProviders = [
       const tenantDB: string =
         subdomain +
         '_' +
-        (config.get('SERVICE_SUFFIX')
-          ? config.get('SERVICE_SUFFIX')
-          : 'SSIdb');
-
+        (config.get('SERVICE_SUFFIX') ? config.get('SERVICE_SUFFIX') : 'SSIdb');
 
       // // Find existing connection
       const foundConn = connections.find((con: Connection) => {
