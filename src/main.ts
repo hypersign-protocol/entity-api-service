@@ -75,7 +75,7 @@ async function bootstrap() {
     const vaultPrefix =
       vaultPrefixInEnv && vaultPrefixInEnv != 'undefined'
         ? vaultPrefixInEnv
-        : 'hs:studio-api:';
+        : 'hs:developer-dashboard:';
     const edvId = vaultPrefix + 'kms:' + kmsVaultWallet.didDocument.id;
     const kmsVault = await kmsVaultManager.createVault(kmsVaultWallet, edvId);
 
