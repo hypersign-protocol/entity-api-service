@@ -22,7 +22,13 @@ export const databaseProviders = [
         'tenant-mongoose-connections',
       );
       const subdomain = request['user']['subdomain'];
-      const tenantDB: string = subdomain;
+      const tenantDB: string =
+        subdomain +
+        '_' +
+        (config.get('SERVICE_SUFFIX')
+          ? config.get('SERVICE_SUFFIX')
+          : 'SSIdb');
+
 
       // // Find existing connection
       const foundConn = connections.find((con: Connection) => {
