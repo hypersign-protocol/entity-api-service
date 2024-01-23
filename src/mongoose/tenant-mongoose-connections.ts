@@ -23,12 +23,13 @@ export const databaseProviders = [
       );
       const subdomain = request['user']['subdomain'];
       const tenantDB: string =
-        subdomain +
-        '_' +
+        'service' +
+        ':' +
         (config.get('SERVICE_SUFFIX')
           ? config.get('SERVICE_SUFFIX')
-          : 'SSIdb');
-
+          : 'SSIdb') +
+        ':' +
+        subdomain;
 
       // // Find existing connection
       const foundConn = connections.find((con: Connection) => {
