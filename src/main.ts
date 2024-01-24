@@ -75,7 +75,7 @@ async function bootstrap() {
     const vaultPrefix =
       vaultPrefixInEnv && vaultPrefixInEnv != 'undefined'
         ? vaultPrefixInEnv
-        : 'hs:studio-api:';
+        : 'hs:developer-dashboard:';
     const edvId = vaultPrefix + 'kms:' + kmsVaultWallet.didDocument.id;
     const kmsVault = await kmsVaultManager.createVault(kmsVaultWallet, edvId);
 
@@ -91,8 +91,8 @@ async function bootstrap() {
   try {
     // Swagger documentation setup
     const tenantDocConfig = new DocumentBuilder()
-      .setTitle('Entity Studio SSI API Playground')
-      .setDescription('Open API Documentation of the Entity Studio')
+      .setTitle('Entity Self Sovereign Identity (SSI) APIs')
+      .setDescription('Open API Documentation for Entity SSI')
       .addBearerAuth(
         {
           type: 'http',
@@ -117,7 +117,7 @@ async function bootstrap() {
       customCss: ` .topbar-wrapper img {content:url(\'./Entity_full.png\'); width:135px; height:auto;margin-left: -150px;}
       .swagger-ui .topbar { background-color: #fff; }`,
     };
-    SwaggerModule.setup('/ssi', app, tenantDocuments, tenantOptions);
+    SwaggerModule.setup('/', app, tenantDocuments, tenantOptions);
   } catch (e) {
     Logger.error(e);
   }

@@ -22,7 +22,14 @@ export const databaseProviders = [
         'tenant-mongoose-connections',
       );
       const subdomain = request['user']['subdomain'];
-      const tenantDB: string = subdomain;
+      const tenantDB: string =
+        'service' +
+        ':' +
+        (config.get('SERVICE_SUFFIX')
+          ? config.get('SERVICE_SUFFIX')
+          : 'SSI_API') +
+        ':' +
+        subdomain;
 
       // // Find existing connection
       const foundConn = connections.find((con: Connection) => {
@@ -50,7 +57,7 @@ export const databaseProviders = [
         throw new Error('No BASE_DB_PATH set in env');
       }
 
-      const uri = `${BASE_DB_PATH}/${subdomain}+${CONFIG_DB}`;
+      const uri = `${BASE_DB_PATH}/${tenantDB}${CONFIG_DB}`;
       Logger.log(
         'Before creating new db connection...',
         'tenant-mongoose-connections',

@@ -43,6 +43,7 @@
     "hid-hd-wallet": "git+https://github.com/hypersign-protocol/hid-hd-wallet.git#main",
     "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk#testcase/bjj",
     "hypersign-edv-client": "github:hypersign-protocol/hypersign-edv-client#develop",
+    "idb-keyval": "^6.2.1",
     "mongoose": "^6.8.3",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
