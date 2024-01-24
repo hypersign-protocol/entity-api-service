@@ -27,7 +27,7 @@ export const databaseProviders = [
         ':' +
         (config.get('SERVICE_SUFFIX')
           ? config.get('SERVICE_SUFFIX')
-          : 'SSIdb') +
+          : 'SSI_API') +
         ':' +
         subdomain;
 
