@@ -33,7 +33,7 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
     const subdomain =
       req.subdomains.length > 0 ? req.subdomains.at(-1) : host.split('.')[0];
     Logger.debug(`Subdomain ${subdomain} `, 'Middleware');
-    Logger.debug(`Origin ${host} `, 'Middleware');
+    Logger.debug(`Host ${host} `, 'Middleware');
 
     // if (!(origin.includes('localhost') || origin.includes('127.0.0.1'))) {
     //   if (!subdomain) {
