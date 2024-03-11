@@ -15,31 +15,32 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       'WhitelistSSICorsMiddleware: checking if call is form whitelisted domain starts',
       'Middleware',
     );
-    let referer = req.header('Referer');
+    const origin = req.header('Origin');
+    // let referer = req.header('Referer');
 
     // Extract the origin
-    if (referer) {
-      const referalUrl = new URL(referer);
-      referer = `${referalUrl.protocol}//${referalUrl.host}`;
-    }
-    const origin = req.header('Origin') || referer;
+    // if (referer) {
+    //   const referalUrl = new URL(referer);
+    //   referer = `${referalUrl.protocol}//${referalUrl.host}`;
+    // }
+    const host = req.header('Host');
 
     Logger.debug(
-      `WhitelistSSICorsMiddleware: request is comming from ${origin}`,
+      `WhitelistSSICorsMiddleware: request is comming from ${host}`,
       'Middleware',
     );
 
     let subdomain =
       req.subdomains.length > 0 ? req.subdomains.at(-1) : undefined;
     Logger.debug(`Subdomain ${subdomain} `, 'Middleware');
-    Logger.debug(`Origin ${origin} `, 'Middleware');
+    Logger.debug(`Origin ${host} `, 'Middleware');
 
     if (!(origin.includes('localhost') || origin.includes('127.0.0.1'))) {
       if (!subdomain) {
         throw new BadRequestException(['Invalid subdomain']);
       }
     } else {
-      subdomain = origin.split('.')[0].split('://')[1];
+      subdomain = host.split('.')[0];
     }
 
     if (
