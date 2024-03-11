@@ -67,6 +67,9 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
         throw new UnauthorizedException([e]);
       }
 
+      if (decoded.grantType != 'access_service_ssi') {
+        throw new BadRequestException(['Invalid grant type for this service']);
+      }
       type App = {
         appId?: string;
         kmsId?: string;
