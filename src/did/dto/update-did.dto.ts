@@ -268,4 +268,13 @@ export class UpdateDidDto {
     example: false,
   })
   deactivate: boolean;
+
+  @ApiProperty({
+    name: 'name',
+    example: `Issuer Identity`,
+    description: 'Any human-readable name for this DID',
+    required: false,
+  })
+  @IsOptional()
+  name?: string;
 }

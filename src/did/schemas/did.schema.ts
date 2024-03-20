@@ -60,6 +60,13 @@ export class Did {
   @Prop({ unique: true, required: false })
   @IsString()
   kmsId: string;
+
+  @ApiProperty({
+    name: 'name',
+  })
+  @IsOptional()
+  @Prop()
+  name?: string;
 }
 
 @Schema()
