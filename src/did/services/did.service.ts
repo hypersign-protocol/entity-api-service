@@ -269,6 +269,7 @@ export class DidService {
         hdPathIndex: null,
         transactionHash: '',
         registrationStatus: RegistrationStatus.UNREGISTRED,
+        name: createDidDto.options?.name,
       });
       Logger.log(
         'After calling didRepositiory.create() did ' + didDoc.id,
@@ -345,6 +346,7 @@ export class DidService {
           registerDidDoc && registerDidDoc?.transactionHash
             ? RegistrationStatus.COMPLETED
             : RegistrationStatus.UNREGISTRED,
+        name: DidInfo.name,
       });
     } else {
       const didData = await this.didRepositiory.findOne({
@@ -463,11 +465,13 @@ export class DidService {
       const tempResolvedDid = {
         didDocument: resolvedDid,
         didDocumentMetadata: {},
+        name: didInfo.name,
       };
       resolvedDid = tempResolvedDid;
     } else {
       const hypersignDid = new HypersignDID();
       resolvedDid = await hypersignDid.resolve({ did });
+      resolvedDid['name'] = didInfo?.name;
     }
     return resolvedDid;
   }

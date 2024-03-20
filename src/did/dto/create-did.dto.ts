@@ -66,6 +66,7 @@ export class Options {
   @IsOptional()
   @IsBoolean()
   register?: boolean = false; // keeping it for time being will remove it later
+
   @ApiProperty({
     description:
       'verificationRelationships defines  verification methods to be used for which purposes',
@@ -78,6 +79,15 @@ export class Options {
   @IsArray()
   @IsEnum(IVerificationRelationships, { each: true })
   verificationRelationships?: IVerificationRelationships[];
+
+  @ApiProperty({
+    name: 'name',
+    example: `Issuer Identity`,
+    description: 'Any human-readable name for this DID',
+    required: false,
+  })
+  @IsOptional()
+  name?: string;
 }
 export class CreateDidDto {
   @ApiProperty({
