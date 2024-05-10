@@ -50,6 +50,8 @@ import { RegisterDidDto } from '../dto/register-did.dto';
 import { IKeyType } from 'hs-ssi-sdk';
 import { AtLeastOneParamPipe } from 'src/utils/Pipes/atleastOneParam.pipe';
 import { AddVMResponse, AddVerificationMethodDto } from '../dto/addVm.dto';
+import { SignDidDto, SignedDidDocument } from '../dto/sign-did.dto';
+import { VerifyDidDocResponseDto, VerifyDidDto } from '../dto/verify-did.dto';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
@@ -192,7 +194,7 @@ export class DidController {
   }
 
   @Post('/addVerificationMethod')
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'Added vm to Did Document',
     type: AddVMResponse,
   })
@@ -217,12 +219,73 @@ export class DidController {
   addVerficationMethod(
     @Headers('Authorization') authorization: string,
     @Body() addVm: AddVerificationMethodDto,
-    @Req() req: any,
   ) {
     Logger.log('addVerificationMethod() method: starts', 'DidController');
     return this.didService.addVerificationMethod(addVm);
   }
-  @ApiCreatedResponse({
+
+  @Post('/sign')
+  @ApiOkResponse({
+    description: 'DidDocument is signed successfully',
+    type: SignedDidDocument,
+  })
+  @ApiBadRequestResponse({
+    status: 400,
+    description: 'Error occured at the time of signing did',
+    type: DidError,
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
+  @ApiHeader({
+    name: 'Origin',
+    description: 'Origin as you set in application cors',
+    required: false,
+  })
+  @UsePipes(ValidationPipe)
+  @UsePipes(new AtLeastOneParamPipe(['did', 'didDocument']))
+  SignDidDocument(
+    @Headers('Authorization') authorization: string,
+    @Req() req: any,
+    @Body() signDidDocDto: SignDidDto,
+  ) {
+    Logger.log('SignDidDocument() method: starts', 'DidController');
+    return this.didService.SignDidDocument(signDidDocDto, req.user);
+  }
+  @Post('/verify')
+  @ApiOkResponse({
+    description: 'DidDocument is verified successfully',
+    type: VerifyDidDocResponseDto,
+  })
+  @ApiBadRequestResponse({
+    status: 400,
+    description: 'Error occured at the time of verifing did',
+    type: DidError,
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
+  @ApiHeader({
+    name: 'Origin',
+    description: 'Origin as you set in application cors',
+    required: false,
+  })
+  @UsePipes(ValidationPipe)
+  @UsePipes(new AtLeastOneParamPipe(['did', 'didDocument']))
+  VerifyDidDocument(
+    @Headers('Authorization') authorization: string,
+    @Req() req: any,
+    @Body() verifyDidDto: VerifyDidDto,
+  ) {
+    Logger.log('VerifyDidDocument() method: starts', 'DidController');
+    return this.didService.VerifyDidDocument(verifyDidDto, req.user);
+  }
+
+  @ApiOkResponse({
     description: 'DID Registred',
     type: RegisterDidResponse,
   })
