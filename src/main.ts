@@ -55,7 +55,24 @@ async function bootstrap() {
     mnemonic_EnglishMnemonic,
   );
 
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api/v1/');
+
+  app.use((req, res, next) => {
+    if (req.path == '/api/v1/edv/state' && process.env.EDV_STATUS !== 'DOWN') {
+      return res.status(200).json({
+        status: 200,
+        isEdvLive: true,
+      });
+    }
+    if (req.path == '/api/v1/edv/state' && process.env.EDV_STATUS == 'DOWN') {
+      return res.status(502).json({
+        status: 502,
+        isEdvLive: false,
+      });
+    }
+    next();
+  });
+
   if (!existDir(process.env.EDV_CONFIG_DIR)) {
     createDir(process.env.EDV_CONFIG_DIR);
   }
@@ -83,8 +100,10 @@ async function bootstrap() {
     globalThis.kmsVault = kmsVault;
 
     Logger.log('After  keymanager initialization', 'main');
+    process.env.EDV_STATUS = 'UP';
   } catch (e) {
     Logger.error('Could not initialize keymanager', 'main');
+    process.env.EDV_STATUS = 'DOWN';
     Logger.error(e);
   }
 
@@ -126,5 +145,19 @@ async function bootstrap() {
     `Server running on http://localhost:${process.env.PORT}`,
     'Bootstrap',
   );
+  setInterval(async () => await checkEdv(), 120000);
 }
+
+async function checkEdv() {
+  try {
+    const resp = await fetch(process.env.EDV_BASE_URL + '/api');
+
+    if (resp.status == 200) {
+      process.env.EDV_STATUS = 'UP';
+    }
+  } catch (error) {
+    process.env.EDV_STATUS = 'DOWN';
+  }
+}
+
 bootstrap();
