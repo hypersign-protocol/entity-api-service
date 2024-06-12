@@ -4,6 +4,8 @@ COPY ./package.json .
 RUN npx patch-package -y 
 
 COPY ./tsconfig.json .
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
 RUN npm install
 COPY . .
 RUN npm run build
