@@ -1,7 +1,8 @@
 FROM node:16
 WORKDIR /usr/src/app
-RUN npx patch-package -y 
 COPY ./package.json .
+RUN npx patch-package -y 
+
 COPY ./tsconfig.json .
 RUN npm install
 COPY . .
