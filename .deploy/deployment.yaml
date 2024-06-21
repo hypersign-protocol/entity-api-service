@@ -27,6 +27,10 @@ spec:
             periodSeconds: 5
             failureThreshold: 1
 
+          resources:
+            limits:
+              memory: "5Gi"
+              cpu: "1000m"
           ports:
             - containerPort: __PORT__
           env:
