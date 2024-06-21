@@ -6,7 +6,7 @@ RUN npx patch-package -y
 
 COPY ./tsconfig.json .
 
-ENV NODE_OPTIONS="--openssl-legacy-provider --max-old-space-size=4096"
+ENV NODE_OPTIONS="--openssl-legacy-provider"
 
 RUN npm install
 COPY . .

@@ -29,8 +29,8 @@ spec:
 
           resources:
             limits:
-              memory: "5Gi"
-              cpu: "1000m"
+              memory: "2Gi"
+              cpu: "500m"
           ports:
             - containerPort: __PORT__
           env:
@@ -129,5 +129,6 @@ spec:
 #     - port: 8080
 #       targetPort: 8080
 #       protocol: TCP
+
 
 
