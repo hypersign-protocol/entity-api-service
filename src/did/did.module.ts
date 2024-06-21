@@ -26,7 +26,7 @@ import { JwtStrategy } from '../utils/jwt.strategy';
 import { RedisConnectorService } from 'src/redis-connector/redis-connector.service';
 import { RedisConnectorModule } from 'src/redis-connector/redis-connector.module';
 @Module({
-  imports: [EdvModule, HidWalletModule,RedisConnectorModule],
+  imports: [EdvModule, HidWalletModule, RedisConnectorModule],
   controllers: [DidController],
   providers: [
     RedisConnectorService,
