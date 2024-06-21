@@ -27,10 +27,6 @@ spec:
             periodSeconds: 5
             failureThreshold: 1
 
-          resources:
-            limits:
-              memory: "1Gi"
-              cpu: "1000m"
           ports:
             - containerPort: __PORT__
           env:
@@ -129,4 +125,5 @@ spec:
 #     - port: 8080
 #       targetPort: 8080
 #       protocol: TCP
+
 
