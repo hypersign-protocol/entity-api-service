@@ -7,6 +7,7 @@ import { DidModule } from './did/did.module';
 import { SchemaModule } from './schema/schema.module';
 import { CredentialModule } from './credential/credential.module';
 import { PresentationModule } from './presentation/presentation.module';
+import { RedisConnectorModule } from './redis-connector/redis-connector.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -18,6 +19,7 @@ import { PresentationModule } from './presentation/presentation.module';
     SchemaModule,
     CredentialModule,
     PresentationModule,
+    RedisConnectorModule,
   ],
   controllers: [],
   providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],

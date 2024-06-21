@@ -15,6 +15,7 @@ import { HypersignDID, HypersignVerifiableCredential } from 'hs-ssi-sdk';
 import { VerifyCredentialDto } from '../dto/verify-credential.dto';
 import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
+import { RedisConnectorService } from 'src/redis-connector/redis-connector.service';
 
 @Injectable()
 export class CredentialService {
@@ -24,6 +25,7 @@ export class CredentialService {
     private readonly hidWallet: HidWalletService,
     private credentialRepository: CredentialRepository,
     private readonly didRepositiory: DidRepository,
+    private readonly redisConnector: RedisConnectorService,
   ) {}
 
   async create(createCredentialDto: CreateCredentialDto, appDetail) {
@@ -128,17 +130,32 @@ export class CredentialService {
       if (registerCredentialStatus == undefined) {
         registerCredentialStatus = true;
       }
+
       const {
         signedCredential,
         credentialStatus,
         credentialStatusRegistrationResult,
+        credentialStatusProof,
       } = await hypersignVC.issue({
         credential,
         issuerDid,
         verificationMethodId,
         privateKeyMultibase,
-        registerCredential: registerCredentialStatus,
+        registerCredential: false,
       });
+
+      if (registerCredentialStatus === true) {
+        const txn_message =
+          await hypersignVC.generateRegisterCredentialStatusTxnMessage(
+            credentialStatus,
+            credentialStatusProof,
+          );
+
+        txn_message['value']['txAuthor'] = this.config.get('TXN_AUTHOR');
+
+        this.redisConnector.sendVcTxn(txn_message, signedCredential.id);
+      }
+
       let edvData = undefined;
       if (persist) {
         const creedential = {

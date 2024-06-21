@@ -30,6 +30,7 @@ import { Did as IDidDto } from '../schemas/did.schema';
 import { AddVerificationMethodDto } from '../dto/addVm.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { ConfigService } from '@nestjs/config';
+import { RedisConnectorService } from 'src/redis-connector/redis-connector.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class DidService {
@@ -39,6 +40,7 @@ export class DidService {
     private readonly hidWallet: HidWalletService,
     private readonly didSSIService: DidSSIService,
     private readonly config: ConfigService,
+    private readonly redisConnector: RedisConnectorService,
   ) {}
 
   // TODO: need to fix this once ed25519 is finished.
@@ -328,10 +330,27 @@ export class DidService {
     const { didDocument, signInfos, verificationMethodId } = registerDidDto;
 
     if (!verificationMethodId && signInfos) {
-      registerDidDoc = await hypersignDid.registerByClientSpec({
+      const txnMesage = await hypersignDid.generateRegisterDidTxnMessage(
         didDocument,
         signInfos,
-      });
+      );
+
+      delete signInfos[0]['verification_method_id'];
+
+      signInfos[0]['proofPurpose'] = 'assertionMethod';
+      signInfos[0]['verificationMethod'] = didDocument.verificationMethod[0].id;
+      signInfos[0]['proofValue'] = signInfos[0]['signature'];
+      delete signInfos[0]['signature'];
+
+      signInfos[0]['type'] = 'Ed25519Signature2020';
+
+      this.redisConnector.sendDidTxn(txnMesage, didDocument.id);
+
+      // registerDidDoc = await hypersignDid.registerByClientSpec({
+      //   didDocument,
+      //   signInfos,
+      // });
+
       data = await this.didRepositiory.create({
         did: didDocument['id'],
         appId: appDetail.appId,
@@ -376,7 +395,32 @@ export class DidService {
         'register() method: before calling hypersignDid.register ',
         'DidService',
       );
-      registerDidDoc = await hypersignDid.register(params);
+      // registerDidDoc = await hypersignDid.register(params);
+
+      const signInfos = await hypersignDid.createSignInfos(params);
+      delete signInfos[0]['verification_method_id'];
+
+      signInfos[0]['proofPurpose'] = 'assertionMethod';
+      signInfos[0]['verificationMethod'] = didDocument.verificationMethod[0].id;
+      signInfos[0]['proofValue'] = signInfos[0]['signature'];
+      delete signInfos[0]['signature'];
+
+      signInfos[0]['type'] = 'Ed25519Signature2020';
+      console.log(signInfos);
+
+      const txnMesage = await hypersignDid.generateRegisterDidTxnMessage(
+        didDocument,
+        signInfos,
+      );
+
+      txnMesage['value']['didDocumentProofs'] = signInfos;
+      txnMesage['value']['txAuthor'] = this.config.get('TXN_AUTHOR');
+      console.log(JSON.stringify(txnMesage, null, 2));
+
+      this.redisConnector.sendDidTxn(txnMesage, didDocument.id);
+
+      // push txnMessage to redis
+
       data = await this.didRepositiory.findOneAndUpdate(
         { did: didDocument['id'] },
         {

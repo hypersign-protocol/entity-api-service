@@ -16,9 +16,10 @@ import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { credentialProviders } from './providers/credential.provider';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
+import { RedisConnectorModule } from 'src/redis-connector/redis-connector.module';
 
 @Module({
-  imports: [EdvModule, HidWalletModule, DidModule],
+  imports: [EdvModule, HidWalletModule, DidModule, RedisConnectorModule],
   controllers: [CredentialController],
   providers: [
     CredentialService,

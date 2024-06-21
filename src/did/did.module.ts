@@ -23,10 +23,13 @@ import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 import { didProviders } from './providers/did.provider';
 import { JwtStrategy } from '../utils/jwt.strategy';
+import { RedisConnectorService } from 'src/redis-connector/redis-connector.service';
+import { RedisConnectorModule } from 'src/redis-connector/redis-connector.module';
 @Module({
-  imports: [EdvModule, HidWalletModule],
+  imports: [EdvModule, HidWalletModule,RedisConnectorModule],
   controllers: [DidController],
   providers: [
+    RedisConnectorService,
     JwtStrategy,
     DidService,
     DidRepository,

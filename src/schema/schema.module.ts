@@ -15,9 +15,10 @@ import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { schemaProviders } from './providers/schema.provider';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
+import { RedisConnectorModule } from 'src/redis-connector/redis-connector.module';
 
 @Module({
-  imports: [DidModule],
+  imports: [DidModule, RedisConnectorModule],
   controllers: [SchemaController],
   providers: [
     SchemaService,
