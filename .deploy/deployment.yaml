@@ -28,8 +28,8 @@ spec:
 
         resources:
           limits:
-            memory: "6Gi"
-            cpu: "2000m"
+            memory: "1Gi"
+            cpu: "1000m"
         ports:
         - containerPort: __PORT__
         env:

@@ -58,6 +58,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1/');
 
   app.use((req, res, next) => {
+    Logger.debug({ edv_stats: process.env.EDV_STATUS }, '/api/v1/edv/state');
     if (req.path == '/api/v1/edv/state' && process.env.EDV_STATUS !== 'DOWN') {
       return res.status(200).json({
         status: 200,
