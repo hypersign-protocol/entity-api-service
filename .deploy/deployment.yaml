@@ -18,13 +18,13 @@ spec:
       - name: entity-api
         image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-service:__LATEST_RELEASE_TAG__
         imagePullPolicy: Always
-        # livenessProbe:
-        #   httpGet:
-        #     path: /api/v1/edv/state
-        #     port: 3001
-        #   initialDelaySeconds: 60
-        #   periodSeconds: 5
-        #   failureThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /api/v1/edv/state
+            port: 3001
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          failureThreshold: 3
 
         resources:
           limits:
