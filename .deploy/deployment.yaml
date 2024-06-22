@@ -1,4 +1,3 @@
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,57 +15,57 @@ spec:
         app: entity-api
     spec:
       containers:
-        - name: entity-api
-          image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-service:__LATEST_RELEASE_TAG__
-          imagePullPolicy: Always
-          livenessProbe:
-            httpGet:
-              path: /api/v1/edv/state
-              port: 3001
-            initialDelaySeconds: 60
-            periodSeconds: 5
-            failureThreshold: 1
+      - name: entity-api
+        image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-service:__LATEST_RELEASE_TAG__
+        imagePullPolicy: Always
+        # livenessProbe:
+        #   httpGet:
+        #     path: /api/v1/edv/state
+        #     port: 3001
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 5
+        #   failureThreshold: 1
 
-          resources:
-            limits:
-              memory: "2Gi"
-              cpu: "500m"
-          ports:
-            - containerPort: __PORT__
-          env:
-            - name: PORT
-              value: "__PORT__"
-            - name: BASE_DB_PATH
-              value: __BASE_DB_PATH__
-            - name: DB_CONFIG
-              value: __DB_CONFIG__
-            - name: HID_NETWORK_RPC
-              value: __HID_NETWORK_RPC__
-            - name: HID_NETWORK_API
-              value: __HID_NETWORK_API__
-            - name: HID_NETWORK_NAMESPACE
-              value: __HID_NETWORK_NAMESPACE__
-            - name: EDV_BASE_URL
-              value: __EDV_BASE_URL__
-            - name: EDV_CONFIG_DIR
-              value: __EDV_CONFIG_DIR__
-            - name: EDV_DID_FILE_PATH
-              value: __EDV_DID_FILE_PATH__
-            - name: EDV_KEY_FILE_PATH
-              value: __EDV_KEY_FILE_PATH__
-            - name: MNEMONIC
-              value: __MNEMONIC__
-            - name: JWT_SECRET
-              value: __JWT_SECRET__
-            - name: WHITELISTED_CORS
-              value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://wallet-prajna.hypersign.id']"
-          volumeMounts:
-            - name: mongo
-              mountPath: "/data"
-      volumes:
+        resources:
+          limits:
+            memory: "6Gi"
+            cpu: "2000m"
+        ports:
+        - containerPort: __PORT__
+        env:
+        - name: PORT
+          value: "__PORT__"
+        - name: BASE_DB_PATH
+          value: __BASE_DB_PATH__
+        - name: DB_CONFIG
+          value: __DB_CONFIG__
+        - name: HID_NETWORK_RPC
+          value: __HID_NETWORK_RPC__
+        - name: HID_NETWORK_API
+          value: __HID_NETWORK_API__
+        - name: HID_NETWORK_NAMESPACE
+          value: __HID_NETWORK_NAMESPACE__
+        - name: EDV_BASE_URL
+          value: __EDV_BASE_URL__
+        - name: EDV_CONFIG_DIR
+          value: __EDV_CONFIG_DIR__
+        - name: EDV_DID_FILE_PATH
+          value: __EDV_DID_FILE_PATH__
+        - name: EDV_KEY_FILE_PATH
+          value: __EDV_KEY_FILE_PATH__
+        - name: MNEMONIC
+          value: __MNEMONIC__
+        - name: JWT_SECRET
+          value: __JWT_SECRET__
+        - name: WHITELISTED_CORS
+          value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://wallet-prajna.hypersign.id']"
+        volumeMounts:
         - name: mongo
-          secret:
-            secretName: mongo
+          mountPath: "/data"
+      volumes:
+      - name: mongo
+        secret:
+          secretName: mongo
 ---
 apiVersion: v1
 kind: Service
@@ -81,9 +80,9 @@ spec:
   selector:
     app: entity-api
   ports:
-    - port: __PORT__
-      targetPort: __PORT__
-      protocol: TCP
+  - port: __PORT__
+    targetPort: __PORT__
+    protocol: TCP
 # ---
 # apiVersion: apps/v1
 # kind: Deployment
