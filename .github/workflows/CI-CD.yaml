@@ -45,9 +45,9 @@ jobs:
           GOOGLE_ARTIFACT_URL: ${{secrets.GOOGLE_ARTIFACT_URL}}
           GOOGLE_ARTIFACT_REPO: ${{secrets.GOOGLE_ARTIFACT_REPO}}
         run:
-          docker build -t $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:${{ env.LATEST_RELEASE_TAG }} .
+          docker build -t $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-test-service:${{ env.LATEST_RELEASE_TAG }} .
 
-          docker push $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:${{ env.LATEST_RELEASE_TAG }}
+          docker push $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-test-service:${{ env.LATEST_RELEASE_TAG }}
       - name: "Docker Build and Push"
         env:
           GOOGLE_PROJECT_ID: ${{secrets.GOOGLE_PROJECT_ID}}
@@ -104,6 +104,10 @@ jobs:
       - name: "Replace secrets"
         run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_KEY_FILE_PATH__#${{ secrets.EDV_KEY_FILE_PATH }}#" {} \;
       - name: "Replace secrets"
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__GLOBAL_TXN_CONTROLLER_QUEUE__#${{ secrets.GLOBAL_TXN_CONTROLLER_QUEUE }}#" {} \;
+      - name: "Replace secrets"
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__RABBIT_MQ_URI__#${{ secrets.RABBIT_MQ_URI }}#" {} \;
+      - name: "Replace secrets"
         run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__MNEMONIC__#${{ secrets.MNEMONIC }}#" {} \;
       - name: "Replace secrets"
         run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__JWT_SECRET__#${{ secrets.JWT_SECRET }}#" {} \;
@@ -114,4 +118,4 @@ jobs:
       - name: "Replace secrets"
         run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_PROJECT_ID__/${{ secrets.GOOGLE_PROJECT_ID }}/g'' {} \;
       - name: "Deploy to GKE"
-        run: kubectl apply -f .deploy/deployment.yaml
+        run: kubectl apply -f .deploy/deployment2.yaml

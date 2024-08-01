@@ -30,6 +30,7 @@ import { Did as IDidDto } from '../schemas/did.schema';
 import { AddVerificationMethodDto } from '../dto/addVm.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { ConfigService } from '@nestjs/config';
+import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class DidService {
@@ -39,6 +40,7 @@ export class DidService {
     private readonly hidWallet: HidWalletService,
     private readonly didSSIService: DidSSIService,
     private readonly config: ConfigService,
+    private readonly txnService: TxSendModuleService,
   ) {}
 
   // TODO: need to fix this once ed25519 is finished.
@@ -376,7 +378,20 @@ export class DidService {
         'register() method: before calling hypersignDid.register ',
         'DidService',
       );
-      registerDidDoc = await hypersignDid.register(params);
+
+      const signInfos = await hypersignDid.createSignInfos({
+        didDocument,
+        privateKeyMultibase,
+        verificationMethodId: verificationMethodId,
+      });
+      await this.txnService.sendDIDTxn(
+        didDocument,
+        signInfos,
+        verificationMethodId,
+        appMenemonic,
+      );
+
+      // registerDidDoc = await hypersignDid.register(params);
       data = await this.didRepositiory.findOneAndUpdate(
         { did: didDocument['id'] },
         {
