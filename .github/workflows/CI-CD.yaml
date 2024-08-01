@@ -108,6 +108,8 @@ jobs:
       - name: "Replace secrets"
         run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__RABBIT_MQ_URI__#${{ secrets.RABBIT_MQ_URI }}#" {} \;
       - name: "Replace secrets"
+        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__VAULT_PREFIX__#${{ secrets.VAULT_PREFIX }}#" {} \;
+      - name: "Replace secrets"
         run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__MNEMONIC__#${{ secrets.MNEMONIC }}#" {} \;
       - name: "Replace secrets"
         run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__JWT_SECRET__#${{ secrets.JWT_SECRET }}#" {} \;
