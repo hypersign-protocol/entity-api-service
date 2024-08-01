@@ -4,7 +4,7 @@ metadata:
   name: entity-ingress-test
   namespace: hypermine-development
   annotations:
-    kubernetes.io/ingress.allow-http: "true"
+    kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/force-ssl-redirect: redirect
     ingressClassName: "gce"
     kubernetes.io/ingress.global-static-ip-name: entity-ip-test

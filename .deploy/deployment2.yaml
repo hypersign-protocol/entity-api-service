@@ -62,7 +62,7 @@ spec:
         - name: RABBIT_MQ_URI
           value: __RABBIT_MQ_URI__
         - name: WHITELISTED_CORS
-          value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://wallet-prajna.hypersign.id']"
+          value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://api.entity-test.hypersign.id','https://wallet-prajna.hypersign.id']"
         volumeMounts:
         - name: mongo
           mountPath: "/data"
