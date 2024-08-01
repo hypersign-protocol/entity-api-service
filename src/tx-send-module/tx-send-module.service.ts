@@ -141,6 +141,7 @@ export class TxSendModuleService {
       FIXED_FEE: '50',
       ESTIMATE_GAS_PRICE: '155303',
       podName: 'did-txn-dynamic',
+      granteeWalletAddress: address,
     };
 
     await this.channel.assertQueue('GLOBAL_TXN_CONTROLLER_QUEUE', {
