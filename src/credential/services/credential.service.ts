@@ -15,6 +15,7 @@ import { HypersignDID, HypersignVerifiableCredential } from 'hs-ssi-sdk';
 import { VerifyCredentialDto } from '../dto/verify-credential.dto';
 import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
+import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 
 @Injectable()
 export class CredentialService {
@@ -24,6 +25,7 @@ export class CredentialService {
     private readonly hidWallet: HidWalletService,
     private credentialRepository: CredentialRepository,
     private readonly didRepositiory: DidRepository,
+    private readonly txnService: TxSendModuleService,
   ) {}
 
   async create(createCredentialDto: CreateCredentialDto, appDetail) {
@@ -437,10 +439,12 @@ export class CredentialService {
       );
       const { proof } = credentialStatus;
       delete credentialStatus['proof'];
-      registeredVC = await hypersignVC.registerCredentialStatus({
-        credentialStatus,
-        credentialStatusProof: proof,
-      });
+      // registeredVC = await hypersignVC.registerCredentialStatus({
+      //   credentialStatus,
+      //   credentialStatusProof: proof,
+      // });
+
+      await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
     } catch (e) {
       Logger.error(
         `registerCredentialStatus() method: Error ${e.message}`,
@@ -452,6 +456,6 @@ export class CredentialService {
       'registerCredentialStatus() method: ends....',
       'CredentialService',
     );
-    return { transactionHash: registeredVC.transactionHash };
+    return { transactionHash: registeredVC?.transactionHash };
   }
 }
