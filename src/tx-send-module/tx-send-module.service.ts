@@ -27,6 +27,9 @@ export class TxSendModuleService {
   }
 
   async invokeTxnController(address, granteeMnemonic) {
+    await this.channel.assertQueue('DID_TXN_QUEUE_' + address);
+    await this.channel.assertQueue('CRED_TXN_QUEUE_' + address);
+
     const podENV = {
       RMQ_URL: this.configService.get('RABBIT_MQ_URI'),
       DID_QUEUE_NAME: 'DID_TXN_QUEUE_' + address,
