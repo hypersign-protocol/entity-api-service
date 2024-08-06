@@ -27,19 +27,9 @@ export class TxSendModuleService {
   }
 
   async invokeTxnController(address, granteeMnemonic) {
-    await this.channel.sendToQueue(
-      'DID_TXN_QUEUE_' + address,
-      Buffer.from(null),
-    );
-    await this.channel.sendToQueue(
-      'CRED_TXN_QUEUE_' + address,
-      Buffer.from(null),
-    );
-
     const podENV = {
       RMQ_URL: this.configService.get('RABBIT_MQ_URI'),
-      DID_QUEUE_NAME: 'DID_TXN_QUEUE_' + address,
-      CRED_QUEUE_NAME: 'CRED_TXN_QUEUE_' + address,
+      QUEUE_NAME: 'TXN_QUEUE_' + address,
       NODE_RPC_URL: this.configService.get('HID_NETWORK_RPC'),
       GRANTEE_MNEMONIC: granteeMnemonic,
       GRANTER_ADDRESS: this.granterAddress,
@@ -171,14 +161,19 @@ export class TxSendModuleService {
       value: authExecMsg,
     };
 
-    const queue = 'CRED_TXN_QUEUE_' + address;
+    const data = {
+      type: 'CRED_REGISTER',
+      txMsg,
+    };
+
+    const queue = 'TXN_QUEUE_' + address;
     await this.channel.assertQueue(queue, {
       durable: false,
     });
 
     const sendToQueue1 = await this.channel.sendToQueue(
       queue,
-      Buffer.from(JSON.stringify(txMsg)),
+      Buffer.from(JSON.stringify(data)),
     );
 
     await this.invokeTxnController(address, granteeMnemonic);
@@ -228,15 +223,20 @@ export class TxSendModuleService {
       typeUrl: '/cosmos.authz.v1beta1.MsgExec',
       value: authExecMsg,
     };
-    const queue = 'DID_TXN_QUEUE_' + address;
+    const queue = 'TXN_QUEUE_' + address;
     await this.channel.assertQueue(queue, {
       durable: false,
     });
 
+    const data = {
+      type: 'DID_REGISTER',
+      txMsg,
+    };
     const sendToQueue1 = await this.channel.sendToQueue(
       queue,
-      Buffer.from(JSON.stringify(txMsg)),
+      Buffer.from(JSON.stringify(data)),
     );
+
     await this.invokeTxnController(address, granteeMnemonic);
     console.log(sendToQueue1);
   }
