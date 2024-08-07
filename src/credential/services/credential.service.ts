@@ -139,8 +139,16 @@ export class CredentialService {
         issuerDid,
         verificationMethodId,
         privateKeyMultibase,
-        registerCredential: registerCredentialStatus,
+        registerCredential: false,
       });
+
+      const credStatus = {
+        credentialStatus,
+        namespace: 'testnet',
+      } as RegisterCredentialStatusDto;
+
+      await this.registerCredentialStatus(credStatus, appDetail);
+
       let edvData = undefined;
       if (persist) {
         const creedential = {
