@@ -337,18 +337,31 @@ export class CredentialService {
         'update() method: before calling hypersignVC.updateCredentialStatus to update cred status on chain',
         'CredentialService',
       );
-      const updatedCredResult = await hypersignVC.updateCredentialStatus({
+      const updateCredenital: any = await hypersignVC.updateCredentialStatus({
         credentialStatus,
         issuerDid,
         verificationMethodId,
         privateKeyMultibase,
         status: statusChange,
         statusReason,
+        readonly: true,
       });
-      await this.credentialRepository.findOneAndUpdate(
-        { appId: appDetail.appId, credentialId: id },
-        { transactionHash: updatedCredResult.transactionHash },
+
+      console.log(
+        updateCredenital?.credentialStatus,
+        updateCredenital?.proofValue,
       );
+
+      await this.txnService.sendUpdateVC(
+        updateCredenital?.credentialStatus,
+        updateCredenital?.proofValue,
+        appMenemonic,
+      );
+
+      // await this.credentialRepository.findOneAndUpdate(
+      //   { appId: appDetail.appId, credentialId: id },
+      //   { transactionHash: updatedCredResult.transactionHash },
+      // );
       Logger.log('update() method: ends....', 'CredentialService');
 
       return await hypersignVC.resolveCredentialStatus({
@@ -437,10 +450,6 @@ export class CredentialService {
     let registeredVC: { transactionHash: string };
     try {
       const appMenemonic = await getAppMenemonic(kmsId);
-      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        appMenemonic,
-        namespace,
-      );
       Logger.log(
         'registerCredentialStatus() method: before calling hypersignVC.registerCredentialStatus to register credential status on chain',
         'CredentialService',

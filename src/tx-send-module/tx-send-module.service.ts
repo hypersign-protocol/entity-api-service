@@ -4,6 +4,7 @@ import amqp, { ChannelWrapper } from 'amqp-connection-manager';
 import {
   MsgRegisterDID,
   MsgRegisterCredentialStatus,
+  MsgUpdateCredentialStatus,
 } from 'hs-ssi-sdk/build/libs/generated/ssi/tx';
 import { DidSSIService } from 'src/did/services/did.ssi.service';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
@@ -117,6 +118,74 @@ export class TxSendModuleService {
       credentialStatusProof: credentialStatusProof,
       txAuthor,
     });
+  }
+
+  async prepareUpdateCredentialStatus(credentialStatus, proofValue, address) {
+    return MsgUpdateCredentialStatus.fromPartial({
+      credentialStatusDocument: credentialStatus,
+      credentialStatusProof: credentialStatus,
+      txAuthor: address,
+    });
+  }
+
+  async sendUpdateVC(credentialStatus, proofValue, granteeMnemonic) {
+    if (!this.channel) {
+      await this.connect();
+    }
+    const { wallet, address } = await this.hidWalletService.generateWallet(
+      granteeMnemonic,
+    );
+    const msgUpdateCredentialStatus = await this.prepareUpdateCredentialStatus(
+      credentialStatus,
+      proofValue,
+      address,
+    );
+
+    const authExecMsg: MsgExec = {
+      grantee: address,
+      msgs: [
+        {
+          typeUrl: '/hypersign.ssi.v1.MsgUpdateCredentialStatus',
+          value: MsgUpdateCredentialStatus.encode(
+            msgUpdateCredentialStatus,
+          ).finish(),
+        },
+      ],
+    };
+
+    const fee = {
+      amount: [
+        {
+          denom: 'uhid',
+          amount: '100',
+        },
+      ],
+      gas: '500000',
+      granter: this.granterAddress, // NOTE: It is VERY IMPORTANT to explicitly pass granter's address
+    };
+
+    const txMsg = {
+      typeUrl: '/cosmos.authz.v1beta1.MsgExec',
+      value: authExecMsg,
+    };
+
+    const data = {
+      type: 'CRED_UPDATE',
+      txMsg,
+    };
+
+    const queue = 'TXN_QUEUE_' + address;
+    await this.channel.assertQueue(queue, {
+      durable: false,
+    });
+
+    const sendToQueue1 = await this.channel.sendToQueue(
+      queue,
+      Buffer.from(JSON.stringify(data)),
+    );
+
+    await this.invokeTxnController(address, granteeMnemonic);
+    console.log(sendToQueue1);
   }
 
   async sendVCTxn(credentialStatus, credentialStatusProof, granteeMnemonic) {
