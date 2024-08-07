@@ -142,6 +142,9 @@ export class CredentialService {
         registerCredential: false,
       });
 
+      const credStatusTemp = {};
+      Object.assign(credStatusTemp, credentialStatus);
+
       const credStatus = {
         credentialStatus,
         namespace: 'testnet',
@@ -190,7 +193,7 @@ export class CredentialService {
 
       return {
         credentialDocument: signedCredential,
-        credentialStatus,
+        credentialStatus: credStatusTemp,
         persist,
       };
     } catch (e) {
