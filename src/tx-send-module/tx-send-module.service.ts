@@ -123,7 +123,7 @@ export class TxSendModuleService {
   async prepareUpdateCredentialStatus(credentialStatus, proofValue, address) {
     return MsgUpdateCredentialStatus.fromPartial({
       credentialStatusDocument: credentialStatus,
-      credentialStatusProof: credentialStatus,
+      credentialStatusProof: proofValue,
       txAuthor: address,
     });
   }
