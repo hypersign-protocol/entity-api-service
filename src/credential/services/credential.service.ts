@@ -149,8 +149,9 @@ export class CredentialService {
         credentialStatus,
         namespace: 'testnet',
       } as RegisterCredentialStatusDto;
-
-      await this.registerCredentialStatus(credStatus, appDetail);
+      if (registerCredentialStatus) {
+        await this.registerCredentialStatus(credStatus, appDetail);
+      }
 
       let edvData = undefined;
       if (persist) {
