@@ -114,17 +114,13 @@ export class SchemaService {
         schemaId: signedSchema.id,
         appId: appDetail.appId,
         authorDid: author,
-        transactionHash: registeredSchema['transactionHash']
-          ? registeredSchema['transactionHash']
-          : '',
+        transactionHash: '',
       });
       Logger.log('create() method: ends', 'SchemaService');
 
       return {
         schemaId: signedSchema.id,
-        transactionHash: registeredSchema['transactionHash']
-          ? registeredSchema['transactionHash']
-          : '',
+        transactionHash: '',
       };
     } catch (error) {
       Logger.error(
@@ -206,7 +202,7 @@ export class SchemaService {
   async registerSchema(
     registerSchemaDto: RegisterSchemaDto,
     appDetail,
-  ): Promise<{ transactionHash: string }> {
+  ): Promise<any> {
     Logger.log('registerSchema() method: starts....', 'SchemaService');
 
     const { edvId, kmsId } = appDetail;
@@ -227,14 +223,13 @@ export class SchemaService {
     }
 
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = Namespace.testnet;
+    // const namespace = Namespace.testnet;
     Logger.log('registerSchema() method: initialising hypersignSchema');
 
-    const hypersignSchema = await this.schemaSSIservice.initiateHypersignSchema(
-      appMenemonic,
-      namespace,
-    );
-    const registeredSchema = {} as { transactionHash: string };
+    // const hypersignSchema = await this.schemaSSIservice.initiateHypersignSchema(
+    //   appMenemonic,
+    //   namespace,
+    // );
     schemaDocument['proof'] = schemaProof;
     Logger.log('registerSchema() method: registering schema on the blockchain');
     try {
@@ -242,17 +237,19 @@ export class SchemaService {
       //   schema: schemaDocument,
       // });
 
-      await this.txnService.sendSchemaTxn(
+      const ack = await this.txnService.sendSchemaTxn(
         registerSchemaDto.schemaDocument,
         registerSchemaDto.schemaProof,
         appMenemonic,
       );
+      if (ack == true) {
+      }
     } catch (e) {
       Logger.error('registerSchema() method: Error while registering schema');
       throw new BadRequestException([e.message]);
     }
     Logger.log('registerSchema() method: ends....', 'SchemaService');
 
-    return { transactionHash: registeredSchema?.transactionHash };
+    return { status: 'Transaction sent' };
   }
 }

@@ -510,6 +510,6 @@ export class TxSendModuleService {
     );
 
     await this.invokeTxnController(address, granteeMnemonic);
-    console.log(sendToQueue1);
+    return sendToQueue1;
   }
 }
