@@ -280,13 +280,14 @@ export class TxSendModuleService {
       versionId,
       address,
     );
+    console.log(msgDeactivateDID);
 
     const authExecMsg: MsgExec = {
       grantee: address,
       msgs: [
         {
           typeUrl: '/hypersign.ssi.v1.MsgDeactivateDID',
-          value: MsgRegisterDID.encode(msgDeactivateDID).finish(),
+          value: MsgDeactivateDID.encode(msgDeactivateDID).finish(),
         },
       ],
     };
@@ -355,7 +356,7 @@ export class TxSendModuleService {
       msgs: [
         {
           typeUrl: '/hypersign.ssi.v1.MsgUpdateDID',
-          value: MsgRegisterDID.encode(msgUpdateDID).finish(),
+          value: MsgUpdateDID.encode(msgUpdateDID).finish(),
         },
       ],
     };
@@ -476,7 +477,7 @@ export class TxSendModuleService {
       msgs: [
         {
           typeUrl: '/hypersign.ssi.v1.MsgRegisterCredentialSchema',
-          value: MsgRegisterDID.encode(msgSchema).finish(),
+          value: MsgRegisterCredentialSchema.encode(msgSchema).finish(),
         },
       ],
     };
