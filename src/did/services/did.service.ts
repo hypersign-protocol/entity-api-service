@@ -535,7 +535,7 @@ export class DidService {
       });
 
       // If signature is passed then no need to check if it is present in db or not
-      if (!signInfos && (!didInfo || didInfo == null)) {
+      if (signInfos == undefined && (!didInfo || didInfo == null)) {
         throw new NotFoundException([
           `${did} not found`,
           `${did} is not owned by the appId ${appDetail.appId}`,
