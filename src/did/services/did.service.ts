@@ -529,6 +529,11 @@ export class DidService {
         did,
       });
       const { signInfos } = updateDidDto;
+      console.log({
+        signInfos,
+        didInfo,
+      });
+
       // If signature is passed then no need to check if it is present in db or not
       if (!signInfos && (!didInfo || didInfo == null)) {
         throw new NotFoundException([
