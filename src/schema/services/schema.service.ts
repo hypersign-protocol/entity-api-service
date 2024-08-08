@@ -114,13 +114,17 @@ export class SchemaService {
         schemaId: signedSchema.id,
         appId: appDetail.appId,
         authorDid: author,
-        transactionHash: registeredSchema['transactionHash'],
+        transactionHash: registeredSchema['transactionHash']
+          ? registeredSchema['transactionHash']
+          : '',
       });
       Logger.log('create() method: ends', 'SchemaService');
 
       return {
         schemaId: signedSchema.id,
-        transactionHash: registeredSchema['transactionHash'],
+        transactionHash: registeredSchema['transactionHash']
+          ? registeredSchema['transactionHash']
+          : '',
       };
     } catch (error) {
       Logger.error(
@@ -249,6 +253,6 @@ export class SchemaService {
     }
     Logger.log('registerSchema() method: ends....', 'SchemaService');
 
-    return { transactionHash: registeredSchema.transactionHash };
+    return { transactionHash: registeredSchema?.transactionHash };
   }
 }
