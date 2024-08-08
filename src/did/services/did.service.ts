@@ -628,30 +628,36 @@ export class DidService {
       });
 
       try {
+        updatedDid = await hypersignDid.update({
+          didDocument: updateDidDto.didDocument as Did,
+          privateKeyMultibase,
+          verificationMethodId: resolvedDid['verificationMethod'][0].id,
+          versionId: updatedDidDocMetaData.versionId,
+          readonly: true,
+        });
         if (!updateDidDto.deactivate) {
           Logger.debug(
             'updateDid() method: before calling hypersignDid.update to update did',
             'DidService',
           );
 
-          updatedDid = await hypersignDid.update({
-            didDocument: updateDidDto.didDocument as Did,
-            privateKeyMultibase,
-            verificationMethodId: resolvedDid['verificationMethod'][0].id,
-            versionId: updatedDidDocMetaData.versionId,
-          });
+          await this.txnService.sendDIDUpdate(
+            updatedDid.didDocument,
+            updatedDid.signInfos,
+            updatedDid.versionId,
+            appMenemonic,
+          );
         } else {
           Logger.debug(
             'updateDid() method: before calling hypersignDid.deactivate to deactivate did',
             'DidService',
           );
-
-          updatedDid = await hypersignDid.deactivate({
-            didDocument: updateDidDto.didDocument as Did,
-            privateKeyMultibase,
-            verificationMethodId: resolvedDid['verificationMethod'][0].id,
-            versionId: updatedDidDocMetaData.versionId,
-          });
+          await this.txnService.sendDIDDeactivate(
+            updatedDid.didDocument,
+            updatedDid.signInfos,
+            updatedDid.versionId,
+            appMenemonic,
+          );
         }
       } catch (error) {
         Logger.error(

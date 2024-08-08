@@ -5,6 +5,9 @@ import {
   MsgRegisterDID,
   MsgRegisterCredentialStatus,
   MsgUpdateCredentialStatus,
+  MsgUpdateDID,
+  MsgDeactivateDID,
+  MsgRegisterCredentialSchema,
 } from 'hs-ssi-sdk/build/libs/generated/ssi/tx';
 import { DidSSIService } from 'src/did/services/did.ssi.service';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
@@ -249,6 +252,146 @@ export class TxSendModuleService {
     console.log(sendToQueue1);
   }
 
+  async prepareMsgUpdateDID(didDocument, signInfos, versionId, txAuthor) {
+    return MsgUpdateDID.fromPartial({
+      didDocument,
+      didDocumentProofs: signInfos,
+      versionId,
+      txAuthor,
+    });
+  }
+
+  async sendDIDDeactivate(
+    didDocument: any,
+    signInfos: any,
+    versionId: any,
+    granteeMnemonic: any,
+  ) {
+    if (!this.channel) {
+      await this.connect();
+    }
+
+    const { wallet, address } = await this.hidWalletService.generateWallet(
+      granteeMnemonic,
+    );
+    const msgDeactivateDID = await this.prepareMsgDeactivateDID(
+      didDocument,
+      signInfos,
+      versionId,
+      address,
+    );
+
+    const authExecMsg: MsgExec = {
+      grantee: address,
+      msgs: [
+        {
+          typeUrl: '/hypersign.ssi.v1.MsgDeactivateDID',
+          value: MsgRegisterDID.encode(msgDeactivateDID).finish(),
+        },
+      ],
+    };
+
+    const fee = {
+      amount: [
+        {
+          denom: 'uhid',
+          amount: '100',
+        },
+      ],
+      gas: '500000',
+      granter: this.granterAddress, // NOTE: It is VERY IMPORTANT to explicitly pass granter's address
+    };
+    const txMsg = {
+      typeUrl: '/cosmos.authz.v1beta1.MsgExec',
+      value: authExecMsg,
+    };
+    const queue = 'TXN_QUEUE_' + address;
+    await this.channel.assertQueue(queue, {
+      durable: false,
+    });
+
+    const data = {
+      type: 'DID_DEACTIVATE',
+      txMsg,
+    };
+    const sendToQueue1 = await this.channel.sendToQueue(
+      queue,
+      Buffer.from(JSON.stringify(data)),
+    );
+
+    await this.invokeTxnController(address, granteeMnemonic);
+    console.log(sendToQueue1);
+  }
+  prepareMsgDeactivateDID(
+    didDocument: any,
+    signInfos: any,
+    versionId: any,
+    address: string,
+  ) {
+    return MsgDeactivateDID.fromPartial({
+      didDocumentId: didDocument.id,
+      didDocumentProofs: signInfos,
+      txAuthor: address,
+      versionId,
+    });
+  }
+
+  async sendDIDUpdate(didDocument, signInfos, versionId, granteeMnemonic) {
+    if (!this.channel) {
+      await this.connect();
+    }
+
+    const { wallet, address } = await this.hidWalletService.generateWallet(
+      granteeMnemonic,
+    );
+    const msgUpdateDID = await this.prepareMsgUpdateDID(
+      didDocument,
+      signInfos,
+      versionId,
+      address,
+    );
+    const authExecMsg: MsgExec = {
+      grantee: address,
+      msgs: [
+        {
+          typeUrl: '/hypersign.ssi.v1.MsgUpdateDID',
+          value: MsgRegisterDID.encode(msgUpdateDID).finish(),
+        },
+      ],
+    };
+
+    const fee = {
+      amount: [
+        {
+          denom: 'uhid',
+          amount: '100',
+        },
+      ],
+      gas: '500000',
+      granter: this.granterAddress, // NOTE: It is VERY IMPORTANT to explicitly pass granter's address
+    };
+    const txMsg = {
+      typeUrl: '/cosmos.authz.v1beta1.MsgExec',
+      value: authExecMsg,
+    };
+    const queue = 'TXN_QUEUE_' + address;
+    await this.channel.assertQueue(queue, {
+      durable: false,
+    });
+
+    const data = {
+      type: 'DID_UPDATE',
+      txMsg,
+    };
+    const sendToQueue1 = await this.channel.sendToQueue(
+      queue,
+      Buffer.from(JSON.stringify(data)),
+    );
+
+    await this.invokeTxnController(address, granteeMnemonic);
+    console.log(sendToQueue1);
+  }
+
   async sendDIDTxn(
     didDocument,
     didDocumentSigned,
@@ -299,6 +442,65 @@ export class TxSendModuleService {
 
     const data = {
       type: 'DID_REGISTER',
+      txMsg,
+    };
+    const sendToQueue1 = await this.channel.sendToQueue(
+      queue,
+      Buffer.from(JSON.stringify(data)),
+    );
+
+    await this.invokeTxnController(address, granteeMnemonic);
+    console.log(sendToQueue1);
+  }
+
+  prepareSchemaMsg(schema, proof, txAuthor) {
+    return MsgRegisterCredentialSchema.fromPartial({
+      credentialSchemaDocument: schema,
+      credentialSchemaProof: proof,
+      txAuthor: txAuthor,
+    });
+  }
+
+  async sendSchemaTxn(schema, proof, granteeMnemonic) {
+    if (!this.channel) {
+      await this.connect();
+    }
+
+    const { wallet, address } = await this.hidWalletService.generateWallet(
+      granteeMnemonic,
+    );
+    const msgSchema = await this.prepareSchemaMsg(schema, proof, address);
+
+    const authExecMsg: MsgExec = {
+      grantee: address,
+      msgs: [
+        {
+          typeUrl: '/hypersign.ssi.v1.MsgRegisterCredentialSchema',
+          value: MsgRegisterDID.encode(msgSchema).finish(),
+        },
+      ],
+    };
+    const fee = {
+      amount: [
+        {
+          denom: 'uhid',
+          amount: '100',
+        },
+      ],
+      gas: '500000',
+      granter: this.granterAddress, // NOTE: It is VERY IMPORTANT to explicitly pass granter's address
+    };
+    const txMsg = {
+      typeUrl: '/cosmos.authz.v1beta1.MsgExec',
+      value: authExecMsg,
+    };
+    const queue = 'TXN_QUEUE_' + address;
+    await this.channel.assertQueue(queue, {
+      durable: false,
+    });
+
+    const data = {
+      type: 'SCHEMA_REGISTER',
       txMsg,
     };
     const sendToQueue1 = await this.channel.sendToQueue(

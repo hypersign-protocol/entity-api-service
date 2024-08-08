@@ -20,6 +20,7 @@ import { Schemas } from '../schemas/schemas.schema';
 import { RegisterSchemaDto } from '../dto/register-schema.dto';
 import { Namespace } from 'src/did/dto/create-did.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
+import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class SchemaService {
@@ -29,6 +30,7 @@ export class SchemaService {
     private readonly schemaSSIservice: SchemaSSIService,
     private readonly hidWallet: HidWalletService,
     private readonly didRepositiory: DidRepository,
+    private readonly txnService: TxSendModuleService,
   ) {}
   async create(
     createSchemaDto: CreateSchemaDto,
@@ -92,9 +94,18 @@ export class SchemaService {
         'SchemaService',
       );
 
-      const registeredSchema = await hypersignSchema.register({
-        schema: signedSchema,
-      });
+      // const registeredSchema = await hypersignSchema.register({
+      //   schema: signedSchema,
+      // });
+
+      let registeredSchema;
+
+      await this.txnService.sendSchemaTxn(
+        generatedSchema,
+        signedSchema.proof,
+        appMenemonic,
+      );
+
       Logger.log(
         'create() method: storing schema information to DB',
         'SchemaService',
@@ -219,13 +230,19 @@ export class SchemaService {
       appMenemonic,
       namespace,
     );
-    let registeredSchema = {} as { transactionHash: string };
+    const registeredSchema = {} as { transactionHash: string };
     schemaDocument['proof'] = schemaProof;
     Logger.log('registerSchema() method: registering schema on the blockchain');
     try {
-      registeredSchema = await hypersignSchema.register({
-        schema: schemaDocument,
-      });
+      // registeredSchema = await hypersignSchema.register({
+      //   schema: schemaDocument,
+      // });
+
+      await this.txnService.sendSchemaTxn(
+        registerSchemaDto.schemaDocument,
+        registerSchemaDto.schemaProof,
+        appMenemonic,
+      );
     } catch (e) {
       Logger.error('registerSchema() method: Error while registering schema');
       throw new BadRequestException([e.message]);
