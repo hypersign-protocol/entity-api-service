@@ -446,6 +446,7 @@ export class CredentialService {
     );
 
     const { credentialStatus, namespace } = registerCredentialDto;
+    const credentialId = credentialStatus.id;
     const { kmsId } = appDetail;
     Logger.log(
       'registerCredentialStatus() method: initialising edv service',
@@ -458,6 +459,7 @@ export class CredentialService {
         'registerCredentialStatus() method: before calling hypersignVC.registerCredentialStatus to register credential status on chain',
         'CredentialService',
       );
+
       const { proof } = credentialStatus;
       delete credentialStatus['proof'];
       // registeredVC = await hypersignVC.registerCredentialStatus({
@@ -466,6 +468,12 @@ export class CredentialService {
       // });
 
       await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
+
+      const registredCredential = await this.registrationStatus(
+        credentialId,
+        appDetail,
+      );
+      Logger.log('Registred Credential', registredCredential);
     } catch (e) {
       Logger.error(
         `registerCredentialStatus() method: Error ${e.message}`,
@@ -478,5 +486,43 @@ export class CredentialService {
       'CredentialService',
     );
     return { transactionHash: registeredVC?.transactionHash };
+  }
+
+  async registrationStatus(credId, appDetail) {
+    return new Promise((resolve, reject) => {
+      const interval = 5000; // Interval in milliseconds (e.g., 5000ms = 5 seconds)
+      const maxAttempts = 12; // Maximum number of attempts before rejecting
+      let attempts = 0;
+
+      const intervalId = setInterval(async () => {
+        attempts++;
+
+        try {
+          // Assume resolveCredential is a method that checks the status and returns a response
+          const response = await this.resolveCredential(
+            credId,
+            appDetail,
+            false,
+          );
+
+          if (response.credentialDocument) {
+            // Assuming status 200 means success
+            clearInterval(intervalId); // Stop the interval
+            resolve(response); // Resolve the promise with the successful response
+          } else {
+            console.log(
+              `Attempt ${attempts}: Status not successful, retrying...`,
+            );
+          }
+        } catch (error) {
+          console.log(`Attempt ${attempts}: Error occurred, retrying...`);
+        }
+
+        if (attempts >= maxAttempts) {
+          clearInterval(intervalId); // Stop the interval after max attempts
+          reject(new Error('Maximum attempts reached, registration failed'));
+        }
+      }, interval);
+    });
   }
 }
