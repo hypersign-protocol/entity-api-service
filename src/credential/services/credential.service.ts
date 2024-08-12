@@ -469,10 +469,7 @@ export class CredentialService {
 
       await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
 
-      const registredCredential = await this.registrationStatus(
-        credentialId,
-        appDetail,
-      );
+      const registredCredential = await this.registrationStatus(credentialId);
       Logger.log('Registred Credential', registredCredential);
     } catch (e) {
       Logger.error(
@@ -488,10 +485,10 @@ export class CredentialService {
     return { transactionHash: registeredVC?.transactionHash };
   }
 
-  async registrationStatus(credId, appDetail) {
+  async registrationStatus(credId) {
     return new Promise((resolve, reject) => {
       const interval = 5000; // Interval in milliseconds (e.g., 5000ms = 5 seconds)
-      const maxAttempts = 12; // Maximum number of attempts before rejecting
+      const maxAttempts = 20; // Maximum number of attempts before rejecting
       let attempts = 0;
 
       const intervalId = setInterval(async () => {
@@ -499,16 +496,17 @@ export class CredentialService {
 
         try {
           // Assume resolveCredential is a method that checks the status and returns a response
-          const response = await this.resolveCredential(
-            credId,
-            appDetail,
-            false,
+          const response = await fetch(
+            this.config.get('HID_NETWORK_API') +
+              '/hypersign-protocol/hidnode/ssi/credential/' +
+              credId,
           );
 
-          if (response.credentialDocument) {
+          if (response.status == 200) {
+            const resp = await response.json();
             // Assuming status 200 means success
             clearInterval(intervalId); // Stop the interval
-            resolve(response); // Resolve the promise with the successful response
+            resolve(resp); // Resolve the promise with the successful response
           } else {
             console.log(
               `Attempt ${attempts}: Status not successful, retrying...`,
