@@ -82,42 +82,40 @@ jobs:
       - name: "Configure kubectl"
         run: gcloud container clusters get-credentials hypermine-gke --region=asia-south1
       - name: Replace tags
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__LATEST_RELEASE_TAG__#${{ env.LATEST_RELEASE_TAG }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__LATEST_RELEASE_TAG__#${{ env.LATEST_RELEASE_TAG }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i ''s/__PORT__/${{ secrets.PORT }}/g'' {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__PORT__/${{ secrets.PORT }}/g'' {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__BASE_DB_PATH__#${{ secrets.BASE_DB_PATH }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__BASE_DB_PATH__#${{ secrets.BASE_DB_PATH }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__DB_CONFIG__#${{ secrets.DB_CONFIG }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__DB_CONFIG__#${{ secrets.DB_CONFIG }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_RPC__#${{ secrets.HID_NETWORK_RPC }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_RPC__#${{ secrets.HID_NETWORK_RPC }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_API__#${{ secrets.HID_NETWORK_API }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_API__#${{ secrets.HID_NETWORK_API }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_NAMESPACE__#${{ secrets.HID_NETWORK_NAMESPACE }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_NAMESPACE__#${{ secrets.HID_NETWORK_NAMESPACE }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__EDV_BASE_URL__#${{ secrets.EDV_BASE_URL }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_BASE_URL__#${{ secrets.EDV_BASE_URL }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__EDV_CONFIG_DIR__#${{ secrets.EDV_CONFIG_DIR }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_CONFIG_DIR__#${{ secrets.EDV_CONFIG_DIR }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__EDV_DID_FILE_PATH__#${{ secrets.EDV_DID_FILE_PATH }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_DID_FILE_PATH__#${{ secrets.EDV_DID_FILE_PATH }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__EDV_KEY_FILE_PATH__#${{ secrets.EDV_KEY_FILE_PATH }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_KEY_FILE_PATH__#${{ secrets.EDV_KEY_FILE_PATH }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__GLOBAL_TXN_CONTROLLER_QUEUE__#${{ secrets.GLOBAL_TXN_CONTROLLER_QUEUE }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__GLOBAL_TXN_CONTROLLER_QUEUE__#${{ secrets.GLOBAL_TXN_CONTROLLER_QUEUE }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__RABBIT_MQ_URI__#${{ secrets.RABBIT_MQ_URI }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__RABBIT_MQ_URI__#${{ secrets.RABBIT_MQ_URI }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__VAULT_PREFIX__#${{ secrets.VAULT_PREFIX }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__MNEMONIC__#${{ secrets.MNEMONIC }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__MNEMONIC__#${{ secrets.MNEMONIC }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__JWT_SECRET__#${{ secrets.JWT_SECRET }}#" {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i -e "s#__JWT_SECRET__#${{ secrets.JWT_SECRET }}#" {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_URL__/${{ secrets.GOOGLE_ARTIFACT_URL }}/g'' {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_URL__/${{ secrets.GOOGLE_ARTIFACT_URL }}/g'' {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_REPO__/${{ secrets.GOOGLE_ARTIFACT_REPO }}/g'' {} \;
       - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_REPO__/${{ secrets.GOOGLE_ARTIFACT_REPO }}/g'' {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment2.yaml -type f -exec sed  -i ''s/__GOOGLE_PROJECT_ID__/${{ secrets.GOOGLE_PROJECT_ID }}/g'' {} \;
+        run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_PROJECT_ID__/${{ secrets.GOOGLE_PROJECT_ID }}/g'' {} \;
       - name: "Deploy to GKE"
         run: kubectl apply -f .deploy/deployment.yaml
