@@ -120,4 +120,4 @@ jobs:
       - name: "Replace secrets"
         run: find .deploy/deployment2.yaml -type f -exec sed  -i ''s/__GOOGLE_PROJECT_ID__/${{ secrets.GOOGLE_PROJECT_ID }}/g'' {} \;
       - name: "Deploy to GKE"
-        run: kubectl apply -f .deploy/deployment2.yaml
+        run: kubectl apply -f .deploy/deployment.yaml
