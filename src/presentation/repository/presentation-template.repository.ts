@@ -4,7 +4,6 @@ import {
 } from '../schemas/presentation-template.schema';
 import { FilterQuery, Model } from 'mongoose';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class PresentationTemplateRepository {

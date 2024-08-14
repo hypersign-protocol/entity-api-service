@@ -28,8 +28,8 @@ spec:
 
         resources:
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "2Gi"
+            cpu: "1000m"
         ports:
         - containerPort: __PORT__
         env:
@@ -57,8 +57,14 @@ spec:
           value: __MNEMONIC__
         - name: JWT_SECRET
           value: __JWT_SECRET__
+        - name: GLOBAL_TXN_CONTROLLER_QUEUE
+          value: __GLOBAL_TXN_CONTROLLER_QUEUE__
+        - name: RABBIT_MQ_URI
+          value: __RABBIT_MQ_URI__
+        - name: VAULT_PREFIX
+          value: __VAULT_PREFIX__
         - name: WHITELISTED_CORS
-          value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://wallet-prajna.hypersign.id']"
+          value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://api.entity-test.hypersign.id','https://wallet-prajna.hypersign.id']"
         volumeMounts:
         - name: mongo
           mountPath: "/data"

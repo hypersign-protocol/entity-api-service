@@ -7,6 +7,7 @@ import { DidModule } from './did/did.module';
 import { SchemaModule } from './schema/schema.module';
 import { CredentialModule } from './credential/credential.module';
 import { PresentationModule } from './presentation/presentation.module';
+import { TxSendModuleModule } from './tx-send-module/tx-send-module.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -18,6 +19,7 @@ import { PresentationModule } from './presentation/presentation.module';
     SchemaModule,
     CredentialModule,
     PresentationModule,
+    TxSendModuleModule,
   ],
   controllers: [],
   providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],

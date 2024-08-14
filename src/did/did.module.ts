@@ -23,8 +23,9 @@ import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 import { didProviders } from './providers/did.provider';
 import { JwtStrategy } from '../utils/jwt.strategy';
+import { TxSendModuleModule } from 'src/tx-send-module/tx-send-module.module';
 @Module({
-  imports: [EdvModule, HidWalletModule],
+  imports: [EdvModule, HidWalletModule, TxSendModuleModule],
   controllers: [DidController],
   providers: [
     JwtStrategy,
