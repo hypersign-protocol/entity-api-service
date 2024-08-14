@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: entity-api-test
+  name: entity-api
   namespace: hypermine-development
 spec:
   replicas: 1
 
   selector:
     matchLabels:
-      app: entity-api-test
+      app: entity-api
   template:
     metadata:
       labels:
-        app: entity-api-test
+        app: entity-api
     spec:
       containers:
-      - name: entity-api-test
-        image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-test-service:__LATEST_RELEASE_TAG__
+      - name: entity-api
+        image: __GOOGLE_ARTIFACT_URL__/__GOOGLE_PROJECT_ID__/__GOOGLE_ARTIFACT_REPO__/enity-api-service:__LATEST_RELEASE_TAG__
         imagePullPolicy: Always
         livenessProbe:
           httpGet:
@@ -76,7 +76,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: entity-api-test-service
+  name: entity-api-service
   namespace: hypermine-development
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
@@ -84,7 +84,7 @@ metadata:
 spec:
   type: NodePort
   selector:
-    app: entity-api-test
+    app: entity-api
   ports:
   - port: __PORT__
     targetPort: __PORT__

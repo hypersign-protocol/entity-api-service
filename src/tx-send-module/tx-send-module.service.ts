@@ -52,7 +52,6 @@ export class TxSendModuleService {
       this.configService.get('GLOBAL_TXN_CONTROLLER_QUEUE'),
       Buffer.from(JSON.stringify(podENV)),
     );
-    console.log(sendToQueue2);
   }
 
   async prepareMsgCreateDID(
@@ -188,7 +187,6 @@ export class TxSendModuleService {
     );
 
     await this.invokeTxnController(address, granteeMnemonic);
-    console.log(sendToQueue1);
   }
 
   async sendVCTxn(credentialStatus, credentialStatusProof, granteeMnemonic) {
@@ -249,7 +247,6 @@ export class TxSendModuleService {
     );
 
     await this.invokeTxnController(address, granteeMnemonic);
-    console.log(sendToQueue1);
   }
 
   async prepareMsgUpdateDID(didDocument, signInfos, versionId, txAuthor) {
@@ -280,7 +277,6 @@ export class TxSendModuleService {
       versionId,
       address,
     );
-    console.log(msgDeactivateDID);
 
     const authExecMsg: MsgExec = {
       grantee: address,
@@ -321,7 +317,6 @@ export class TxSendModuleService {
     );
 
     await this.invokeTxnController(address, granteeMnemonic);
-    console.log(sendToQueue1);
   }
   prepareMsgDeactivateDID(
     didDocument: any,
@@ -390,7 +385,6 @@ export class TxSendModuleService {
     );
 
     await this.invokeTxnController(address, granteeMnemonic);
-    console.log(sendToQueue1);
   }
 
   async sendDIDTxn(
@@ -451,7 +445,6 @@ export class TxSendModuleService {
     );
 
     await this.invokeTxnController(address, granteeMnemonic);
-    console.log(sendToQueue1);
   }
 
   prepareSchemaMsg(schema, proof, txAuthor) {
