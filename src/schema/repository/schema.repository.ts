@@ -1,6 +1,5 @@
 import { Schemas, SchemaDocument } from '../schemas/schemas.schema';
 import { FilterQuery, Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
 @Injectable()

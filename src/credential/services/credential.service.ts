@@ -15,6 +15,7 @@ import { HypersignDID, HypersignVerifiableCredential } from 'hs-ssi-sdk';
 import { VerifyCredentialDto } from '../dto/verify-credential.dto';
 import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
+import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 
 @Injectable()
 export class CredentialService {
@@ -24,7 +25,27 @@ export class CredentialService {
     private readonly hidWallet: HidWalletService,
     private credentialRepository: CredentialRepository,
     private readonly didRepositiory: DidRepository,
+    private readonly txnService: TxSendModuleService,
   ) {}
+
+  async checkAllowence(address) {
+    const url =
+      this.config.get('HID_NETWORK_API') +
+      '/cosmos/feegrant/v1beta1/allowances/' +
+      address;
+
+    const resp = await fetch(url);
+
+    const res = await resp.json();
+    if (resp.status === 200) {
+      if (res.allowances.length > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  }
 
   async create(createCredentialDto: CreateCredentialDto, appDetail) {
     Logger.log('create() method: starts....', 'CredentialService');
@@ -137,8 +158,20 @@ export class CredentialService {
         issuerDid,
         verificationMethodId,
         privateKeyMultibase,
-        registerCredential: registerCredentialStatus,
+        registerCredential: false,
       });
+
+      const credStatusTemp = {};
+      Object.assign(credStatusTemp, credentialStatus);
+
+      const credStatus = {
+        credentialStatus,
+        namespace: nameSpace,
+      } as RegisterCredentialStatusDto;
+      if (registerCredentialStatus) {
+        await this.registerCredentialStatus(credStatus, appDetail);
+      }
+
       let edvData = undefined;
       if (persist) {
         const creedential = {
@@ -180,7 +213,7 @@ export class CredentialService {
 
       return {
         credentialDocument: signedCredential,
-        credentialStatus,
+        credentialStatus: credStatusTemp,
         persist,
       };
     } catch (e) {
@@ -311,7 +344,7 @@ export class CredentialService {
         ? namespace
         : this.config.get('NETWORK')
         ? this.config.get('NETWORK')
-        : 'testnet';
+        : namespace;
       const hypersignVC = await this.credentialSSIService.initateHypersignVC(
         appMenemonic,
         nameSpace,
@@ -327,17 +360,46 @@ export class CredentialService {
         'update() method: before calling hypersignVC.updateCredentialStatus to update cred status on chain',
         'CredentialService',
       );
-      const updatedCredResult = await hypersignVC.updateCredentialStatus({
-        credentialStatus,
-        issuerDid,
-        verificationMethodId,
-        privateKeyMultibase,
-        status: statusChange,
-        statusReason,
-      });
+
+      const { wallet, address } = await this.hidWallet.generateWallet(
+        appMenemonic,
+      );
+      let updatedCredResult;
+      if (await this.checkAllowence(address)) {
+        const updateCredenital: any = await hypersignVC.updateCredentialStatus({
+          credentialStatus,
+          issuerDid,
+          verificationMethodId,
+          privateKeyMultibase,
+          status: statusChange,
+          statusReason,
+          readonly: true,
+        });
+
+        await this.txnService.sendUpdateVC(
+          updateCredenital?.credentialStatus,
+          updateCredenital?.proofValue,
+          appMenemonic,
+        );
+      } else {
+        updatedCredResult = await hypersignVC.updateCredentialStatus({
+          credentialStatus,
+          issuerDid,
+          verificationMethodId,
+          privateKeyMultibase,
+          status: statusChange,
+          statusReason,
+          readonly: false,
+        });
+      }
+
       await this.credentialRepository.findOneAndUpdate(
         { appId: appDetail.appId, credentialId: id },
-        { transactionHash: updatedCredResult.transactionHash },
+        {
+          transactionHash: updatedCredResult?.transactionHash
+            ? updatedCredResult?.transactionHash
+            : '',
+        },
       );
       Logger.log('update() method: ends....', 'CredentialService');
 
@@ -419,6 +481,7 @@ export class CredentialService {
     );
 
     const { credentialStatus, namespace } = registerCredentialDto;
+    const credentialId = credentialStatus.id;
     const { kmsId } = appDetail;
     Logger.log(
       'registerCredentialStatus() method: initialising edv service',
@@ -427,20 +490,32 @@ export class CredentialService {
     let registeredVC: { transactionHash: string };
     try {
       const appMenemonic = await getAppMenemonic(kmsId);
-      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        appMenemonic,
-        namespace,
-      );
       Logger.log(
         'registerCredentialStatus() method: before calling hypersignVC.registerCredentialStatus to register credential status on chain',
         'CredentialService',
       );
+
       const { proof } = credentialStatus;
+
       delete credentialStatus['proof'];
-      registeredVC = await hypersignVC.registerCredentialStatus({
-        credentialStatus,
-        credentialStatusProof: proof,
-      });
+
+      const { wallet, address } = await this.hidWallet.generateWallet(
+        appMenemonic,
+      );
+
+      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
+        appMenemonic,
+        namespace,
+      );
+
+      if (await this.checkAllowence(address)) {
+        await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
+      } else {
+        registeredVC = await hypersignVC.registerCredentialStatus({
+          credentialStatus,
+          credentialStatusProof: proof,
+        });
+      }
     } catch (e) {
       Logger.error(
         `registerCredentialStatus() method: Error ${e.message}`,
@@ -452,6 +527,6 @@ export class CredentialService {
       'registerCredentialStatus() method: ends....',
       'CredentialService',
     );
-    return { transactionHash: registeredVC.transactionHash };
+    return { transactionHash: registeredVC?.transactionHash };
   }
 }

@@ -11,6 +11,7 @@ export class HidWalletService {
 
   async generateWallet(mnemonic?: string): Promise<{
     mnemonic: string;
+    wallet: DirectSecp256k1HdWallet;
     address: string;
   }> {
     Logger.log('generateWallet() method: starts....', 'generateWallet');
@@ -41,6 +42,7 @@ export class HidWalletService {
     this.mnemonic = generatedMnemonice;
     return {
       mnemonic: generatedMnemonice,
+      wallet: wallet,
       address: hidWalletAddress[0].address,
     };
   }
