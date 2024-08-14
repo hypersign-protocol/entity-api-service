@@ -28,6 +28,25 @@ export class CredentialService {
     private readonly txnService: TxSendModuleService,
   ) {}
 
+  async checkAllowence(address) {
+    const url =
+      this.config.get('HID_NETWORK_API') +
+      '/cosmos/feegrant/v1beta1/allowances/' +
+      address;
+
+    const resp = await fetch(url);
+
+    const res = await resp.json();
+    if (resp.status === 200) {
+      if (res.allowances.length > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  }
+
   async create(createCredentialDto: CreateCredentialDto, appDetail) {
     Logger.log('create() method: starts....', 'CredentialService');
     const {
@@ -341,31 +360,47 @@ export class CredentialService {
         'update() method: before calling hypersignVC.updateCredentialStatus to update cred status on chain',
         'CredentialService',
       );
-      const updateCredenital: any = await hypersignVC.updateCredentialStatus({
-        credentialStatus,
-        issuerDid,
-        verificationMethodId,
-        privateKeyMultibase,
-        status: statusChange,
-        statusReason,
-        readonly: true,
-      });
 
-      console.log(
-        updateCredenital?.credentialStatus,
-        updateCredenital?.proofValue,
-      );
-
-      await this.txnService.sendUpdateVC(
-        updateCredenital?.credentialStatus,
-        updateCredenital?.proofValue,
+      const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
+      let updatedCredResult;
+      if (await this.checkAllowence(address)) {
+        const updateCredenital: any = await hypersignVC.updateCredentialStatus({
+          credentialStatus,
+          issuerDid,
+          verificationMethodId,
+          privateKeyMultibase,
+          status: statusChange,
+          statusReason,
+          readonly: true,
+        });
 
-      // await this.credentialRepository.findOneAndUpdate(
-      //   { appId: appDetail.appId, credentialId: id },
-      //   { transactionHash: updatedCredResult.transactionHash },
-      // );
+        await this.txnService.sendUpdateVC(
+          updateCredenital?.credentialStatus,
+          updateCredenital?.proofValue,
+          appMenemonic,
+        );
+      } else {
+        updatedCredResult = await hypersignVC.updateCredentialStatus({
+          credentialStatus,
+          issuerDid,
+          verificationMethodId,
+          privateKeyMultibase,
+          status: statusChange,
+          statusReason,
+          readonly: false,
+        });
+      }
+
+      await this.credentialRepository.findOneAndUpdate(
+        { appId: appDetail.appId, credentialId: id },
+        {
+          transactionHash: updatedCredResult?.transactionHash
+            ? updatedCredResult?.transactionHash
+            : '',
+        },
+      );
       Logger.log('update() method: ends....', 'CredentialService');
 
       return await hypersignVC.resolveCredentialStatus({
@@ -461,13 +496,26 @@ export class CredentialService {
       );
 
       const { proof } = credentialStatus;
-      delete credentialStatus['proof'];
-      // registeredVC = await hypersignVC.registerCredentialStatus({
-      //   credentialStatus,
-      //   credentialStatusProof: proof,
-      // });
 
-      await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
+      delete credentialStatus['proof'];
+
+      const { wallet, address } = await this.hidWallet.generateWallet(
+        appMenemonic,
+      );
+
+      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
+        appMenemonic,
+        namespace,
+      );
+
+      if (await this.checkAllowence(address)) {
+        await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
+      } else {
+        registeredVC = await hypersignVC.registerCredentialStatus({
+          credentialStatus,
+          credentialStatusProof: proof,
+        });
+      }
 
       const registredCredential = await this.registrationStatus(credentialId);
       Logger.log('Registred Credential', registredCredential);

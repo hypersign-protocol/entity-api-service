@@ -43,6 +43,25 @@ export class DidService {
     private readonly txnService: TxSendModuleService,
   ) {}
 
+  async checkAllowence(address) {
+    const url =
+      this.config.get('HID_NETWORK_API') +
+      '/cosmos/feegrant/v1beta1/allowances/' +
+      address;
+
+    const resp = await fetch(url);
+
+    const res = await resp.json();
+    if (resp.status === 200) {
+      if (res.allowances.length > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  }
+
   // TODO: need to fix this once ed25519 is finished.
   async createByClientSpec(createDidDto: CreateDidDto, appDetail) {
     Logger.log('createByClientSpec() method: starts....', 'DidService');
@@ -369,29 +388,38 @@ export class DidService {
           seed: seed,
         });
       const regDidDocument = registerDidDto.didDocument as Did;
-      const params = {
-        didDocument: regDidDocument,
-        privateKeyMultibase,
-        verificationMethodId: verificationMethodId,
-      };
+
       Logger.log(
         'register() method: before calling hypersignDid.register ',
         'DidService',
       );
-
+      const didDocPreserved = {};
+      Object.assign(didDocPreserved, didDocument);
       const signInfos = await hypersignDid.createSignInfos({
         didDocument,
         privateKeyMultibase,
         verificationMethodId: verificationMethodId,
       });
-      await this.txnService.sendDIDTxn(
-        didDocument,
-        signInfos,
-        verificationMethodId,
+      const params = {
+        didDocument: didDocPreserved,
+        privateKeyMultibase,
+        verificationMethodId: verificationMethodId,
+      };
+
+      const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
+      if (await this.checkAllowence(address)) {
+        await this.txnService.sendDIDTxn(
+          didDocument,
+          signInfos,
+          verificationMethodId,
+          appMenemonic,
+        );
+      } else {
+        registerDidDoc = await hypersignDid.register(params);
+      }
 
-      // registerDidDoc = await hypersignDid.register(params);
       data = await this.didRepositiory.findOneAndUpdate(
         { did: didDocument['id'] },
         {
@@ -633,36 +661,67 @@ export class DidService {
       });
 
       try {
-        updatedDid = await hypersignDid.update({
-          didDocument: updateDidDto.didDocument as Did,
-          privateKeyMultibase,
-          verificationMethodId: resolvedDid['verificationMethod'][0].id,
-          versionId: updatedDidDocMetaData.versionId,
-          readonly: true,
-        });
+        const { wallet, address } = await this.hidWallet.generateWallet(
+          appMenemonic,
+        );
+
         if (!updateDidDto.deactivate) {
           Logger.debug(
             'updateDid() method: before calling hypersignDid.update to update did',
             'DidService',
           );
 
-          await this.txnService.sendDIDUpdate(
-            updatedDid.didDocument,
-            updatedDid.signInfos,
-            updatedDid.versionId,
-            appMenemonic,
-          );
+          if ((await this.checkAllowence(address)) == false) {
+            updatedDid = await hypersignDid.update({
+              didDocument: updateDidDto.didDocument as Did,
+              privateKeyMultibase,
+              verificationMethodId: resolvedDid['verificationMethod'][0].id,
+              versionId: updatedDidDocMetaData.versionId,
+              readonly: false,
+            });
+          } else {
+            updatedDid = await hypersignDid.update({
+              didDocument: updateDidDto.didDocument as Did,
+              privateKeyMultibase,
+              verificationMethodId: resolvedDid['verificationMethod'][0].id,
+              versionId: updatedDidDocMetaData.versionId,
+              readonly: true,
+            });
+            await this.txnService.sendDIDUpdate(
+              updatedDid.didDocument,
+              updatedDid.signInfos,
+              updatedDid.versionId,
+              appMenemonic,
+            );
+          }
         } else {
           Logger.debug(
             'updateDid() method: before calling hypersignDid.deactivate to deactivate did',
             'DidService',
           );
-          await this.txnService.sendDIDDeactivate(
-            updatedDid.didDocument,
-            updatedDid.signInfos,
-            updatedDid.versionId,
-            appMenemonic,
-          );
+
+          if ((await this.checkAllowence(address)) == false) {
+            updatedDid = await hypersignDid.deactivate({
+              didDocument: updateDidDto.didDocument as Did,
+              privateKeyMultibase,
+              verificationMethodId: resolvedDid['verificationMethod'][0].id,
+              versionId: updatedDidDocMetaData.versionId,
+            });
+          } else {
+            updatedDid = await hypersignDid.update({
+              didDocument: updateDidDto.didDocument as Did,
+              privateKeyMultibase,
+              verificationMethodId: resolvedDid['verificationMethod'][0].id,
+              versionId: updatedDidDocMetaData.versionId,
+              readonly: true,
+            });
+            await this.txnService.sendDIDDeactivate(
+              updatedDid.didDocument,
+              updatedDid.signInfos,
+              updatedDid.versionId,
+              appMenemonic,
+            );
+          }
         }
       } catch (error) {
         Logger.error(

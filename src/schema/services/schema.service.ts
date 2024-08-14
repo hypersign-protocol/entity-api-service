@@ -32,6 +32,25 @@ export class SchemaService {
     private readonly didRepositiory: DidRepository,
     private readonly txnService: TxSendModuleService,
   ) {}
+
+  async checkAllowence(address) {
+    const url =
+      this.config.get('HID_NETWORK_API') +
+      '/cosmos/feegrant/v1beta1/allowances/' +
+      address;
+
+    const resp = await fetch(url);
+
+    const res = await resp.json();
+    if (resp.status === 200) {
+      if (res.allowances.length > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  }
   async create(
     createSchemaDto: CreateSchemaDto,
     appDetail,
@@ -94,17 +113,22 @@ export class SchemaService {
         'SchemaService',
       );
 
-      // const registeredSchema = await hypersignSchema.register({
-      //   schema: signedSchema,
-      // });
-
-      let registeredSchema;
-
-      await this.txnService.sendSchemaTxn(
-        generatedSchema,
-        signedSchema.proof,
+      const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
+      let registeredSchema;
+
+      if (await this.checkAllowence(address)) {
+        await this.txnService.sendSchemaTxn(
+          generatedSchema,
+          signedSchema.proof,
+          appMenemonic,
+        );
+      } else {
+        registeredSchema = await hypersignSchema.register({
+          schema: signedSchema,
+        });
+      }
 
       Logger.log(
         'create() method: storing schema information to DB',
@@ -114,13 +138,17 @@ export class SchemaService {
         schemaId: signedSchema.id,
         appId: appDetail.appId,
         authorDid: author,
-        transactionHash: '',
+        transactionHash: registeredSchema['transactionHash']
+          ? registeredSchema['transactionHash']
+          : '',
       });
       Logger.log('create() method: ends', 'SchemaService');
 
       return {
         schemaId: signedSchema.id,
-        transactionHash: '',
+        transactionHash: registeredSchema['transactionHash']
+          ? registeredSchema['transactionHash']
+          : '',
       };
     } catch (error) {
       Logger.error(
