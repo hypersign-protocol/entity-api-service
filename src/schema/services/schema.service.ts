@@ -251,26 +251,30 @@ export class SchemaService {
     }
 
     const appMenemonic = await getAppMenemonic(kmsId);
-    // const namespace = Namespace.testnet;
+    const namespace = Namespace.testnet;
     Logger.log('registerSchema() method: initialising hypersignSchema');
 
-    // const hypersignSchema = await this.schemaSSIservice.initiateHypersignSchema(
-    //   appMenemonic,
-    //   namespace,
-    // );
+    const hypersignSchema = await this.schemaSSIservice.initiateHypersignSchema(
+      appMenemonic,
+      namespace,
+    );
     schemaDocument['proof'] = schemaProof;
     Logger.log('registerSchema() method: registering schema on the blockchain');
+    let registeredSchema;
     try {
-      // registeredSchema = await hypersignSchema.register({
-      //   schema: schemaDocument,
-      // });
-
-      const ack = await this.txnService.sendSchemaTxn(
-        registerSchemaDto.schemaDocument,
-        registerSchemaDto.schemaProof,
+      const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
-      if (ack == true) {
+      if (await this.checkAllowence(address)) {
+        await this.txnService.sendSchemaTxn(
+          registerSchemaDto.schemaDocument,
+          registerSchemaDto.schemaProof,
+          appMenemonic,
+        );
+      } else {
+        registeredSchema = await hypersignSchema.register({
+          schema: schemaDocument,
+        });
       }
     } catch (e) {
       Logger.error('registerSchema() method: Error while registering schema');
@@ -278,6 +282,6 @@ export class SchemaService {
     }
     Logger.log('registerSchema() method: ends....', 'SchemaService');
 
-    return { status: 'Transaction sent' };
+    return { transactionHash: registeredSchema?.transactionHash };
   }
 }

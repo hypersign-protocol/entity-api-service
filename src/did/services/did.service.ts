@@ -549,7 +549,7 @@ export class DidService {
       const mnemonic = await getAppMenemonic(kmsId);
       const hypersignDid = await this.didSSIService.initiateHypersignDid(
         mnemonic,
-        'testnet',
+        this.config.get('NETWORK') ? this.config.get('NETWORK') : 'testnet',
       );
 
       const didInfo = await this.didRepositiory.findOne({
