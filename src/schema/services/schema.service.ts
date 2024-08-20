@@ -282,6 +282,10 @@ export class SchemaService {
     }
     Logger.log('registerSchema() method: ends....', 'SchemaService');
 
-    return { transactionHash: registeredSchema?.transactionHash };
+    return {
+      transactionHash: registeredSchema?.transactionHash
+        ? registeredSchema?.transactionHash
+        : '',
+    };
   }
 }
