@@ -60,24 +60,6 @@ export class Fields {
 }
 export class SchemaBody {
   @ApiProperty({
-    type: String,
-    isArray: true,
-    name: 'schemaContext',
-    required: false,
-    example: ['https://schema.org'],
-  })
-  schemaContext?: Array<string>;
-
-  @ApiProperty({
-    type: String,
-    isArray: true,
-    required: false,
-    example: ['StudentCredential'],
-
-    name: 'type',
-  })
-  type?: Array<string>;
-  @ApiProperty({
     description: 'Name of the schema',
     example: 'Railway ticket schema',
   })
