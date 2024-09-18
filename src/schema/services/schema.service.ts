@@ -20,6 +20,7 @@ import { Schemas } from '../schemas/schemas.schema';
 import { RegisterSchemaDto } from '../dto/register-schema.dto';
 import { Namespace } from 'src/did/dto/create-did.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
+import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class SchemaService {
@@ -29,7 +30,27 @@ export class SchemaService {
     private readonly schemaSSIservice: SchemaSSIService,
     private readonly hidWallet: HidWalletService,
     private readonly didRepositiory: DidRepository,
+    private readonly txnService: TxSendModuleService,
   ) {}
+
+  async checkAllowence(address) {
+    const url =
+      this.config.get('HID_NETWORK_API') +
+      '/cosmos/feegrant/v1beta1/allowances/' +
+      address;
+
+    const resp = await fetch(url);
+
+    const res = await resp.json();
+    if (resp.status === 200) {
+      if (res.allowances.length > 0) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  }
   async create(
     createSchemaDto: CreateSchemaDto,
     appDetail,
@@ -92,9 +113,23 @@ export class SchemaService {
         'SchemaService',
       );
 
-      const registeredSchema = await hypersignSchema.register({
-        schema: signedSchema,
-      });
+      const { wallet, address } = await this.hidWallet.generateWallet(
+        appMenemonic,
+      );
+      let registeredSchema;
+
+      if (await this.checkAllowence(address)) {
+        await this.txnService.sendSchemaTxn(
+          generatedSchema,
+          signedSchema.proof,
+          appMenemonic,
+        );
+      } else {
+        registeredSchema = await hypersignSchema.register({
+          schema: signedSchema,
+        });
+      }
+
       Logger.log(
         'create() method: storing schema information to DB',
         'SchemaService',
@@ -103,13 +138,17 @@ export class SchemaService {
         schemaId: signedSchema.id,
         appId: appDetail.appId,
         authorDid: author,
-        transactionHash: registeredSchema['transactionHash'],
+        transactionHash: registeredSchema['transactionHash']
+          ? registeredSchema['transactionHash']
+          : '',
       });
       Logger.log('create() method: ends', 'SchemaService');
 
       return {
         schemaId: signedSchema.id,
-        transactionHash: registeredSchema['transactionHash'],
+        transactionHash: registeredSchema['transactionHash']
+          ? registeredSchema['transactionHash']
+          : '',
       };
     } catch (error) {
       Logger.error(
@@ -191,7 +230,7 @@ export class SchemaService {
   async registerSchema(
     registerSchemaDto: RegisterSchemaDto,
     appDetail,
-  ): Promise<{ transactionHash: string }> {
+  ): Promise<any> {
     Logger.log('registerSchema() method: starts....', 'SchemaService');
 
     const { edvId, kmsId } = appDetail;
@@ -219,19 +258,30 @@ export class SchemaService {
       appMenemonic,
       namespace,
     );
-    let registeredSchema = {} as { transactionHash: string };
     schemaDocument['proof'] = schemaProof;
     Logger.log('registerSchema() method: registering schema on the blockchain');
+    let registeredSchema;
     try {
-      registeredSchema = await hypersignSchema.register({
-        schema: schemaDocument,
-      });
+      const { wallet, address } = await this.hidWallet.generateWallet(
+        appMenemonic,
+      );
+      if (await this.checkAllowence(address)) {
+        await this.txnService.sendSchemaTxn(
+          registerSchemaDto.schemaDocument,
+          registerSchemaDto.schemaProof,
+          appMenemonic,
+        );
+      } else {
+        registeredSchema = await hypersignSchema.register({
+          schema: schemaDocument,
+        });
+      }
     } catch (e) {
       Logger.error('registerSchema() method: Error while registering schema');
       throw new BadRequestException([e.message]);
     }
     Logger.log('registerSchema() method: ends....', 'SchemaService');
 
-    return { transactionHash: registeredSchema.transactionHash };
+    return { transactionHash: registeredSchema?.transactionHash };
   }
 }

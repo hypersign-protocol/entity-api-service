@@ -5,7 +5,6 @@ import {
   DidMetaData,
 } from '../schemas/did.schema';
 import { FilterQuery, Model } from 'mongoose';
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
 @Injectable()

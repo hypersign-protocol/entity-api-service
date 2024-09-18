@@ -10,7 +10,7 @@ export class CredentialSSIService {
     private readonly config: ConfigService,
     private readonly hidWallet: HidWalletService,
   ) {}
-  async initateHypersignVC(mnemonic: string, namespace: string) {
+  async initateHypersignVC(mnemonic: string,namespace: string): Promise<HypersignVerifiableCredential> {
     Logger.log('InitateHypersignVC(): starts....', 'CredentialSSIService');
     const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
     const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
