@@ -30,8 +30,9 @@ import { Did as IDidDto } from '../schemas/did.schema';
 import { AddVerificationMethodDto } from '../dto/addVm.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { ConfigService } from '@nestjs/config';
+import { SignDidDto } from '../dto/sign-did.dto';
+import { VerifyDidDto } from '../dto/verify-did.dto';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
-
 @Injectable({ scope: Scope.REQUEST })
 export class DidService {
   constructor(
@@ -318,7 +319,7 @@ export class DidService {
     registerDidDto: RegisterDidDto,
     appDetail,
   ): Promise<RegisterDidResponse> {
-    Logger.log('createByClientSpec() method: starts....', 'DidService');
+    Logger.log('register() method: starts....', 'DidService');
     let registerDidDoc;
     const { edvId, kmsId } = appDetail;
     Logger.log('register() method: initialising edv service', 'DidService');
@@ -747,5 +748,82 @@ export class DidService {
       throw new BadRequestException([`${e.message}`]);
     }
     return result;
+  }
+
+  async SignDidDocument(signDidDto: SignDidDto, appDetail) {
+    Logger.log('SignDidDocument() method: starts....', 'DidService');
+    const { edvId, kmsId } = appDetail;
+    const appMenemonic = await getAppMenemonic(kmsId);
+    const namespace = this.config.get('NETWORK')
+      ? this.config.get('NETWORK')
+      : 'testnet';
+    const didId = signDidDto.did ? signDidDto.did : signDidDto.didDocument.id;
+    const DidInfo = await this.didRepositiory.findOne({
+      appId: appDetail.appId,
+      did: didId,
+    });
+    /**
+     *TODO:- check if privatekey multibase is requered to be taken from outside.
+     * test the case where did is and key is generated from somewhenre and api is used only for sign and verify
+     */
+    if (!signDidDto.didDocument && DidInfo.registrationStatus != 'COMPLETED') {
+      throw new BadRequestException([
+        'didDocument parameter is required for private did',
+      ]);
+    }
+    Logger.log(
+      'SignDidDocument() method: initialising didSSIService service',
+      'DidService',
+    );
+    const hypersignDid = await this.didSSIService.initiateHypersignDid(
+      appMenemonic,
+      namespace,
+    );
+    let { didDocument } = signDidDto;
+    const { verificationMethodId, purpose, did, domain, challenge } =
+      signDidDto;
+    if (!didDocument) {
+      const didDocToBeSigned = await hypersignDid.resolve({
+        did: signDidDto.did ?? did,
+      });
+      didDocument = didDocToBeSigned.didDocument;
+    }
+    const appVault = await getAppVault(kmsId, edvId);
+    const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
+      DidInfo.kmsId,
+    );
+    const seed = await this.hidWallet.getSeedFromMnemonic(userMnemonic);
+    const { privateKeyMultibase } = await hypersignDid.generateKeys({
+      seed: seed,
+    });
+    const signedDidDocument = await hypersignDid.sign({
+      didDocument: didDocument,
+      privateKeyMultibase,
+      verificationMethodId,
+      domain,
+      challenge,
+      purpose: purpose,
+    });
+    return signedDidDocument;
+  }
+  async VerifyDidDocument(verifyDidDto: VerifyDidDto, appDetail) {
+    Logger.log('VerifyDidDocument() method: starts....', 'DidService');
+    const { kmsId } = appDetail;
+    const appMenemonic = await getAppMenemonic(kmsId);
+    const namespace = this.config.get('NETWORK')
+      ? this.config.get('NETWORK')
+      : 'testnet';
+    Logger.log(
+      'VerifyDidDocument() method: initialising didSSIService service',
+      'DidService',
+    );
+
+    const hypersignDid = await this.didSSIService.initiateHypersignDid(
+      appMenemonic,
+      namespace,
+    );
+    const params = { ...verifyDidDto };
+    const verifiedDidDocument = await hypersignDid.verify(params);
+    return verifiedDidDocument;
   }
 }
