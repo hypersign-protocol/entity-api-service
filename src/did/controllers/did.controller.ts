@@ -224,7 +224,7 @@ export class DidController {
     return this.didService.addVerificationMethod(addVm);
   }
 
-  @Post('/sign')
+  @Post('/auth/sign')
   @ApiOkResponse({
     description: 'DidDocument is signed successfully',
     type: SignedDidDocument,
@@ -254,7 +254,7 @@ export class DidController {
     Logger.log('SignDidDocument() method: starts', 'DidController');
     return this.didService.SignDidDocument(signDidDocDto, req.user);
   }
-  @Post('/verify')
+  @Post('/auth/verify')
   @ApiOkResponse({
     description: 'DidDocument is verified successfully',
     type: VerifyDidDocResponseDto,
@@ -275,7 +275,6 @@ export class DidController {
     required: false,
   })
   @UsePipes(ValidationPipe)
-  @UsePipes(new AtLeastOneParamPipe(['did', 'didDocument']))
   VerifyDidDocument(
     @Headers('Authorization') authorization: string,
     @Req() req: any,

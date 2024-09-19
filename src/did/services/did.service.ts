@@ -19,6 +19,7 @@ import {
   IKeyType,
   IClientSpec,
   Did,
+  SupportedPurpose,
 } from 'hs-ssi-sdk';
 import { DidRepository, DidMetaDataRepo } from '../repository/did.repository';
 import { Slip10RawIndex } from '@cosmjs/crypto';
@@ -780,8 +781,11 @@ export class DidService {
       namespace,
     );
     let { didDocument } = signDidDto;
-    const { verificationMethodId, purpose, did, domain, challenge } =
-      signDidDto;
+    const { verificationMethodId, did } = signDidDto;
+    const purpose =
+      signDidDto?.options?.purpose || SupportedPurpose.assertionMethod;
+    const domain = signDidDto?.options?.domain;
+    const challenge = signDidDto?.options?.challenge;
     if (!didDocument) {
       const didDocToBeSigned = await hypersignDid.resolve({
         did: signDidDto.did ?? did,
@@ -802,7 +806,7 @@ export class DidService {
       verificationMethodId,
       domain,
       challenge,
-      purpose: purpose,
+      purpose,
     });
     return signedDidDocument;
   }
@@ -822,7 +826,18 @@ export class DidService {
       appMenemonic,
       namespace,
     );
-    const params = { ...verifyDidDto };
+    const purpose = verifyDidDto.signedDidDocument.proof
+      .proofPurpose as SupportedPurpose;
+    const domain = verifyDidDto?.signedDidDocument.proof?.domain;
+    const challenge = verifyDidDto?.signedDidDocument.proof?.challenge;
+    const params = {
+      didDocument: verifyDidDto.signedDidDocument,
+      verificationMethodId:
+        verifyDidDto.signedDidDocument.proof.verificationMethod,
+      domain,
+      challenge,
+      purpose,
+    };
     const verifiedDidDocument = await hypersignDid.verify(params);
     return verifiedDidDocument;
   }
