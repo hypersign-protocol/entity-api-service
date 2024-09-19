@@ -15,37 +15,15 @@ import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.dec
 
 export class VerifyDidDto {
   @ApiProperty({
-    name: 'didDocument',
-    description: 'didDocument',
-    type: DidDoc,
+    name: 'signedDidDocument',
+    description: 'signedDidDocument',
+    type: SignedDidDocument,
   })
   @IsOptional()
   @IsNotEmptyObject()
   @Type(() => SignedDidDocument)
   @ValidateNested({ each: true })
-  didDocument: SignedDidDocument;
-  @ApiProperty({
-    description: 'Verification Method id for did registration',
-    example: 'did:hid:testnet:........#key-${idx}',
-    required: true,
-  })
-  @ValidateVerificationMethodId()
-  @IsString()
-  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
-    message: "Did's namespace should be testnet",
-  }) // this is to validate if did is generated using empty namespace
-  verificationMethodId: string;
-
-  @ApiProperty({
-    name: 'options',
-    description: 'optional parameter',
-    type: DidSignOption,
-    required: false,
-  })
-  @IsOptional()
-  @Type(() => DidSignOption)
-  @ValidateNested({ each: true })
-  options?: DidSignOption;
+  signedDidDocument: SignedDidDocument;
 }
 
 export class Controller {

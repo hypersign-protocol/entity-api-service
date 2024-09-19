@@ -826,13 +826,14 @@ export class DidService {
       appMenemonic,
       namespace,
     );
-    const purpose =
-      verifyDidDto?.options?.purpose || SupportedPurpose.assertionMethod;
-    const domain = verifyDidDto?.options?.domain;
-    const challenge = verifyDidDto?.options?.challenge;
+    const purpose = verifyDidDto.signedDidDocument.proof
+      .proofPurpose as SupportedPurpose;
+    const domain = verifyDidDto?.signedDidDocument.proof?.domain;
+    const challenge = verifyDidDto?.signedDidDocument.proof?.challenge;
     const params = {
-      didDocument: verifyDidDto.didDocument,
-      verificationMethodId: verifyDidDto.verificationMethodId,
+      didDocument: verifyDidDto.signedDidDocument,
+      verificationMethodId:
+        verifyDidDto.signedDidDocument.proof.verificationMethod,
       domain,
       challenge,
       purpose,
