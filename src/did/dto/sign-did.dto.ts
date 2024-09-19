@@ -85,35 +85,19 @@ export class SignedDidDocument extends DidDoc {
   })
   proof: Proof;
 }
-
-export class BaseDidDto {
-  @ApiProperty({
-    name: 'didDocument',
-    description: 'didDocument',
-    type: DidDoc,
-    required: false,
-  })
-  didDocument: any;
-  @ApiProperty({
-    description: 'Verification Method id for did registration',
-    example: 'did:hid:testnet:........#key-${idx}',
-    required: true,
-  })
-  @ValidateVerificationMethodId()
-  @IsString()
-  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
-    message: "Did's namespace should be testnet",
-  }) // this is to validate if did is generated using empty namespace
-  verificationMethodId: string;
+export class DidSignOption {
   @ApiProperty({
     name: 'purpose',
     description: 'purpose for signing didDocument',
     example: 'authentication',
-    required: true,
+    required: false,
+    enum: SupportedPurpose,
+    default: SupportedPurpose.assertionMethod,
   })
+  @IsOptional()
   @IsString()
   @IsEnum(SupportedPurpose)
-  purpose: SupportedPurpose;
+  purpose?: SupportedPurpose;
   @ApiProperty({
     name: 'challenge',
     description:
@@ -134,8 +118,7 @@ export class BaseDidDto {
   @IsString()
   domain: string;
 }
-
-export class SignDidDto extends BaseDidDto {
+export class SignDidDto {
   @ApiProperty({
     name: 'didDocument',
     description: 'didDocument',
@@ -157,4 +140,26 @@ export class SignDidDto extends BaseDidDto {
   @IsDid()
   @IsString()
   did: string;
+
+  @ApiProperty({
+    description: 'Verification Method id for did registration',
+    example: 'did:hid:testnet:........#key-${idx}',
+    required: true,
+  })
+  @ValidateVerificationMethodId()
+  @IsString()
+  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
+    message: "Did's namespace should be testnet",
+  })
+  verificationMethodId: string;
+  @ApiProperty({
+    name: 'options',
+    description: 'optional parameter',
+    type: DidSignOption,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => DidSignOption)
+  @ValidateNested({ each: true })
+  options?: DidSignOption;
 }

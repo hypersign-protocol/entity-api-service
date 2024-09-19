@@ -1,17 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BaseDidDto, Proof, SignedDidDocument } from './sign-did.dto';
+import { DidSignOption, Proof, SignedDidDocument } from './sign-did.dto';
 import {
   IsBoolean,
   IsNotEmptyObject,
   IsOptional,
   IsString,
+  Matches,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DidDoc } from './update-did.dto';
 import { IKeyType } from 'hs-ssi-sdk';
+import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
 
-export class VerifyDidDto extends BaseDidDto {
+export class VerifyDidDto {
   @ApiProperty({
     name: 'didDocument',
     description: 'didDocument',
@@ -22,6 +24,28 @@ export class VerifyDidDto extends BaseDidDto {
   @Type(() => SignedDidDocument)
   @ValidateNested({ each: true })
   didDocument: SignedDidDocument;
+  @ApiProperty({
+    description: 'Verification Method id for did registration',
+    example: 'did:hid:testnet:........#key-${idx}',
+    required: true,
+  })
+  @ValidateVerificationMethodId()
+  @IsString()
+  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
+    message: "Did's namespace should be testnet",
+  }) // this is to validate if did is generated using empty namespace
+  verificationMethodId: string;
+
+  @ApiProperty({
+    name: 'options',
+    description: 'optional parameter',
+    type: DidSignOption,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => DidSignOption)
+  @ValidateNested({ each: true })
+  options?: DidSignOption;
 }
 
 export class Controller {
