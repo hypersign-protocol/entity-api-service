@@ -91,6 +91,7 @@ export class BaseDidDto {
     name: 'didDocument',
     description: 'didDocument',
     type: DidDoc,
+    required: false,
   })
   didDocument: any;
   @ApiProperty({
@@ -108,7 +109,7 @@ export class BaseDidDto {
     name: 'purpose',
     description: 'purpose for signing didDocument',
     example: 'authentication',
-    required: false,
+    required: true,
   })
   @IsString()
   @IsEnum(SupportedPurpose)
@@ -139,6 +140,7 @@ export class SignDidDto extends BaseDidDto {
     name: 'didDocument',
     description: 'didDocument',
     type: DidDoc,
+    required: false,
   })
   @IsOptional()
   @IsNotEmptyObject()
@@ -149,6 +151,7 @@ export class SignDidDto extends BaseDidDto {
     name: 'did',
     description: 'Id of the didDocument',
     example: 'did:hid:testnet:........',
+    required: false,
   })
   @IsOptional()
   @IsDid()
