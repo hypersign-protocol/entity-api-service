@@ -61,8 +61,6 @@ spec:
           value: __GLOBAL_TXN_CONTROLLER_QUEUE__
         - name: RABBIT_MQ_URI
           value: __RABBIT_MQ_URI__
-        - name: VAULT_PREFIX
-          value: __VAULT_PREFIX__
         - name: WHITELISTED_CORS
           value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://api.entity-test.hypersign.id','https://wallet-prajna.hypersign.id']"
         volumeMounts:

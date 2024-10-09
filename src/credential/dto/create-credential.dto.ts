@@ -52,12 +52,25 @@ export class CreateCredentialDto {
   @IsOptional()
   subjectDidDocSigned?: JSON;
 
-  @ApiHideProperty()
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    name: 'schemaContext',
+    required: false,
+    example: ['https://schema.org'],
+  })
   @ValidateIf((o) => o.schemaId === undefined)
   @IsArray()
   @ArrayNotEmpty()
   schemaContext?: Array<string>;
-  @ApiHideProperty()
+  @ApiProperty({
+    type: String,
+    isArray: true,
+    required: false,
+    example: ['StudentCredential'],
+
+    name: 'type',
+  })
   @ValidateIf((o) => o.schemaId === undefined)
   @IsArray()
   type?: Array<string>;

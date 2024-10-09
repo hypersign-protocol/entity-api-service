@@ -44,7 +44,6 @@ export class Schemas {
 }
 
 const SchemasSchema = SchemaFactory.createForClass(Schemas);
-SchemasSchema.index({ transactionHash: 1 }, { unique: true });
 SchemasSchema.index({ appId: 1, schemaId: 1, authorDid: 1 }, { unique: true });
 SchemasSchema.index({ schemaId: 1 }, { unique: true });
 
