@@ -26,7 +26,7 @@ import { Slip10RawIndex } from '@cosmjs/crypto';
 import { HidWalletService } from '../../hid-wallet/services/hid-wallet.service';
 import { DidSSIService } from './did.ssi.service';
 import { RegistrationStatus } from '../schemas/did.schema';
-import { RegisterDidDto } from '../dto/register-did.dto';
+import { RegisterDidDto, RegisterV2DidDto } from '../dto/register-did.dto';
 import { Did as IDidDto } from '../schemas/did.schema';
 import { AddVerificationMethodDto } from '../dto/addVm.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
@@ -70,30 +70,30 @@ export class DidService {
     let methodSpecificId = createDidDto.methodSpecificId;
     const publicKey = createDidDto.options?.publicKey;
     const chainId = createDidDto.options.chainId;
-    const keyType: IKeyType = createDidDto.options.keyType;
+    const keyType = createDidDto.options.keyType;
     const address = createDidDto.options.walletAddress;
     const register = createDidDto.options?.register;
-    let verificationRelationships: IVerificationRelationships[];
-    if (
-      createDidDto.options?.verificationRelationships &&
-      createDidDto.options?.verificationRelationships.length > 0
-    ) {
-      verificationRelationships =
-        createDidDto.options.verificationRelationships;
-      if (
-        verificationRelationships.includes(
-          IVerificationRelationships.keyAgreement,
-        )
-      ) {
-        Logger.error(
-          'createByClientSpec() method: Invalid varifiactionRelationship method',
-          'DidService',
-        );
-        throw new BadRequestException([
-          'verificationRelationships.keyAgreement is not allowed at the time of creating a did',
-        ]);
-      }
-    }
+    // let verificationRelationships: IVerificationRelationships[];
+    // if (
+    //   createDidDto.options?.verificationRelationships &&
+    //   createDidDto.options?.verificationRelationships.length > 0
+    // ) {
+    //   verificationRelationships =
+    //     createDidDto.options.verificationRelationships;
+    //   if (
+    //     verificationRelationships.includes(
+    //       IVerificationRelationships.keyAgreement,
+    //     )
+    //   ) {
+    //     Logger.error(
+    //       'createByClientSpec() method: Invalid varifiactionRelationship method',
+    //       'DidService',
+    //     );
+    //     throw new BadRequestException([
+    //       'verificationRelationships.keyAgreement is not allowed at the time of creating a did',
+    //     ]);
+    //   }
+    // }
     if (!methodSpecificId) {
       methodSpecificId = address;
     }
@@ -161,7 +161,7 @@ export class DidService {
       chainId,
       clientSpec,
       address,
-      verificationRelationships,
+      // verificationRelationships,
     });
 
     return {
@@ -177,28 +177,29 @@ export class DidService {
   async create(
     createDidDto: CreateDidDto,
     appDetail,
+    keyTypes?: IKeyType[],
   ): Promise<CreateDidResponse> {
     Logger.log('create() method: starts....', 'DidService');
 
     try {
       const methodSpecificId = createDidDto.methodSpecificId;
-      let verificationRelationships: IVerificationRelationships[];
-      if (
-        createDidDto.options?.verificationRelationships &&
-        createDidDto.options?.verificationRelationships.length > 0
-      ) {
-        verificationRelationships =
-          createDidDto.options.verificationRelationships;
-        if (
-          verificationRelationships.includes(
-            IVerificationRelationships.keyAgreement,
-          )
-        ) {
-          throw new BadRequestException([
-            'verificationRelationships.keyAgreement is not allowed at the time of creating a did',
-          ]);
-        }
-      }
+      // let verificationRelationships: IVerificationRelationships[];
+      // if (
+      //   createDidDto.options?.verificationRelationships &&
+      //   createDidDto.options?.verificationRelationships.length > 0
+      // ) {
+      //   verificationRelationships =
+      //     createDidDto.options.verificationRelationships;
+      //   if (
+      //     verificationRelationships.includes(
+      //       IVerificationRelationships.keyAgreement,
+      //     )
+      //   ) {
+      //     throw new BadRequestException([
+      //       'verificationRelationships.keyAgreement is not allowed at the time of creating a did',
+      //     ]);
+      //   }
+      // }
       const { edvId, kmsId } = appDetail;
       // Step 1: Generate a new menmonic
       Logger.log('Before calling hidWallet.generateWallet()', 'DidService');
@@ -236,10 +237,10 @@ export class DidService {
       Logger.log('After calling hypersignDid.generateKeys', 'DidService');
 
       Logger.log('Before calling hypersignDid.generate()', 'DidService');
-      const didDoc = await hypersignDid.generate({
+      let didDoc: any = await hypersignDid.generate({
         methodSpecificId,
         publicKeyMultibase,
-        verificationRelationships,
+        // verificationRelationships,
       });
       Logger.log('After calling hypersignDid.generate()', 'DidService');
 
@@ -278,7 +279,6 @@ export class DidService {
         );
       }
       const { id: userKMSId } = insertedDoc;
-
       // Step 4: Store user's kmsId in DID db for that application. x
       Logger.log(
         'Before calling didRepositiory.create() did ' + didDoc.id,
@@ -298,7 +298,25 @@ export class DidService {
         'After calling didRepositiory.create() did ' + didDoc.id,
         'DidService',
       );
-
+      if (keyTypes.length > 1) {
+        for (const type of keyTypes.slice(1)) {
+          if (type === IKeyType.BabyJubJubKey2021) {
+            const hypersignBjjDid =
+              await this.didSSIService.initiateHyperSignBJJDid(
+                userWallet.mnemonic,
+                createDidDto.namespace,
+              );
+            const { publicKeyMultibase } = await hypersignBjjDid.generateKeys({
+              mnemonic: userWallet.mnemonic,
+            });
+            didDoc = await this.addVerificationMethod({
+              didDocument: didDoc,
+              type: type,
+              publicKeyMultibase,
+            });
+          }
+        }
+      }
       return {
         did: didDoc.id,
         registrationStatus: RegistrationStatus.UNREGISTRED,
@@ -309,6 +327,159 @@ export class DidService {
       };
     } catch (e) {
       Logger.error(`create() method: Error: ${e.message}`, 'DidService');
+      if (e.code === 11000) {
+        throw new ConflictException(['Duplicate key error']);
+      }
+      throw new BadRequestException([e.message]);
+    }
+  }
+  async createBjjDid(
+    createDidDto: CreateDidDto,
+    appDetail,
+    keyTypes?: IKeyType[],
+  ): Promise<CreateDidResponse> {
+    Logger.log(
+      'createBjjDid() method: starts to create a bjj did',
+      'DidService',
+    );
+    try {
+      const methodSpecificId = createDidDto.methodSpecificId;
+      // let verificationRelationships: IVerificationRelationships[];
+      // if (
+      //   createDidDto.options?.verificationRelationships &&
+      //   createDidDto.options?.verificationRelationships.length > 0
+      // ) {
+      //   verificationRelationships =
+      //     createDidDto.options.verificationRelationships;
+      //   if (
+      //     verificationRelationships.includes(
+      //       IVerificationRelationships.keyAgreement,
+      //     )
+      //   ) {
+      //     throw new BadRequestException([
+      //       'verificationRelationships.keyAgreement is not allowed at the time of creating a did',
+      //     ]);
+      //   }
+      // }
+      const { edvId, kmsId } = appDetail;
+      Logger.log('Before calling hidWallet.generateWallet()', 'DidService');
+      const userWallet = await this.hidWallet.generateWallet();
+      Logger.log('After calling hidWallet.generateWallet()', 'DidService');
+      Logger.log(
+        'Before calling didSSIService.initiateHypersignDid()',
+        'DidService',
+      );
+      const hypersignBjjDid = await this.didSSIService.initiateHyperSignBJJDid(
+        userWallet.mnemonic,
+        createDidDto.namespace,
+      );
+      Logger.log(
+        'After calling didSSIService.initiateHyperSignBJJDid()',
+        'DidService',
+      );
+
+      Logger.log(
+        'Before calling .hidWallet.getSeedFromMnemonic()',
+        'DidService',
+      );
+      const seed = await this.hidWallet.getSeedFromMnemonic(
+        userWallet.mnemonic,
+      );
+
+      Logger.log(
+        'After calling .hidWallet.getSeedFromMnemonic()',
+        'DidService',
+      );
+      Logger.log('Before calling hypersignBjjDid.generateKeys', 'DidService');
+      const { publicKeyMultibase, privateKeyMultibase } =
+        await hypersignBjjDid.generateKeys({
+          mnemonic: userWallet.mnemonic,
+        });
+      Logger.log('After calling hypersignBjjDid.generateKeys', 'DidService');
+
+      Logger.log('Before calling hypersignBjjDid.generate()', 'DidService');
+      let didDoc: any = await hypersignBjjDid.generate({
+        methodSpecificId,
+        publicKeyMultibase,
+        // verificationRelationships,
+      });
+      Logger.log('After calling hypersignDid.generate()', 'DidService');
+
+      if (!didDoc) {
+        throw new Error('Could not generate dIDDoc');
+      }
+      Logger.log('Before calling getAppVault ', 'DidService');
+      const appVault = await getAppVault(kmsId, edvId);
+      Logger.log('After calling getAppVault ', 'DidService');
+      if (!appVault) {
+        throw new Error('KeyManager is not null or not initialized');
+      }
+      const userCredential = {
+        mnemonic: userWallet.mnemonic,
+        walletAddress: userWallet.address,
+      };
+      Logger.log('Before calling appVault.prepareEdvDocument() ', 'DidService');
+      const userEdvDoc = appVault.prepareEdvDocument(userCredential, [
+        { index: 'content.walletAddress', unique: false },
+      ]);
+      Logger.log('After calling appVault.prepareEdvDocument() ', 'DidService');
+
+      Logger.log('Before calling appVault.insertDocument() ', 'DidService');
+      const insertedDoc = await appVault.insertDocument(userEdvDoc);
+      Logger.log('After calling appVault.insertDocument() ', 'DidService');
+
+      Logger.log(JSON.stringify(insertedDoc), 'DidService');
+      if (!insertedDoc) {
+        throw new Error(
+          'Could not insert document for userCredential.walletAddress' +
+            userCredential.walletAddress,
+        );
+      }
+      const { id: userKMSId } = insertedDoc;
+      Logger.log(
+        'Before calling didRepositiory.create() did ' + didDoc.id,
+        'DidService',
+      );
+      await this.didRepositiory.create({
+        did: didDoc.id,
+        appId: appDetail.appId,
+        kmsId: userKMSId,
+        slipPathKeys: null,
+        hdPathIndex: null,
+        transactionHash: '',
+        registrationStatus: RegistrationStatus.UNREGISTRED,
+        name: createDidDto.options?.name,
+      });
+      Logger.log(
+        'After calling didRepositiory.create() did ' + didDoc.id,
+        'DidService',
+      );
+      if (keyTypes.length > 1) {
+        for (const type of keyTypes.slice(1)) {
+          const hypersignDid = await this.didSSIService.initiateHypersignDid(
+            userWallet.mnemonic,
+            createDidDto.namespace,
+          );
+          const { publicKeyMultibase } = await hypersignDid.generateKeys({
+            seed,
+          });
+          didDoc = await this.addVerificationMethod({
+            didDocument: didDoc,
+            type: type,
+            publicKeyMultibase,
+          });
+        }
+      }
+      return {
+        did: didDoc.id,
+        registrationStatus: RegistrationStatus.UNREGISTRED,
+        transactionHash: '',
+        metaData: {
+          didDocument: didDoc,
+        },
+      };
+    } catch (e) {
+      Logger.error(`createBjjDid() method: Error: ${e.message}`, 'DidService');
       if (e.code === 11000) {
         throw new ConflictException(['Duplicate key error']);
       }
@@ -450,6 +621,203 @@ export class DidService {
     };
   }
 
+  async registerV2(
+    registerV2DidDto: RegisterV2DidDto,
+    appDetail, // : Promise<RegisterDidResponse>
+  ) {
+    Logger.log('registerV2() method: starts....', 'DidService');
+    const { edvId, kmsId } = appDetail;
+    Logger.log('registerV2() method: initialising edv service', 'DidService');
+
+    const appMenemonic = await getAppMenemonic(kmsId);
+    const namespace = this.config.get('NETWORK')
+      ? this.config.get('NETWORK')
+      : 'testnet';
+    const didInfo = await this.didRepositiory.findOne({
+      appId: appDetail.appId,
+      did: registerV2DidDto.didDocument['id'],
+    });
+    if (didInfo !== null && didInfo.registrationStatus === 'COMPLETED') {
+      throw new BadRequestException([
+        `${registerV2DidDto.didDocument['id']} already registered`,
+      ]);
+    }
+    Logger.log(
+      'registerV2() method: initialising didSSIService service',
+      'DidService',
+    );
+    const hypersignDid = await this.didSSIService.initiateHypersignDid(
+      appMenemonic,
+      namespace,
+    );
+    const hypersignBjjDid = await this.didSSIService.initiateHyperSignBJJDid(
+      appMenemonic,
+      namespace,
+    );
+    const { didDocument, signInfos: providedSignInfos } = registerV2DidDto;
+    const finalSignInfos: any = [];
+    const didDocPreserved = { ...didDocument };
+
+    const checkIfBjjExist = didDocument.verificationMethod.some(
+      (vm) => vm.type === IKeyType.BabyJubJubKey2021,
+    );
+    if (checkIfBjjExist) {
+      delete didDocument.alsoKnownAs;
+      delete didDocPreserved.alsoKnownAs;
+    }
+    for (let i = 0; i < didDocument.verificationMethod.length; i++) {
+      const vm = didDocument.verificationMethod[i];
+      const keyType = vm.type;
+
+      const selectedSignInfo = providedSignInfos.find(
+        (sign) => sign.verification_method_id === vm.id,
+      );
+      if (!selectedSignInfo) {
+        throw new BadRequestException([
+          `Missing sign info for verification method: ${vm.id}`,
+        ]);
+      }
+      if (
+        keyType === IKeyType.EcdsaSecp256k1RecoveryMethod2020 ||
+        keyType === IKeyType.EcdsaSecp256k1VerificationKey2019
+      ) {
+        if (!selectedSignInfo.signature) {
+          throw new BadRequestException([
+            `signature must be passed for keyType:${keyType}`,
+          ]);
+        }
+        if (!selectedSignInfo.clientSpec) {
+          throw new BadRequestException([
+            `clientSpec must passed for keyType:${keyType}`,
+          ]);
+        }
+        if (!selectedSignInfo.created) {
+          throw new BadRequestException([
+            `created must passed for keyType:${keyType}`,
+          ]);
+        }
+        finalSignInfos.push(selectedSignInfo);
+      }
+      // let didData;
+      // if (
+      //   (keyType === IKeyType.Ed25519VerificationKey2020 ||
+      //     keyType === IKeyType.BabyJubJubKey2021) &&
+      //   !selectedSignInfo.signature
+      // ) {
+      //   didData = await this.didRepositiory.findOne({
+      //     did: didDocument['id'],
+      //   });
+
+      // }
+
+      if (keyType === IKeyType.Ed25519VerificationKey2020) {
+        //genrate signInfo
+        if (!didInfo) {
+          throw new NotFoundException([didDocument['id'] + ' not found']);
+        }
+        const appVault = await getAppVault(kmsId, edvId);
+        const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
+          didInfo.kmsId,
+        );
+
+        const seed = await this.hidWallet.getSeedFromMnemonic(userMnemonic);
+        const { privateKeyMultibase } = await hypersignDid.generateKeys({
+          seed: seed,
+        });
+        const generatedSignInfo = await hypersignDid.createSignInfos({
+          didDocument: JSON.parse(JSON.stringify(didDocPreserved)),
+          privateKeyMultibase,
+          verificationMethodId: selectedSignInfo.verification_method_id,
+        });
+        finalSignInfos.push(generatedSignInfo[0]);
+      }
+      if (keyType === IKeyType.BabyJubJubKey2021) {
+        if (!didInfo) {
+          throw new NotFoundException([didDocument['id'] + ' not found']);
+        }
+        const appVault = await getAppVault(kmsId, edvId);
+        const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
+          didInfo.kmsId,
+        );
+
+        const { privateKeyMultibase } = await hypersignBjjDid.generateKeys({
+          mnemonic: userMnemonic,
+        });
+
+        const generatedSignInfo = await hypersignBjjDid.createSignInfos({
+          didDocument: JSON.parse(JSON.stringify(didDocPreserved)),
+          privateKeyMultibase,
+          verificationMethodId: selectedSignInfo.verification_method_id,
+        });
+        finalSignInfos.push(generatedSignInfo[0]);
+      }
+    }
+    const registerDidDoc = await hypersignDid.registerByClientSpec({
+      didDocument,
+      signInfos: finalSignInfos,
+    });
+    let registerDidData;
+
+    if (!didInfo || didInfo == undefined) {
+      registerDidData = await this.didRepositiory.create({
+        did: didDocument['id'],
+        appId: appDetail.appId,
+        slipPathKeys: null,
+        hdPathIndex: null,
+        kmsId: didInfo.kmsId,
+        transactionHash:
+          registerDidDoc && registerDidDoc?.transactionHash
+            ? registerDidDoc.transactionHash
+            : '',
+        registrationStatus:
+          registerDidDoc && registerDidDoc?.transactionHash
+            ? RegistrationStatus.COMPLETED
+            : RegistrationStatus.UNREGISTRED,
+        name: didInfo.name,
+      });
+    } else {
+      // const { wallet, address } = await this.hidWallet.generateWallet(
+      //   appMenemonic,
+      // );
+      // if (await this.checkAllowence(address)) {
+      //   await this.txnService.sendDIDTxn(
+      //     didDocument,
+      //      finalSignInfos,
+      //     verificationMethodId,
+      //     appMenemonic,
+      //   );
+      // }
+      // else {
+      //   registerDidDoc = await hypersignDid.register(params);
+      // }
+      registerDidData = await this.didRepositiory.findOneAndUpdate(
+        { did: didDocument['id'] },
+        {
+          did: didDocument['id'],
+          appId: appDetail.appId,
+          slipPathKeys: null,
+          hdPathIndex: null,
+          transactionHash:
+            registerDidDoc && registerDidDoc?.transactionHash
+              ? registerDidDoc.transactionHash
+              : '',
+          registrationStatus:
+            registerDidDoc && registerDidDoc?.transactionHash
+              ? RegistrationStatus.COMPLETED
+              : RegistrationStatus.UNREGISTRED,
+        },
+      );
+    }
+    return {
+      did: registerDidData.did,
+      registrationStatus: registerDidData.registrationStatus,
+      transactionHash: registerDidData.transactionHash,
+      metaData: {
+        didDocument: didDocument,
+      },
+    };
+  }
+
   async getDidList(appDetail, option): Promise<IDidDto[]> {
     Logger.log('getDidList() method: starts....', 'DidService');
 
@@ -559,10 +927,6 @@ export class DidService {
         did,
       });
       const { signInfos } = updateDidDto;
-      console.log({
-        signInfos,
-        didInfo,
-      });
 
       // If signature is passed then no need to check if it is present in db or not
       if (!signInfos && (!didInfo || didInfo == null || didInfo == undefined)) {
