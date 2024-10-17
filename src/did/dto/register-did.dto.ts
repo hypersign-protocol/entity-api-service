@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { DidDoc } from './update-did.dto';
 import {
+  ArrayNotEmpty,
+  IsArray,
   IsEnum,
   IsNotEmpty,
   IsNotEmptyObject,
@@ -216,6 +218,8 @@ export class RegisterV2DidDto {
     required: true,
     type: RegisterV2SignInfo,
   })
+  @IsArray()
+  @ArrayNotEmpty()
   @ValidateNested({ each: false })
   @Type(() => RegisterV2SignInfo)
   signInfos: Array<RegisterV2SignInfo>;

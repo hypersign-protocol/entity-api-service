@@ -131,7 +131,7 @@ export class DidController {
   }
   @UsePipes(
     new ValidationPipe({
-      whitelist: true,
+      // whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
     }),
