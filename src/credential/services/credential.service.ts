@@ -11,9 +11,16 @@ import { CredentialSSIService } from './credential.ssi.service';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { CredentialRepository } from '../repository/credential.repository';
 import { DidRepository } from 'src/did/repository/did.repository';
-import { HypersignDID, HypersignVerifiableCredential } from 'hs-ssi-sdk';
+import {
+  HypersignDID,
+  HypersignVerifiableCredential,
+  IKeyType,
+} from 'hs-ssi-sdk';
 import { VerifyCredentialDto } from '../dto/verify-credential.dto';
-import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
+import {
+  RegisterCredentialStatusDto,
+  SupportedSignatureType,
+} from '../dto/register-credential.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 
@@ -105,14 +112,42 @@ export class CredentialService {
       );
       const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
       const hypersignDid = new HypersignDID();
-      const { privateKeyMultibase } = await hypersignDid.generateKeys({ seed });
-
+      const { didDocument } = await hypersignDid.resolve({ did: issuerDid });
+      const verificationMethod = didDocument.verificationMethod.find(
+        (vm) => vm.id === verificationMethodId,
+      );
       // Apps Identity: - used for gas fee
       const appMenemonic = await getAppMenemonic(kmsId);
-      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
+      // let privateKeyMultibase;
+      // let hypersignVC;
+      if (!verificationMethod) {
+        throw new Error(
+          `VerificationMethod does not exists for vmId ${verificationMethodId}`,
+        );
+      }
+      // if (
+      //   verificationMethod &&
+      //   verificationMethod.type === IKeyType.Ed25519VerificationKey2020
+      // ) {
+      //   const key = await hypersignDid.generateKeys({ seed });
+      //   privateKeyMultibase = key.privateKeyMultibase;
+      //   hypersignVC = await this.credentialSSIService.initateHypersignVC(
+      //     appMenemonic,
+      //     nameSpace,
+      //   );
+      // } else if (
+      //   verificationMethod &&
+      //   verificationMethod.type === IKeyType.BabyJubJubKey2021
+      // ) {
+      const key = await hypersignDid.bjjDID.generateKeys(issuerMnemonic);
+      const privateKeyMultibase = key.privateKeyMultibase;
+      // console.log(privateKeyMultibase);
+      const hypersignVC = await this.credentialSSIService.initateHypersignBjjVC(
         appMenemonic,
         nameSpace,
       );
+      // }
+
       let credential;
 
       if (schemaId) {
@@ -142,6 +177,7 @@ export class CredentialService {
           expirationDate,
         });
       }
+      console.log(credential, null, 2);
       Logger.log(
         'create() method: before calling hypersignVC.issue',
         'CredentialService',
@@ -158,9 +194,9 @@ export class CredentialService {
         issuerDid,
         verificationMethodId,
         privateKeyMultibase,
-        registerCredential: false,
+        registerCredential: true,
       });
-
+      console.log(JSON.stringify(signedCredential, null, 2));
       const credStatusTemp = {};
       Object.assign(credStatusTemp, credentialStatus);
 
@@ -168,9 +204,9 @@ export class CredentialService {
         credentialStatus,
         namespace: nameSpace,
       } as RegisterCredentialStatusDto;
-      if (registerCredentialStatus) {
-        await this.registerCredentialStatus(credStatus, appDetail);
-      }
+      // if (registerCredentialStatus) {
+      //   // await this.registerCredentialStatus(credStatus, appDetail);
+      // }
 
       let edvData = undefined;
       if (persist) {
@@ -502,15 +538,33 @@ export class CredentialService {
       const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
+      let hypersignVC;
+      if (
+        proof &&
+        proof.type &&
+        proof.type === SupportedSignatureType.BJJSignature2021
+      ) {
+        hypersignVC = await this.credentialSSIService.initateHypersignVC(
+          appMenemonic,
+          namespace,
+        );
+        hypersignVC.bjjVC;
+      } else {
+        hypersignVC = await this.credentialSSIService.initateHypersignVC(
+          appMenemonic,
+          namespace,
+        );
+      }
 
-      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        appMenemonic,
-        namespace,
-      );
+      console.log(JSON.stringify(credentialStatus, null, 2));
+      console.log(JSON.stringify(proof, null, 2));
 
       if (await this.checkAllowence(address)) {
+        console.log('if');
         await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
       } else {
+        console.log('else');
+
         registeredVC = await hypersignVC.registerCredentialStatus({
           credentialStatus,
           credentialStatusProof: proof,

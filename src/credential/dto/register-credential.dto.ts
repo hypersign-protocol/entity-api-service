@@ -2,7 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { CredStatus, Namespace } from './create-credential.dto';
 import { Type } from 'class-transformer';
 import { IsEnum, ValidateNested } from 'class-validator';
-
+export enum SupportedSignatureType {
+  BJJSignature2021 = 'BJJSignature2021',
+  Ed25519Signature2020 = 'Ed25519Signature2020',
+}
 export class RegisterCredentialStatusDto {
   @ApiProperty({
     name: 'credentialStatus',
