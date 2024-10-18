@@ -312,7 +312,6 @@ export class PresentationRequestService {
     const vmWithAssertion = didDocument.verificationMethod.find(
       (vm) => vm.id === verificationMethodIdforAssert,
     );
-    console.log(vmWithAssertion);
     const { mnemonic: holderMnemonic } = await appVault.getDecryptedDocument(
       didInfo.kmsId,
     );
@@ -329,8 +328,6 @@ export class PresentationRequestService {
       );
       const keys = await hypersignDid.generateKeys(holderMnemonic);
       privateKeyMultibase = keys.privateKeyMultibase;
-      console.log(privateKeyMultibase);
-
       Logger.log(
         'createPresentation() method: before calling hypersignVP.sign for bjj',
         'PresentationRequestService',
@@ -397,7 +394,6 @@ export class PresentationRequestService {
     );
     let verifiedPresentationDetail;
     if (type === 'BJJSignature2021') {
-      console.log('in if');
       verifiedPresentationDetail = await hypersignVP.bjjVp.verify({
         signedPresentation: presentation as any,
         issuerDid,

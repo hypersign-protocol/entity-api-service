@@ -118,35 +118,36 @@ export class CredentialService {
       );
       // Apps Identity: - used for gas fee
       const appMenemonic = await getAppMenemonic(kmsId);
-      // let privateKeyMultibase;
-      // let hypersignVC;
+      let privateKeyMultibase;
+      let hypersignVC;
       if (!verificationMethod) {
         throw new Error(
           `VerificationMethod does not exists for vmId ${verificationMethodId}`,
         );
       }
-      // if (
-      //   verificationMethod &&
-      //   verificationMethod.type === IKeyType.Ed25519VerificationKey2020
-      // ) {
-      //   const key = await hypersignDid.generateKeys({ seed });
-      //   privateKeyMultibase = key.privateKeyMultibase;
-      //   hypersignVC = await this.credentialSSIService.initateHypersignVC(
-      //     appMenemonic,
-      //     nameSpace,
-      //   );
-      // } else if (
-      //   verificationMethod &&
-      //   verificationMethod.type === IKeyType.BabyJubJubKey2021
-      // ) {
-      const key = await hypersignDid.bjjDID.generateKeys(issuerMnemonic);
-      const privateKeyMultibase = key.privateKeyMultibase;
-      // console.log(privateKeyMultibase);
-      const hypersignVC = await this.credentialSSIService.initateHypersignBjjVC(
-        appMenemonic,
-        nameSpace,
-      );
-      // }
+      if (
+        verificationMethod &&
+        verificationMethod.type === IKeyType.Ed25519VerificationKey2020
+      ) {
+        const key = await hypersignDid.generateKeys({ seed });
+        privateKeyMultibase = key.privateKeyMultibase;
+        hypersignVC = await this.credentialSSIService.initateHypersignVC(
+          appMenemonic,
+          nameSpace,
+        );
+      } else if (
+        verificationMethod &&
+        verificationMethod.type === IKeyType.BabyJubJubKey2021
+      ) {
+        const key = await hypersignDid.bjjDID.generateKeys({
+          mnemonic: issuerMnemonic,
+        });
+        privateKeyMultibase = key.privateKeyMultibase;
+        hypersignVC = await this.credentialSSIService.initateHypersignBjjVC(
+          appMenemonic,
+          nameSpace,
+        );
+      }
 
       let credential;
 
@@ -177,7 +178,6 @@ export class CredentialService {
           expirationDate,
         });
       }
-      console.log(credential, null, 2);
       Logger.log(
         'create() method: before calling hypersignVC.issue',
         'CredentialService',
@@ -194,9 +194,8 @@ export class CredentialService {
         issuerDid,
         verificationMethodId,
         privateKeyMultibase,
-        registerCredential: true,
+        registerCredential: false,
       });
-      console.log(JSON.stringify(signedCredential, null, 2));
       const credStatusTemp = {};
       Object.assign(credStatusTemp, credentialStatus);
 
@@ -204,9 +203,9 @@ export class CredentialService {
         credentialStatus,
         namespace: nameSpace,
       } as RegisterCredentialStatusDto;
-      // if (registerCredentialStatus) {
-      //   // await this.registerCredentialStatus(credStatus, appDetail);
-      // }
+      if (registerCredentialStatus) {
+        await this.registerCredentialStatus(credStatus, appDetail);
+      }
 
       let edvData = undefined;
       if (persist) {
@@ -544,27 +543,19 @@ export class CredentialService {
         proof.type &&
         proof.type === SupportedSignatureType.BJJSignature2021
       ) {
-        hypersignVC = await this.credentialSSIService.initateHypersignVC(
+        hypersignVC = await this.credentialSSIService.initateHypersignBjjVC(
           appMenemonic,
           namespace,
         );
-        hypersignVC.bjjVC;
       } else {
         hypersignVC = await this.credentialSSIService.initateHypersignVC(
           appMenemonic,
           namespace,
         );
       }
-
-      console.log(JSON.stringify(credentialStatus, null, 2));
-      console.log(JSON.stringify(proof, null, 2));
-
       if (await this.checkAllowence(address)) {
-        console.log('if');
         await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
       } else {
-        console.log('else');
-
         registeredVC = await hypersignVC.registerCredentialStatus({
           credentialStatus,
           credentialStatusProof: proof,
