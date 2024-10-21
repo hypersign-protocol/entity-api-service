@@ -1,7 +1,5 @@
 import { Injectable, Logger, Scope } from '@nestjs/common';
-
-import { HypersignDID } from 'hs-ssi-sdk';
-
+import { HypersignDID, HypersignSSISdk } from 'hs-ssi-sdk';
 import { ConfigService } from '@nestjs/config';
 import { HidWalletService } from '../../hid-wallet/services/hid-wallet.service';
 
@@ -44,5 +42,41 @@ export class DidSSIService {
       namespace: namespace,
     });
     return hypersignDid;
+  }
+  async initiateHyperSignBJJDid(mnemonic: string, namespace: string) {
+    Logger.log('InitateHypersignDid(): starts....', 'DidSSIService');
+    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+    await this.hidWallet.generateWallet(mnemonic);
+    Logger.log(
+      'initiateHypersignBJJDid() method: before getting offlinesigner',
+      'DidSSIService',
+    );
+    const offlineSigner = this.hidWallet.getOfflineSigner();
+    const hsSdk = new HypersignSSISdk({
+      offlineSigner,
+      nodeRpcEndpoint,
+      nodeRestEndpoint,
+      namespace: namespace,
+    });
+    await hsSdk.init();
+    const hypersignBjjDid = hsSdk.did.bjjDID;
+    return hypersignBjjDid;
+  }
+  async initiateHyperSignBJJDidOffline(namespace: string) {
+    Logger.log('InitateHypersignDid(): starts....', 'DidSSIService');
+    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+    Logger.log(
+      'initiateHypersignBJJDid() method: before getting offlinesigner',
+      'DidSSIService',
+    );
+    const hypersignDid = new HypersignDID({
+      nodeRpcEndpoint,
+      nodeRestEndpoint,
+      namespace: namespace,
+    });
+    const hypersignBjjDid = hypersignDid.bjjDID;
+    return hypersignBjjDid;
   }
 }

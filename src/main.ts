@@ -96,7 +96,6 @@ async function bootstrap() {
         : 'hs:developer-dashboard:';
     const edvId = vaultPrefix + 'kms:' + kmsVaultWallet.didDocument.id;
     const kmsVault = await kmsVaultManager.createVault(kmsVaultWallet, edvId);
-
     // TODO rename this to kmsVault for bnetter cla
     globalThis.kmsVault = kmsVault;
 

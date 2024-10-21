@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   IsNotEmptyObject,
   IsObject,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -24,6 +25,28 @@ export class VerifyPresentationDto {
   @Type(() => Presentation)
   @ValidateNested({ each: true })
   presentation: Presentation;
+  @ApiProperty({
+    name: 'holderVerificationMethodId',
+    description:
+      'The verificationMethodId used by the holder for signing the presentation.',
+    example: 'did:hid:testnet:........#key-${idx}',
+    required: false,
+  })
+  @IsOptional()
+  @ValidateVerificationMethodId()
+  @IsString()
+  holderVerificationMethodId?: string;
+  @ApiProperty({
+    name: 'issuerVerificationMethodId',
+    description:
+      'The verificationMethodId used by the issuer for signing the credential.',
+    example: 'did:hid:testnet:........#key-${idx}',
+    required: false,
+  })
+  @IsOptional()
+  @ValidateVerificationMethodId()
+  @IsString()
+  issuerVerificationMethodId?: string;
 }
 
 class PResultProof {

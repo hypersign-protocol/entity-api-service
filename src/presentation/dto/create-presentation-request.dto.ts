@@ -10,6 +10,7 @@ import {
   ValidateNested,
   IsArray,
   ArrayNotEmpty,
+  IsOptional,
 } from 'class-validator';
 import { CredDoc } from 'src/credential/dto/create-credential.dto';
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
@@ -167,6 +168,17 @@ export class CreatePresentationDto {
   @IsNotEmpty()
   @IsUrl()
   domain: string;
+  @ApiProperty({
+    name: 'verificationMethodId',
+    description:
+      'verificationMethodId of the holder that will be used to sign the presentation.',
+    example: 'did:hid:testnet:........#key-${idx}',
+    required: false,
+  })
+  @IsOptional()
+  @ValidateVerificationMethodId()
+  @IsString()
+  verificationMethodId: string;
 }
 
 class PresentationProof {
