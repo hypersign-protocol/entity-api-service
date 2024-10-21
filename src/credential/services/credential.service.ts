@@ -370,20 +370,41 @@ export class CredentialService {
         didInfo.kmsId,
       );
       const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
+      let hypersignVC;
       const hypersignDid = new HypersignDID();
-      const { privateKeyMultibase } = await hypersignDid.generateKeys({ seed });
-
-      // Apps Identity: - used for gas fee
+      const { didDocument } = await hypersignDid.resolve({ did: issuerDid });
+      const verificationMethod = didDocument.verificationMethod.find(
+        (vm) => vm.id === verificationMethodId,
+      );
+      let privateKeyMultibase;
       const appMenemonic = await getAppMenemonic(kmsId);
       const nameSpace = namespace
         ? namespace
         : this.config.get('NETWORK')
         ? this.config.get('NETWORK')
         : namespace;
-      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        appMenemonic,
-        nameSpace,
-      );
+      if (
+        verificationMethod &&
+        verificationMethod.type === IKeyType.BabyJubJubKey2021
+      ) {
+        const key = await hypersignDid.bjjDID.generateKeys({
+          mnemonic: issuerMnemonic,
+        });
+        privateKeyMultibase = key.privateKeyMultibase;
+        hypersignVC = await this.credentialSSIService.initateHypersignBjjVC(
+          appMenemonic,
+          nameSpace,
+        );
+      } else {
+        const key = await hypersignDid.generateKeys({ seed });
+        privateKeyMultibase = key.privateKeyMultibase;
+        hypersignVC = await this.credentialSSIService.initateHypersignVC(
+          appMenemonic,
+          nameSpace,
+        );
+      }
+      // Apps Identity: - used for gas fee
+
       Logger.log(
         'update() method: before calling hypersignVC.resolveCredentialStatus to resolve cred status',
         'CredentialService',
@@ -487,12 +508,25 @@ export class CredentialService {
         'verfiyCredential() method: before calling hypersignVC.verify to verify credential',
         'CredentialService',
       );
-      verificationResult = await hypersignCredential.verify({
-        credential: verifyCredentialDto.credentialDocument as any, // will fix it latter
-        issuerDid: issuer,
-        verificationMethodId:
-          verifyCredentialDto.credentialDocument.proof.verificationMethod,
-      });
+      if (
+        verifyCredentialDto.credentialDocument &&
+        verifyCredentialDto.credentialDocument.proof.type ===
+          SupportedSignatureType.BJJSignature2021
+      ) {
+        verificationResult = await hypersignCredential.bjjVC.verify({
+          credential: verifyCredentialDto.credentialDocument as any, // will fix it latter
+          issuerDid: issuer,
+          verificationMethodId:
+            verifyCredentialDto.credentialDocument.proof.verificationMethod,
+        });
+      } else {
+        verificationResult = await hypersignCredential.verify({
+          credential: verifyCredentialDto.credentialDocument as any, // will fix it latter
+          issuerDid: issuer,
+          verificationMethodId:
+            verifyCredentialDto.credentialDocument.proof.verificationMethod,
+        });
+      }
     } catch (e) {
       Logger.error(
         `verfiyCredential() method: Error:${e.message}`,

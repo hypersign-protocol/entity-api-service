@@ -21,16 +21,12 @@ export function IsKeyTypeArrayOrSingle(validationOptions?: ValidationOptions) {
 
           // Ensure value is either a single string or an array
           const values = Array.isArray(value) ? value : [value];
-          console.log(values);
           const invalidKeyTypes = values.filter(
             (val) => !Object.values(IKeyType).includes(val),
           );
-          console.log(invalidKeyTypes, 'invalidKeyTypes');
           // Ensure each value is part of the IKeyType enum
           if (invalidKeyTypes.length > 0) {
             (args as any).invalidKeyTypes = invalidKeyTypes; // Pass invalid key types for custom message
-            console.log('if1');
-
             return false;
           }
 
@@ -60,9 +56,7 @@ export function IsKeyTypeArrayOrSingle(validationOptions?: ValidationOptions) {
         },
         defaultMessage(args: ValidationArguments) {
           // Check for the error flags set during validation and customize the message accordingly
-          console.log(args);
           if ((args as any).invalidKeyTypes) {
-            console.log('if');
             return `The provided key types ${JSON.stringify(
               (args as any).invalidKeyTypes,
             )} are invalid.`;

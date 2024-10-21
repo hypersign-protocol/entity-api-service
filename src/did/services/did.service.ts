@@ -752,10 +752,23 @@ export class DidService {
         finalSignInfos.push(generatedSignInfo[0]);
       }
     }
-    const registerDidDoc = await hypersignDid.registerByClientSpec({
-      didDocument,
-      signInfos: finalSignInfos,
-    });
+    let registerDidDoc;
+    const { wallet, address } = await this.hidWallet.generateWallet(
+      appMenemonic,
+    );
+    if (await this.checkAllowence(address)) {
+      await this.txnService.sendDIDTxn(
+        didDocument,
+        finalSignInfos,
+        registerV2DidDto.signInfos,
+        appMenemonic,
+      );
+    } else {
+      registerDidDoc = await hypersignDid.registerByClientSpec({
+        didDocument,
+        signInfos: finalSignInfos,
+      });
+    }
     let registerDidData;
 
     if (!didInfo || didInfo == undefined) {
@@ -776,20 +789,6 @@ export class DidService {
         name: didInfo.name,
       });
     } else {
-      // const { wallet, address } = await this.hidWallet.generateWallet(
-      //   appMenemonic,
-      // );
-      // if (await this.checkAllowence(address)) {
-      //   await this.txnService.sendDIDTxn(
-      //     didDocument,
-      //      finalSignInfos,
-      //     verificationMethodId,
-      //     appMenemonic,
-      //   );
-      // }
-      // else {
-      //   registerDidDoc = await hypersignDid.register(params);
-      // }
       registerDidData = await this.didRepositiory.findOneAndUpdate(
         { did: didDocument['id'] },
         {
