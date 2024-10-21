@@ -204,7 +204,6 @@ export class PresentationRequestService {
     private readonly hidWallet: HidWalletService,
     private readonly didSSIService: DidSSIService,
   ) {}
-
   async createPresentationRequest(
     createPresentationRequestDto: CreatePresentationRequestDto,
     appDetail,
@@ -250,8 +249,10 @@ export class PresentationRequestService {
 
     return response;
   }
-
-  async createPresentation(credentialsDto: CreatePresentationDto, appDetail) {
+  async createPresentation(
+    CreatePresentationDto: CreatePresentationDto,
+    appDetail,
+  ) {
     Logger.log(
       'createPresentation() method: starts....',
       'PresentationRequestService',
@@ -274,8 +275,13 @@ export class PresentationRequestService {
       namespace: 'testnet',
     });
 
-    const { credentialDocuments, holderDid, challenge, domain } =
-      credentialsDto;
+    const {
+      credentialDocuments,
+      holderDid,
+      challenge,
+      verificationMethodId,
+      domain,
+    } = CreatePresentationDto;
     Logger.log(
       'createPresentation() method: before calling hypersignVP.generate',
       'PresentationRequestService',
@@ -289,8 +295,8 @@ export class PresentationRequestService {
     const { didDocument } = await hypersignDID.resolve({
       did: holderDid,
     });
-    // TODO: Remove hardcoing
-    const verificationMethodIdforAssert = didDocument.assertionMethod[0];
+    const verificationMethodIdforAssert =
+      verificationMethodId || didDocument.assertionMethod[0];
     Logger.log(
       'createPresentation() method: initialising edv service',
       'PresentationRequestService',
@@ -326,7 +332,9 @@ export class PresentationRequestService {
       hypersignDid = await this.didSSIService.initiateHyperSignBJJDidOffline(
         'testnet',
       );
-      const keys = await hypersignDid.generateKeys(holderMnemonic);
+      const keys = await hypersignDid.generateKeys({
+        mnemonic: holderMnemonic,
+      });
       privateKeyMultibase = keys.privateKeyMultibase;
       Logger.log(
         'createPresentation() method: before calling hypersignVP.sign for bjj',
@@ -383,8 +391,6 @@ export class PresentationRequestService {
 
     const holderDid = presentation['holder'];
     const issuerDid = presentation['verifiableCredential'][0]['issuer'];
-
-    // const domain = presentation['proof']['domain'];
     const challenge = presentation['proof']['challenge'];
     const type = presentation['proof']['type'];
 
@@ -393,13 +399,17 @@ export class PresentationRequestService {
       'PresentationRequestService',
     );
     let verifiedPresentationDetail;
+    const holderVerificationMethodId =
+      presentations.holderVerificationMethodId || holderDid + '#key-1';
+    const issuerVerificationMethodId =
+      presentations.issuerVerificationMethodId || issuerDid + '#key-1';
     if (type === 'BJJSignature2021') {
       verifiedPresentationDetail = await hypersignVP.bjjVp.verify({
         signedPresentation: presentation as any,
         issuerDid,
         holderDid,
-        holderVerificationMethodId: holderDid + '#key-1',
-        issuerVerificationMethodId: issuerDid + '#key-1',
+        holderVerificationMethodId: holderVerificationMethodId,
+        issuerVerificationMethodId: issuerVerificationMethodId,
         challenge,
       });
     } else {
@@ -407,8 +417,8 @@ export class PresentationRequestService {
         signedPresentation: presentation as any,
         issuerDid,
         holderDid,
-        holderVerificationMethodId: holderDid + '#key-1',
-        issuerVerificationMethodId: issuerDid + '#key-1',
+        holderVerificationMethodId: holderVerificationMethodId,
+        issuerVerificationMethodId: issuerVerificationMethodId,
         challenge,
       });
     }
