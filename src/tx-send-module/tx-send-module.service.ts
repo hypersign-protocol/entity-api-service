@@ -57,41 +57,57 @@ export class TxSendModuleService {
   async prepareMsgCreateDID(
     didDocument,
     didDocumentSigned,
-    verificationMethodId,
+    verificationMethodIdOrArray,
     txAuthor,
   ): Promise<MsgRegisterDID> {
-    const proof = didDocumentSigned?.find((e) => {
-      return e.verification_method_id === verificationMethodId;
-    });
-
-    const vm = didDocument.verificationMethod?.find((e) => {
-      return e.id == verificationMethodId;
-    });
-    let signatureType = '';
-    let proofPurpose = '';
-    switch (vm.type) {
-      case 'Ed25519VerificationKey2020': {
-        signatureType = 'Ed25519Signature2020';
-        proofPurpose = 'assertionMethod';
-
-        break;
+    const verificationMethods = Array.isArray(verificationMethodIdOrArray)
+      ? verificationMethodIdOrArray
+      : [{ verification_method_id: verificationMethodIdOrArray }];
+    const didDocumentProofs = [];
+    for (const { verification_method_id } of verificationMethods) {
+      const proof = didDocumentSigned?.find((e) => {
+        return e.verification_method_id === verification_method_id;
+      });
+      const vm = didDocument.verificationMethod?.find((e) => {
+        return e.id == verification_method_id;
+      });
+      if (!vm) {
+        throw new Error(
+          `Verification method ${verification_method_id} not found in DID document`,
+        );
       }
-      default: {
-        throw Error('Type is not matched');
+
+      let signatureType = '';
+      let proofPurpose = '';
+      switch (vm.type) {
+        case 'Ed25519VerificationKey2020': {
+          signatureType = 'Ed25519Signature2020';
+          proofPurpose = 'assertionMethod';
+          break;
+        }
+        default: {
+          throw Error('Type is not matched');
+        }
+      }
+
+      if (proof) {
+        didDocumentProofs.push({
+          verificationMethod: verification_method_id,
+          type: signatureType,
+          proofPurpose: proofPurpose,
+          created: proof.created,
+          proofValue: proof.signature,
+        });
+      } else {
+        throw new Error(
+          `Proof for verification method ${verification_method_id} not found`,
+        );
       }
     }
 
     return MsgRegisterDID.fromPartial({
       didDocument: didDocument,
-      didDocumentProofs: [
-        {
-          verificationMethod: verificationMethodId,
-          type: signatureType,
-          proofPurpose: proofPurpose,
-          created: proof.created,
-          proofValue: proof.signature,
-        },
-      ],
+      didDocumentProofs,
       txAuthor: txAuthor,
     });
   }
@@ -406,7 +422,6 @@ export class TxSendModuleService {
       verificationMethodId,
       address,
     );
-
     const authExecMsg: MsgExec = {
       grantee: address,
       msgs: [

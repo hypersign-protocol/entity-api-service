@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { DidDoc } from './update-did.dto';
 import {
+  ArrayNotEmpty,
+  IsArray,
   IsEnum,
   IsNotEmpty,
   IsNotEmptyObject,
@@ -151,4 +153,74 @@ export class RegisterDidDto {
   // @IsOptional()
   // @IsString()
   // address?: string;
+}
+
+export class RegisterV2SignInfo {
+  @ApiProperty({
+    description: 'Verification Method id for did registration',
+    example: 'did:hid:testnet:........#key-${idx}',
+    required: true,
+  })
+  @ValidateVerificationMethodId()
+  @IsString()
+  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
+    message: "Did's namespace should be testnet",
+  })
+  verification_method_id: string;
+  @ApiProperty({
+    description: 'Signature for clientSpec',
+    example: 'afafljagahgp9agjagknaglkj/kagka=',
+    name: 'signature',
+    required: false,
+  })
+  @ValidateIf((o, value) => o.clientSpec !== undefined)
+  @IsNotEmpty()
+  @IsString()
+  signature?: string;
+  @ApiProperty({
+    description: 'ClientSpec ',
+    example: {
+      type: IClientSpec['cosmos-ADR036'],
+      adr036SignerAddress: 'bech32address',
+    },
+    type: ClientSpec,
+    name: 'clientSpec',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => ClientSpec)
+  @ValidateNested({ each: true })
+  clientSpec?: ClientSpec;
+  @ApiProperty({
+    description: 'created',
+    example: '2023-01-23T13:45:17Z',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  created?: string;
+}
+export class RegisterV2DidDto {
+  @ApiProperty({
+    description: 'Did doc to be registered',
+    type: DidDoc,
+    required: true,
+  })
+  @IsNotEmptyObject()
+  @Type(() => DidDoc)
+  @ValidateNested({ each: true })
+  didDocument: Partial<DidDoc>;
+
+  @ApiProperty({
+    description: 'Sign Info',
+    isArray: true,
+    required: true,
+    type: RegisterV2SignInfo,
+  })
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: false })
+  @Type(() => RegisterV2SignInfo)
+  signInfos: Array<RegisterV2SignInfo>;
 }

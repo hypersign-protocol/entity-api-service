@@ -16,6 +16,7 @@ import { DidDoc } from '../dto/update-did.dto';
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
 import { ValidatePublicKeyMultibase } from 'src/utils/customDecorator/pubKeyMultibase.decorator';
 import { IVerificationRelationships, IKeyType } from 'hs-ssi-sdk';
+import { IsKeyTypeArrayOrSingle } from 'src/utils/customDecorator/keyType.decorator';
 
 export enum Namespace {
   testnet = 'testnet',
@@ -24,14 +25,14 @@ export enum Namespace {
 export class Options {
   @ApiProperty({
     description:
-      'Verification Method Keytype Ed25519VerificationKey2020 or EcdsaSecp256k1RecoveryMethod2020',
+      'Verification Method Keytype Ed25519VerificationKey2020 or EcdsaSecp256k1RecoveryMethod2020 or BabyJubJubKey2021',
     example: 'keyType:EcdsaSecp256k1RecoveryMethod2020',
     name: 'keyType',
     required: false,
   })
   @ValidateIf((o) => o.keyType !== undefined)
-  @IsEnum(IKeyType)
-  keyType: IKeyType;
+  @IsKeyTypeArrayOrSingle()
+  keyType: IKeyType | IKeyType[];
 
   @ApiProperty({
     name: 'chainId',
@@ -67,18 +68,18 @@ export class Options {
   @IsBoolean()
   register?: boolean = false; // keeping it for time being will remove it later
 
-  @ApiProperty({
-    description:
-      'verificationRelationships defines  verification methods to be used for which purposes',
-    example: 'authentication/ assertionMethod',
-    name: 'verificationRelationships',
-    required: false,
-    isArray: true,
-  })
-  @IsOptional()
-  @IsArray()
-  @IsEnum(IVerificationRelationships, { each: true })
-  verificationRelationships?: IVerificationRelationships[];
+  // @ApiProperty({
+  //   description:
+  //     'verificationRelationships defines  verification methods to be used for which purposes',
+  //   example: 'authentication/ assertionMethod',
+  //   name: 'verificationRelationships',
+  //   required: false,
+  //   isArray: true,
+  // })
+  // @IsOptional()
+  // @IsArray()
+  // @IsEnum(IVerificationRelationships, { each: true })
+  // verificationRelationships?: IVerificationRelationships[];
 
   @ApiProperty({
     name: 'name',
@@ -115,11 +116,11 @@ export class CreateDidDto {
     description: ' keyType used for verification',
     required: false,
     example: {
-      keyType: 'Ed25519VerificationKey2020',
+      keyType: ['Ed25519VerificationKey2020'],
       chainId: '0x1',
       publicKey: 'z76tzt4XCb6FNqC3CPZvsxRfEDX5HHQc2VPux4DeZYndW',
       walletAddress: '0x01978e553Df0C54A63e2E063DFFe71c688d91C76',
-      verificationRelationships: ['assertionMethod', 'authentication'],
+      // verificationRelationships: ['assertionMethod', 'authentication'],
     },
   })
   @IsOptional()

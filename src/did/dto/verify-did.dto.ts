@@ -1,27 +1,29 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BaseDidDto, Proof, SignedDidDocument } from './sign-did.dto';
+import { DidSignOption, Proof, SignedDidDocument } from './sign-did.dto';
 import {
   IsBoolean,
   IsNotEmptyObject,
   IsOptional,
   IsString,
+  Matches,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DidDoc } from './update-did.dto';
 import { IKeyType } from 'hs-ssi-sdk';
+import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
 
-export class VerifyDidDto extends BaseDidDto {
+export class VerifyDidDto {
   @ApiProperty({
-    name: 'didDocument',
-    description: 'didDocument',
-    type: DidDoc,
+    name: 'signedDidDocument',
+    description: 'signedDidDocument',
+    type: SignedDidDocument,
   })
   @IsOptional()
   @IsNotEmptyObject()
   @Type(() => SignedDidDocument)
   @ValidateNested({ each: true })
-  didDocument: SignedDidDocument;
+  signedDidDocument: SignedDidDocument;
 }
 
 export class Controller {
