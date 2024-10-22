@@ -11,9 +11,16 @@ import { CredentialSSIService } from './credential.ssi.service';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
 import { CredentialRepository } from '../repository/credential.repository';
 import { DidRepository } from 'src/did/repository/did.repository';
-import { HypersignDID, HypersignVerifiableCredential } from 'hs-ssi-sdk';
+import {
+  HypersignDID,
+  HypersignVerifiableCredential,
+  IKeyType,
+} from 'hs-ssi-sdk';
 import { VerifyCredentialDto } from '../dto/verify-credential.dto';
-import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
+import {
+  RegisterCredentialStatusDto,
+  SupportedSignatureType,
+} from '../dto/register-credential.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 
@@ -105,14 +112,43 @@ export class CredentialService {
       );
       const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
       const hypersignDid = new HypersignDID();
-      const { privateKeyMultibase } = await hypersignDid.generateKeys({ seed });
-
+      const { didDocument } = await hypersignDid.resolve({ did: issuerDid });
+      const verificationMethod = didDocument.verificationMethod.find(
+        (vm) => vm.id === verificationMethodId,
+      );
       // Apps Identity: - used for gas fee
       const appMenemonic = await getAppMenemonic(kmsId);
-      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        appMenemonic,
-        nameSpace,
-      );
+      let privateKeyMultibase;
+      let hypersignVC;
+      if (!verificationMethod) {
+        throw new Error(
+          `VerificationMethod does not exists for vmId ${verificationMethodId}`,
+        );
+      }
+      if (
+        verificationMethod &&
+        verificationMethod.type === IKeyType.Ed25519VerificationKey2020
+      ) {
+        const key = await hypersignDid.generateKeys({ seed });
+        privateKeyMultibase = key.privateKeyMultibase;
+        hypersignVC = await this.credentialSSIService.initateHypersignVC(
+          appMenemonic,
+          nameSpace,
+        );
+      } else if (
+        verificationMethod &&
+        verificationMethod.type === IKeyType.BabyJubJubKey2021
+      ) {
+        const key = await hypersignDid.bjjDID.generateKeys({
+          mnemonic: issuerMnemonic,
+        });
+        privateKeyMultibase = key.privateKeyMultibase;
+        hypersignVC = await this.credentialSSIService.initateHypersignBjjVC(
+          appMenemonic,
+          nameSpace,
+        );
+      }
+
       let credential;
 
       if (schemaId) {
@@ -160,7 +196,6 @@ export class CredentialService {
         privateKeyMultibase,
         registerCredential: false,
       });
-
       const credStatusTemp = {};
       Object.assign(credStatusTemp, credentialStatus);
 
@@ -335,20 +370,41 @@ export class CredentialService {
         didInfo.kmsId,
       );
       const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
+      let hypersignVC;
       const hypersignDid = new HypersignDID();
-      const { privateKeyMultibase } = await hypersignDid.generateKeys({ seed });
-
-      // Apps Identity: - used for gas fee
+      const { didDocument } = await hypersignDid.resolve({ did: issuerDid });
+      const verificationMethod = didDocument.verificationMethod.find(
+        (vm) => vm.id === verificationMethodId,
+      );
+      let privateKeyMultibase;
       const appMenemonic = await getAppMenemonic(kmsId);
       const nameSpace = namespace
         ? namespace
         : this.config.get('NETWORK')
         ? this.config.get('NETWORK')
         : namespace;
-      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        appMenemonic,
-        nameSpace,
-      );
+      if (
+        verificationMethod &&
+        verificationMethod.type === IKeyType.BabyJubJubKey2021
+      ) {
+        const key = await hypersignDid.bjjDID.generateKeys({
+          mnemonic: issuerMnemonic,
+        });
+        privateKeyMultibase = key.privateKeyMultibase;
+        hypersignVC = await this.credentialSSIService.initateHypersignBjjVC(
+          appMenemonic,
+          nameSpace,
+        );
+      } else {
+        const key = await hypersignDid.generateKeys({ seed });
+        privateKeyMultibase = key.privateKeyMultibase;
+        hypersignVC = await this.credentialSSIService.initateHypersignVC(
+          appMenemonic,
+          nameSpace,
+        );
+      }
+      // Apps Identity: - used for gas fee
+
       Logger.log(
         'update() method: before calling hypersignVC.resolveCredentialStatus to resolve cred status',
         'CredentialService',
@@ -452,12 +508,25 @@ export class CredentialService {
         'verfiyCredential() method: before calling hypersignVC.verify to verify credential',
         'CredentialService',
       );
-      verificationResult = await hypersignCredential.verify({
-        credential: verifyCredentialDto.credentialDocument as any, // will fix it latter
-        issuerDid: issuer,
-        verificationMethodId:
-          verifyCredentialDto.credentialDocument.proof.verificationMethod,
-      });
+      if (
+        verifyCredentialDto.credentialDocument &&
+        verifyCredentialDto.credentialDocument.proof.type ===
+          SupportedSignatureType.BJJSignature2021
+      ) {
+        verificationResult = await hypersignCredential.bjjVC.verify({
+          credential: verifyCredentialDto.credentialDocument as any, // will fix it latter
+          issuerDid: issuer,
+          verificationMethodId:
+            verifyCredentialDto.credentialDocument.proof.verificationMethod,
+        });
+      } else {
+        verificationResult = await hypersignCredential.verify({
+          credential: verifyCredentialDto.credentialDocument as any, // will fix it latter
+          issuerDid: issuer,
+          verificationMethodId:
+            verifyCredentialDto.credentialDocument.proof.verificationMethod,
+        });
+      }
     } catch (e) {
       Logger.error(
         `verfiyCredential() method: Error:${e.message}`,
@@ -502,12 +571,22 @@ export class CredentialService {
       const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
-
-      const hypersignVC = await this.credentialSSIService.initateHypersignVC(
-        appMenemonic,
-        namespace,
-      );
-
+      let hypersignVC;
+      if (
+        proof &&
+        proof.type &&
+        proof.type === SupportedSignatureType.BJJSignature2021
+      ) {
+        hypersignVC = await this.credentialSSIService.initateHypersignBjjVC(
+          appMenemonic,
+          namespace,
+        );
+      } else {
+        hypersignVC = await this.credentialSSIService.initateHypersignVC(
+          appMenemonic,
+          namespace,
+        );
+      }
       if (await this.checkAllowence(address)) {
         await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
       } else {

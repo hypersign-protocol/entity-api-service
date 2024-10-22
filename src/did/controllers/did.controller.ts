@@ -46,7 +46,7 @@ import { PaginationDto } from 'src/utils/pagination.dto';
 import { Did } from '../schemas/did.schema';
 import { DidResponseInterceptor } from '../interceptors/transformResponse.interseptor';
 import { GetDidList } from '../dto/fetch-did.dto';
-import { RegisterDidDto } from '../dto/register-did.dto';
+import { RegisterDidDto, RegisterV2DidDto } from '../dto/register-did.dto';
 import { IKeyType } from 'hs-ssi-sdk';
 import { AtLeastOneParamPipe } from 'src/utils/Pipes/atleastOneParam.pipe';
 import { AddVMResponse, AddVerificationMethodDto } from '../dto/addVm.dto';
@@ -131,7 +131,7 @@ export class DidController {
   }
   @UsePipes(
     new ValidationPipe({
-      whitelist: true,
+      // whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,
     }),
@@ -169,7 +169,13 @@ export class DidController {
     Logger.log('create() method: starts', 'DidController');
     const { options } = createDidDto;
     const appDetail = req.user;
-    switch (options?.keyType) {
+    const keyTypes = Array.isArray(options?.keyType)
+      ? options.keyType
+      : options?.keyType
+      ? [options.keyType]
+      : [IKeyType.Ed25519VerificationKey2020];
+    const keyTypeAtZeroIndex = keyTypes[0];
+    switch (keyTypeAtZeroIndex) {
       case IKeyType.EcdsaSecp256k1RecoveryMethod2020: {
         const response = this.didService.createByClientSpec(
           createDidDto,
@@ -186,9 +192,21 @@ export class DidController {
 
         return classToPlain(response, { excludePrefixes: ['transactionHash'] });
       }
+      case IKeyType.BabyJubJubKey2021: {
+        const response = this.didService.createBjjDid(
+          createDidDto,
+          appDetail,
+          keyTypes,
+        );
+        return classToPlain(response, { excludePrefixes: ['transactionHash'] });
+      }
 
       default:
-        const response = this.didService.create(createDidDto, appDetail);
+        const response = this.didService.create(
+          createDidDto,
+          appDetail,
+          keyTypes,
+        );
         return classToPlain(response, { excludePrefixes: ['transactionHash'] });
     }
   }
@@ -351,5 +369,35 @@ export class DidController {
 
     const appDetail = req.user;
     return this.didService.updateDid(updateDidDto, appDetail);
+  }
+  @ApiOkResponse({
+    description: 'DID Registred',
+    type: RegisterDidResponse,
+  })
+  @ApiBadRequestResponse({
+    status: 400,
+    description: 'Error occured at the time of creating did',
+    type: DidError,
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
+  @ApiHeader({
+    name: 'Origin',
+    description: 'Origin as you set in application cors',
+    required: false,
+  })
+  @UsePipes(ValidationPipe)
+  @Post('register/v2')
+  registerV2(
+    @Headers('Authorization') authorization: string,
+    @Body() registerV2Dto: RegisterV2DidDto,
+    @Req() req: any,
+  ) {
+    Logger.log('registerV2() method: starts', 'DidController');
+    const appDetail = req.user;
+    return this.didService.registerV2(registerV2Dto, appDetail);
   }
 }
