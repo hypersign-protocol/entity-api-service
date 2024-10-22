@@ -85,6 +85,10 @@ export class TxSendModuleService {
           proofPurpose = 'assertionMethod';
           break;
         }
+        case 'BabyJubJubKey2021': {
+          signatureType = 'BJJSignature2021';
+          proofPurpose = 'assertionMethod';
+        }
         default: {
           throw Error('Type is not matched');
         }
