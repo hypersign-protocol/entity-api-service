@@ -31,8 +31,8 @@ spec:
             memory: "1Gi"
             cpu: "250m"
           limits:
-            memory: "2Gi"
-            cpu: "500m"
+            memory: "3Gi"
+            cpu: "1000m"
         ports:
         - containerPort: __PORT__
         env:
