@@ -28,10 +28,10 @@ spec:
 
         resources:
           requests:
-            memory: "4Gi"
+            memory: "6Gi"
             cpu: "4"
           limits:
-            memory: "4Gi"
+            memory: "8Gi"
             cpu: "6"
         ports:
         - containerPort: __PORT__
