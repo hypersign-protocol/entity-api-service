@@ -25,14 +25,6 @@ spec:
           initialDelaySeconds: 120
           periodSeconds: 30
           failureThreshold: 3
-
-        resources:
-          requests:
-            memory: "3Gi"
-            cpu: "3000m"
-          limits:
-            memory: "4Gi"
-            cpu: "5000m"
         ports:
         - containerPort: __PORT__
         env:
