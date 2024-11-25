@@ -23,7 +23,8 @@ import {
 } from '../dto/register-credential.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
-
+import * as NodeCache from 'node-cache';
+const myCache = new NodeCache();
 @Injectable()
 export class CredentialService {
   constructor(
@@ -112,7 +113,16 @@ export class CredentialService {
       );
       const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
       const hypersignDid = new HypersignDID();
-      const { didDocument } = await hypersignDid.resolve({ did: issuerDid });
+      let didDocument;
+      if (myCache.has(issuerDid)) {
+        didDocument = myCache.get(issuerDid);
+        console.log('Getting from Cache');
+      } else {
+        const resp = await hypersignDid.resolve({ did: issuerDid });
+        didDocument = resp.didDocument;
+        myCache.set(issuerDid, didDocument);
+        Logger.log('Setting Cache');
+      }
       const verificationMethod = didDocument.verificationMethod.find(
         (vm) => vm.id === verificationMethodId,
       );
@@ -192,6 +202,7 @@ export class CredentialService {
       } = await hypersignVC.issue({
         credential,
         issuerDid,
+        issuerDidDoc: didDocument,
         verificationMethodId,
         privateKeyMultibase,
         registerCredential: false,
