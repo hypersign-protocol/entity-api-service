@@ -118,17 +118,32 @@ export class TxSendModuleService {
   }
 
   async connect() {
-    Logger.log('Connecting Rabbit');
-    const connection = await amqp.connect(
-      this.configService.get('RABBIT_MQ_URI'),
-    );
-    this.channel = await connection.createChannel();
-    const { address: granterAddress } =
-      await this.hidWalletService.generateWallet(
-        this.configService.get('MNEMONIC'),
+    try {
+      Logger.log('Connecting Rabbit');
+      const connection = await amqp.connect(
+        this.configService.get('RABBIT_MQ_URI'),
       );
-    this.granterAddress = granterAddress;
-    Logger.log('Connected Rabbit');
+      connection.on('error', (err) => {
+        console.error('Connection error:', err);
+      });
+
+      connection.on('close', () => {
+        Logger.error('Connection closed, reconnecting...', 'RabbitMQ');
+      });
+      this.channel = await connection.createChannel();
+      this.channel.on('error', (err) => {
+        Logger.error(err, 'RabbitMQ');
+      });
+
+      const { address: granterAddress } =
+        await this.hidWalletService.generateWallet(
+          this.configService.get('MNEMONIC'),
+        );
+      this.granterAddress = granterAddress;
+      Logger.log('Connected Rabbit');
+    } catch (error) {
+      Logger.error(error, 'RabbitMQ');
+    }
   }
 
   async prepareRegisterCredentialStatus(
