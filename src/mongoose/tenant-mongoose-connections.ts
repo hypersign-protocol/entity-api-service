@@ -32,7 +32,17 @@ async function tenantConnection(tenantDB, uri) {
 
   if (!foundConn) {
     if (!connectionPromises[tenantDB]) {
-      connectionPromises[tenantDB] = mongoose.createConnection(uri).asPromise();
+      connectionPromises[tenantDB] = mongoose
+        .createConnection(uri, {
+          maxConnecting: 10,
+          maxPoolSize: 100,
+          maxStalenessSeconds: 100,
+          maxIdleTimeMS: 500000,
+          serverSelectionTimeoutMS: 500000,
+          socketTimeoutMS: 500000,
+          connectTimeoutMS: 500000,
+        })
+        .asPromise();
     }
 
     const newConnection = await connectionPromises[tenantDB];

@@ -145,19 +145,6 @@ async function bootstrap() {
     `Server running on http://localhost:${process.env.PORT}`,
     'Bootstrap',
   );
-  setInterval(async () => await checkEdv(), 120000);
-}
-
-async function checkEdv() {
-  try {
-    const resp = await fetch(process.env.EDV_BASE_URL + '/api');
-
-    if (resp.status == 200) {
-      process.env.EDV_STATUS = 'UP';
-    }
-  } catch (error) {
-    process.env.EDV_STATUS = 'DOWN';
-  }
 }
 
 bootstrap();
