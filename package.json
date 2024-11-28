@@ -44,7 +44,7 @@
     "express-session": "^1.17.3",
     "fs": "^0.0.1-security",
     "hid-hd-wallet": "git+https://github.com/hypersign-protocol/hid-hd-wallet.git#main",
-    "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk#testcase/bjj",
+    "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk#multiThreading",
     "hypersign-edv-client": "github:hypersign-protocol/hypersign-edv-client#deleteByDocumentId",
     "idb-keyval": "^6.2.1",
     "mongoose": "^6.8.3",
