@@ -29,10 +29,10 @@ spec:
         resources:
           requests:
             memory: "2Gi"
-            cpu: "1000m"
+            cpu: "4000m"
           limits:
-            memory: "3Gi"
-            cpu: "2000m"
+            memory: "4Gi"
+            cpu: "8000m"
         ports:
         - containerPort: __PORT__
         env:
