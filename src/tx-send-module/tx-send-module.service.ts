@@ -30,7 +30,7 @@ export class TxSendModuleService {
     this.connect();
   }
 
-  async invokeTxnController(address, granteeMnemonic) {
+  async invokeTxnController(address, granteeMnemonic, appDetail) {
     const podENV = {
       RMQ_URL: this.configService.get('RABBIT_MQ_URI'),
       QUEUE_NAME: 'TXN_QUEUE_' + address,
@@ -43,6 +43,7 @@ export class TxSendModuleService {
       ESTIMATE_GAS_PRICE: '155303',
       podName: 'txn-dynamic',
       granteeWalletAddress: address,
+      tenent: appDetail.subdomain,
     };
 
     await this.channel.assertQueue('GLOBAL_TXN_CONTROLLER_QUEUE', {
@@ -166,7 +167,7 @@ export class TxSendModuleService {
     });
   }
 
-  async sendUpdateVC(credentialStatus, proofValue, granteeMnemonic) {
+  async sendUpdateVC(credentialStatus, proofValue, granteeMnemonic, appDetail) {
     if (!this.channel) {
       await this.connect();
     }
@@ -222,10 +223,15 @@ export class TxSendModuleService {
       Buffer.from(JSON.stringify(data)),
     );
 
-    await this.invokeTxnController(address, granteeMnemonic);
+    await this.invokeTxnController(address, granteeMnemonic, appDetail);
   }
 
-  async sendVCTxn(credentialStatus, credentialStatusProof, granteeMnemonic) {
+  async sendVCTxn(
+    credentialStatus,
+    credentialStatusProof,
+    granteeMnemonic,
+    appDetail,
+  ) {
     if (!this.channel) {
       await this.connect();
     }
@@ -282,7 +288,7 @@ export class TxSendModuleService {
       Buffer.from(JSON.stringify(data)),
     );
 
-    await this.invokeTxnController(address, granteeMnemonic);
+    await this.invokeTxnController(address, granteeMnemonic, appDetail);
   }
 
   async prepareMsgUpdateDID(didDocument, signInfos, versionId, txAuthor) {
@@ -299,6 +305,7 @@ export class TxSendModuleService {
     signInfos: any,
     versionId: any,
     granteeMnemonic: any,
+    appDetail,
   ) {
     if (!this.channel) {
       await this.connect();
@@ -352,7 +359,7 @@ export class TxSendModuleService {
       Buffer.from(JSON.stringify(data)),
     );
 
-    await this.invokeTxnController(address, granteeMnemonic);
+    await this.invokeTxnController(address, granteeMnemonic, appDetail);
   }
   prepareMsgDeactivateDID(
     didDocument: any,
@@ -368,7 +375,13 @@ export class TxSendModuleService {
     });
   }
 
-  async sendDIDUpdate(didDocument, signInfos, versionId, granteeMnemonic) {
+  async sendDIDUpdate(
+    didDocument,
+    signInfos,
+    versionId,
+    granteeMnemonic,
+    appDetail,
+  ) {
     if (!this.channel) {
       await this.connect();
     }
@@ -420,7 +433,7 @@ export class TxSendModuleService {
       Buffer.from(JSON.stringify(data)),
     );
 
-    await this.invokeTxnController(address, granteeMnemonic);
+    await this.invokeTxnController(address, granteeMnemonic, appDetail);
   }
 
   async sendDIDTxn(
@@ -428,6 +441,7 @@ export class TxSendModuleService {
     didDocumentSigned,
     verificationMethodId,
     granteeMnemonic,
+    appDetail,
   ) {
     if (!this.channel) {
       await this.connect();
@@ -479,7 +493,7 @@ export class TxSendModuleService {
       Buffer.from(JSON.stringify(data)),
     );
 
-    await this.invokeTxnController(address, granteeMnemonic);
+    await this.invokeTxnController(address, granteeMnemonic, appDetail);
   }
 
   prepareSchemaMsg(schema, proof, txAuthor) {
@@ -490,7 +504,7 @@ export class TxSendModuleService {
     });
   }
 
-  async sendSchemaTxn(schema, proof, granteeMnemonic) {
+  async sendSchemaTxn(schema, proof, granteeMnemonic, appDetail) {
     if (!this.channel) {
       await this.connect();
     }
@@ -537,7 +551,7 @@ export class TxSendModuleService {
       Buffer.from(JSON.stringify(data)),
     );
 
-    await this.invokeTxnController(address, granteeMnemonic);
+    await this.invokeTxnController(address, granteeMnemonic, appDetail);
     return sendToQueue1;
   }
 }

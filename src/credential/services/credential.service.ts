@@ -447,6 +447,7 @@ export class CredentialService {
           updateCredenital?.credentialStatus,
           updateCredenital?.proofValue,
           appMenemonic,
+          appDetail,
         );
       } else {
         updatedCredResult = await hypersignVC.updateCredentialStatus({
@@ -599,7 +600,12 @@ export class CredentialService {
         );
       }
       if (await this.checkAllowence(address)) {
-        await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
+        await this.txnService.sendVCTxn(
+          credentialStatus,
+          proof,
+          appMenemonic,
+          appDetail,
+        );
       } else {
         registeredVC = await hypersignVC.registerCredentialStatus({
           credentialStatus,

@@ -588,6 +588,7 @@ export class DidService {
           signInfos,
           verificationMethodId,
           appMenemonic,
+          appDetail,
         );
       } else {
         registerDidDoc = await hypersignDid.register(params);
@@ -762,6 +763,7 @@ export class DidService {
         finalSignInfos,
         registerV2DidDto.signInfos,
         appMenemonic,
+        appDetail,
       );
     } else {
       registerDidDoc = await hypersignDid.registerByClientSpec({
@@ -1057,6 +1059,7 @@ export class DidService {
               updatedDid.signInfos,
               updatedDid.versionId,
               appMenemonic,
+              appDetail,
             );
           }
         } else {
@@ -1085,6 +1088,7 @@ export class DidService {
               updatedDid.signInfos,
               updatedDid.versionId,
               appMenemonic,
+              appDetail,
             );
           }
         }
