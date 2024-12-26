@@ -123,6 +123,7 @@ export class SchemaService {
           generatedSchema,
           signedSchema.proof,
           appMenemonic,
+          appDetail,
         );
       } else {
         registeredSchema = await hypersignSchema.register({
@@ -270,6 +271,7 @@ export class SchemaService {
           registerSchemaDto.schemaDocument,
           registerSchemaDto.schemaProof,
           appMenemonic,
+          appDetail,
         );
       } else {
         registeredSchema = await hypersignSchema.register({
