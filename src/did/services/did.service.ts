@@ -861,13 +861,14 @@ export class DidService {
         mnemonic,
         namespace,
       );
-      const hdPathIndex = didInfo.hdPathIndex;
-      const slipPathKeys: Array<Slip10RawIndex> =
-        this.hidWallet.makeSSIWalletPath(hdPathIndex);
-      const seed = await this.hidWallet.generateMemonicToSeedFromSlip10RawIndex(
-        slipPathKeys,
+
+      const appVault = await getAppVault(kmsId, edvId);
+      const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
+        didInfo.kmsId,
       );
+      const seed = await this.hidWallet.getSeedFromMnemonic(userMnemonic);
       const { publicKeyMultibase } = await hypersignDid.generateKeys({ seed });
+
       Logger.log(
         'resolveDid() method: before calling hypersignDid.generate',
         'DidService',
@@ -876,6 +877,7 @@ export class DidService {
         methodSpecificId,
         publicKeyMultibase,
       });
+
       const tempResolvedDid = {
         didDocument: resolvedDid,
         didDocumentMetadata: {},

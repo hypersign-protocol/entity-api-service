@@ -361,6 +361,7 @@ export class PresentationRequestService {
         holderDidDocSigned: didDocument as any,
         verificationMethodId: verificationMethodIdforAssert,
         challenge,
+        domain,
         privateKeyMultibase,
       });
     } else {
@@ -376,7 +377,7 @@ export class PresentationRequestService {
         presentation: unsignedverifiablePresentation as IVerifiablePresentation,
         // holderDid,
         holderDidDocSigned: didDocument as any,
-
+        domain,
         verificationMethodId: verificationMethodIdforAssert,
         challenge,
         privateKeyMultibase,
@@ -389,7 +390,7 @@ export class PresentationRequestService {
     return { presentation: signedVerifiablePresentation };
   }
 
-  async verifyPresentation(presentations: VerifyPresentationDto) {
+  async verifyPresentation(presentations: VerifyPresentationDto, appDetail) {
     Logger.log(
       'verifyPresentation() method: starts....',
       'PresentationRequestService',
@@ -411,11 +412,17 @@ export class PresentationRequestService {
     const issuerDid = presentation['verifiableCredential'][0]['issuer'];
     const challenge = presentation['proof']['challenge'];
     const type = presentation['proof']['type'];
+    const domain = presentation['proof']['domain'];
 
     Logger.log(
       'verifyPresentation() method:before calling  hypersignVP.verify',
       'PresentationRequestService',
     );
+    const holderDidResolved = await this.didService.resolveDid(
+      appDetail,
+      holderDid,
+    );
+
     let verifiedPresentationDetail;
     const holderVerificationMethodId =
       presentations.holderVerificationMethodId || holderDid + '#key-1';
@@ -425,16 +432,19 @@ export class PresentationRequestService {
       verifiedPresentationDetail = await hypersignVP.bjjVp.verify({
         signedPresentation: presentation as any,
         issuerDid,
-        holderDid,
+        holderDidDocSigned: holderDidResolved.didDocument,
         holderVerificationMethodId: holderVerificationMethodId,
         issuerVerificationMethodId: issuerVerificationMethodId,
         challenge,
+        domain,
       });
     } else {
+      // holderDidResolved.didDocument.verificationMethod[0].publicKeyMultibase='z6MkuX5ydorS9Hyf6J1Yu4tKPvzLwUpe6TVfATXqn17SvJA4'
       verifiedPresentationDetail = await hypersignVP.verify({
         signedPresentation: presentation as any,
         issuerDid,
-        holderDid,
+        domain,
+        holderDidDocSigned: holderDidResolved.didDocument,
         holderVerificationMethodId: holderVerificationMethodId,
         issuerVerificationMethodId: issuerVerificationMethodId,
         challenge,
