@@ -17,6 +17,7 @@ import { DidModule } from './did/did.module';
 import { SchemaModule } from './schema/schema.module';
 import { PresentationModule } from './presentation/presentation.module';
 import { CredentialModule } from './credential/credential.module';
+import { StatusModule } from './status/status.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.use(json({ limit: '10mb' }));
@@ -124,7 +125,13 @@ async function bootstrap() {
       .build();
 
     const tenantDocuments = SwaggerModule.createDocument(app, tenantDocConfig, {
-      include: [DidModule, SchemaModule, CredentialModule, PresentationModule], // don't include, say, BearsModule
+      include: [
+        DidModule,
+        SchemaModule,
+        CredentialModule,
+        PresentationModule,
+        StatusModule,
+      ], // don't include, say, BearsModule
     });
 
     const tenantOptions = {
