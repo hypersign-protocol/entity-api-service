@@ -7,12 +7,23 @@ export class StatusService {
   findBySsiId(id: string, option) {
     const skip = (option.page - 1) * option.limit;
     option['skip'] = skip;
-    return `This action returns a #${id} status`;
+    return this.txnStatusRepository.find({
+      id,
+    });
   }
 
   findByTxnId(id: string, option) {
     const skip = (option.page - 1) * option.limit;
     option['skip'] = skip;
-    return `This action returns a #${id} status`;
+    return this.txnStatusRepository.find(
+      {
+        txnHash: id,
+      },
+      {},
+      {
+        skip: option.skip,
+        limit: option.limit,
+      },
+    );
   }
 }

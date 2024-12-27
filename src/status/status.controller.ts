@@ -1,14 +1,22 @@
-import { Controller, Get, Param, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  UseGuards,
+  Query,
+  UseFilters,
+} from '@nestjs/common';
 import { StatusService } from './status.service';
 
 import { ApiBearerAuth, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { PaginationDto } from 'src/utils/pagination.dto';
-
+import { AllExceptionsFilter } from 'src/utils/utils';
+@UseFilters(AllExceptionsFilter)
 @ApiTags('Status')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'))
 @Controller('status')
+@UseGuards(AuthGuard('jwt'))
 export class StatusController {
   constructor(private readonly statusService: StatusService) {}
 

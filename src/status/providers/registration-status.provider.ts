@@ -3,7 +3,7 @@ import { RegistrationStatusSchema } from '../schema/status.schema';
 
 export const statusProviders = [
   {
-    provide: 'REGISTRATIONSTATUS_MODEL',
+    provide: 'STATUS_MODEL',
     useFactory: (connection: Connection) =>
       connection.model('RegistrationStatus', RegistrationStatusSchema),
     inject: ['APPDATABASECONNECTIONS'],

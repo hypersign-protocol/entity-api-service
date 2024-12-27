@@ -1,16 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
-import { RegistrationStatus } from '../schema/status.schema';
+import { Inject, Injectable } from '@nestjs/common';
+import { FilterQuery, Model, ProjectionType, QueryOptions } from 'mongoose';
+import { RegistrationStatusDocument } from '../schema/status.schema';
+import { skip } from 'rxjs';
 
 @Injectable()
 export class TxnStatusRepository {
   constructor(
-    @InjectModel('REGISTRATION_STATUS')
-    private registatiationStatusModel: Model<RegistrationStatus>,
+    @Inject('STATUS_MODEL')
+    private readonly registatiationStatusModel: Model<RegistrationStatusDocument>,
   ) {}
 
-  async createOrUpdate(registrationStatus: FilterQuery<RegistrationStatus>) {
-    return this.registatiationStatusModel.insertMany(registrationStatus);
+  async find(
+    registrationStatus: FilterQuery<RegistrationStatusDocument>,
+    projection?: ProjectionType<RegistrationStatusDocument>,
+    option?: QueryOptions<RegistrationStatusDocument>,
+  ) {
+    return this.registatiationStatusModel.find(
+      registrationStatus,
+      projection,
+      option,
+    );
   }
 }
