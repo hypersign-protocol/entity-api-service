@@ -892,7 +892,10 @@ export class DidService {
     return resolvedDid;
   }
 
-  async updateDid(updateDidDto: UpdateDidDto, appDetail): Promise<TxnHash> {
+  async updateDid(
+    updateDidDto: UpdateDidDto,
+    appDetail,
+  ): Promise<{ transactionHash; didDocument: Did }> {
     Logger.log('updateDid() method: starts....', 'DidService');
     if (
       updateDidDto.didDocument['id'] == undefined ||
@@ -1103,7 +1106,10 @@ export class DidService {
       }
     }
 
-    return { transactionHash: updatedDid.transactionHash };
+    return {
+      transactionHash: updatedDid.transactionHash,
+      didDocument: updateDidDto.didDocument,
+    };
   }
 
   async addVerificationMethod(
