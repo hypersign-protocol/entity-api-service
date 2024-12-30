@@ -7,6 +7,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  MaxLength,
   MinLength,
   ValidateIf,
   ValidateNested,
@@ -103,11 +104,14 @@ export class CreateDidDto {
   @IsOptional()
   @IsString()
   @MinLength(32)
+  @MaxLength(48)
   @ApiProperty({
     name: 'methodSpecificId',
     description: 'MethodSpecificId to be added in did',
     example: '0x19d73aeeBcc6FEf2d0342375090401301Fe9663F',
     required: false,
+    minLength: 32,
+    maxLength: 48,
   })
   methodSpecificId?: string;
 
