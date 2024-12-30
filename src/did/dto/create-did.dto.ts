@@ -14,7 +14,10 @@ import {
 } from 'class-validator';
 import { RegistrationStatus } from '../schemas/did.schema';
 import { DidDoc } from '../dto/update-did.dto';
-import { IsDid } from 'src/utils/customDecorator/did.decorator';
+import {
+  IsDid,
+  IsMethodSpecificId,
+} from 'src/utils/customDecorator/did.decorator';
 import { ValidatePublicKeyMultibase } from 'src/utils/customDecorator/pubKeyMultibase.decorator';
 import { IVerificationRelationships, IKeyType } from 'hs-ssi-sdk';
 import { IsKeyTypeArrayOrSingle } from 'src/utils/customDecorator/keyType.decorator';
@@ -105,6 +108,7 @@ export class CreateDidDto {
   @IsString()
   @MinLength(32)
   @MaxLength(48)
+  @IsMethodSpecificId()
   @ApiProperty({
     name: 'methodSpecificId',
     description: 'MethodSpecificId to be added in did',

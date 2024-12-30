@@ -873,6 +873,9 @@ export class DidService {
         'resolveDid() method: before calling hypersignDid.generate',
         'DidService',
       );
+      console.log(methodSpecificId);
+      console.log(publicKeyMultibase);
+
       resolvedDid = await hypersignDid.generate({
         methodSpecificId,
         publicKeyMultibase,
