@@ -15,7 +15,6 @@ import {
   ArgumentsHost,
   HttpStatus,
 } from '@nestjs/common';
-import { Did } from 'hs-ssi-sdk';
 
 export const existDir = (dirPath) => {
   if (!dirPath) throw new Error('Directory path undefined');

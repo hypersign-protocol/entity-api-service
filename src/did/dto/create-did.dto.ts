@@ -104,11 +104,7 @@ export class CreateDidDto {
     message: "namespace must be one of the following values: 'testnet', '' ",
   })
   namespace: string;
-  @IsOptional()
-  @IsString()
-  @MinLength(32)
-  @MaxLength(48)
-  @IsMethodSpecificId()
+
   @ApiProperty({
     name: 'methodSpecificId',
     description: 'MethodSpecificId to be added in did',
@@ -117,6 +113,11 @@ export class CreateDidDto {
     minLength: 32,
     maxLength: 48,
   })
+  @IsOptional()
+  @IsString()
+  @MinLength(32)
+  @MaxLength(48)
+  @IsMethodSpecificId()
   methodSpecificId?: string;
 
   @ApiProperty({
