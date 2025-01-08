@@ -840,15 +840,20 @@ export class DidService {
 
   async resolveDid(appDetail, did: string) {
     Logger.log('resolveDid() method: starts....', 'DidService');
-
     const didInfo = await this.didRepositiory.findOne({
       did,
     });
     let resolvedDid;
-    if (didInfo !== null && didInfo.registrationStatus !== 'COMPLETED') {
+    const hypersignDid = new HypersignDID();
+    const resolvedDIDDocFromBc = await hypersignDid.resolve({ did });
+    if (
+      (!resolvedDIDDocFromBc ||
+        Object.keys(resolvedDIDDocFromBc.didDocument).length == 0) &&
+      didInfo
+    ) {
+      // didInfo !== null && didInfo.registrationStatus !== 'COMPLETED') {
       const { edvId, kmsId } = appDetail;
       Logger.log('resolveDid() method: initialising edv service', 'DidService');
-
       const mnemonic = await getAppMenemonic(kmsId);
       const didSplitedArray = did.split(':'); // Todo Remove this worst way of doing it
       const namespace = didSplitedArray[2];
@@ -873,9 +878,6 @@ export class DidService {
         'resolveDid() method: before calling hypersignDid.generate',
         'DidService',
       );
-      console.log(methodSpecificId);
-      console.log(publicKeyMultibase);
-
       resolvedDid = await hypersignDid.generate({
         methodSpecificId,
         publicKeyMultibase,
@@ -883,13 +885,12 @@ export class DidService {
 
       const tempResolvedDid = {
         didDocument: resolvedDid,
-        didDocumentMetadata: {},
+        didDocumentMetadata: null,
         name: didInfo.name,
       };
       resolvedDid = tempResolvedDid;
     } else {
-      const hypersignDid = new HypersignDID();
-      resolvedDid = await hypersignDid.resolve({ did });
+      resolvedDid = resolvedDIDDocFromBc;
       resolvedDid['name'] = didInfo?.name;
     }
     return resolvedDid;
