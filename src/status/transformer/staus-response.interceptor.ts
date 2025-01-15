@@ -32,8 +32,9 @@ export class RegistrationStatusInterceptor implements NestInterceptor {
   }
   mapData(data) {
     return data.map((data) => {
-      data.message = JSON.parse(data.message);
-
+      try {
+        data.message = JSON.parse(data.message);
+      } catch (e) {}
       return data;
     });
   }

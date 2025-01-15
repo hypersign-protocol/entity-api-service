@@ -201,16 +201,26 @@ export class SchemaService {
       'resolveSchema() method: resolving schema from blockchain',
       'SchemaService',
     );
-
-    const resolvedSchema = await hypersignSchema.resolve({ schemaId });
-    if (resolvedSchema == undefined) {
+    let resolvedSchema;
+    try {
+      resolvedSchema = await hypersignSchema.resolve({ schemaId });
+    } catch (e) {
+      Logger.error(e);
+    }
+    if (
+      !resolvedSchema ||
+      Object.keys(resolvedSchema).length == 0 ||
+      !resolvedSchema.schema
+    ) {
       Logger.error(
-        'resolveSchema() method: Error whilt resolving schema',
+        'resolveSchema() method: Error whilt resolving schema schemaId' +
+          schemaId,
         'SchemaService',
       );
-      throw new NotFoundException([
-        `${schemaId} could not resolve this schema`,
-      ]);
+      const tempResolvedDid = {
+        id: schemaId,
+      };
+      return tempResolvedDid;
     }
 
     try {

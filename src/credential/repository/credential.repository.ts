@@ -26,8 +26,12 @@ export class CredentialRepository {
       'find() method: starts, finding list of credentials from db',
       'CredentialRepository',
     );
+    const match = { appId: credentialFilterQuery.appId };
+    if (credentialFilterQuery.paginationOption.issuerDid) {
+      match['issuerDid'] = credentialFilterQuery.paginationOption.issuerDid;
+    }
     return await this.credentialModel.aggregate([
-      { $match: { appId: credentialFilterQuery.appId } },
+      { $match: match },
       {
         $facet: {
           totalCount: [{ $count: 'total' }],

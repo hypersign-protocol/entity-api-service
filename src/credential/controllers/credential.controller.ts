@@ -87,6 +87,11 @@ export class CredentialController {
     description: 'Fetch limited list of data',
     required: false,
   })
+  @ApiQuery({
+    name: 'issuerDid',
+    description: 'Filter by Issuer DID',
+    required: false,
+  })
   @UseInterceptors(CredentialResponseInterceptor)
   findAll(
     @Headers('Authorization') authorization: string,
