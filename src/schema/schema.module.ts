@@ -16,9 +16,13 @@ import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { schemaProviders } from './providers/schema.provider';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 import { TxSendModuleModule } from 'src/tx-send-module/tx-send-module.module';
+import { StatusService } from 'src/status/status.service';
+import { StatusModule } from 'src/status/status.module';
+import { TxnStatusRepository } from 'src/status/repository/status.repository';
+import { statusProviders } from 'src/status/providers/registration-status.provider';
 
 @Module({
-  imports: [DidModule, TxSendModuleModule],
+  imports: [DidModule, TxSendModuleModule, StatusModule],
   controllers: [SchemaController],
   providers: [
     SchemaService,
@@ -26,8 +30,11 @@ import { TxSendModuleModule } from 'src/tx-send-module/tx-send-module.module';
     DidService,
     HidWalletService,
     SchemaRepository,
+    StatusService,
+    TxnStatusRepository,
     ...databaseProviders,
     ...schemaProviders,
+    ...statusProviders,
   ],
   exports: [SchemaModule],
 })
