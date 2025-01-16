@@ -17,17 +17,30 @@ import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { credentialProviders } from './providers/credential.provider';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 import { TxSendModuleModule } from 'src/tx-send-module/tx-send-module.module';
+import { StatusModule } from 'src/status/status.module';
+import { StatusService } from 'src/status/status.service';
+import { TxnStatusRepository } from 'src/status/repository/status.repository';
+import { statusProviders } from 'src/status/providers/registration-status.provider';
 
 @Module({
-  imports: [EdvModule, HidWalletModule, DidModule, TxSendModuleModule],
+  imports: [
+    EdvModule,
+    HidWalletModule,
+    DidModule,
+    TxSendModuleModule,
+    StatusModule,
+  ],
   controllers: [CredentialController],
   providers: [
     CredentialService,
     CredentialSSIService,
     HidWalletService,
+    StatusService,
     CredentialRepository,
+    TxnStatusRepository,
     ...databaseProviders,
     ...credentialProviders,
+    ...statusProviders,
   ],
 })
 export class CredentialModule implements NestModule {

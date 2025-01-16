@@ -4,7 +4,10 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateCredentialDto } from '../dto/create-credential.dto';
+import {
+  CreateCredentialDto,
+  ResolveCredentialMetadata,
+} from '../dto/create-credential.dto';
 import { UpdateCredentialDto } from '../dto/update-credential.dto';
 import { ConfigService } from '@nestjs/config';
 import { CredentialSSIService } from './credential.ssi.service';
@@ -24,6 +27,7 @@ import {
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 import * as NodeCache from 'node-cache';
+import { StatusService } from 'src/status/status.service';
 const myCache = new NodeCache();
 @Injectable()
 export class CredentialService {
@@ -34,6 +38,7 @@ export class CredentialService {
     private credentialRepository: CredentialRepository,
     private readonly didRepositiory: DidRepository,
     private readonly txnService: TxSendModuleService,
+    private readonly statusService: StatusService,
   ) {}
 
   async checkAllowence(address) {
@@ -244,7 +249,7 @@ export class CredentialService {
         'create() method: before creating credential doc in db',
         'CredentialService',
       );
-      await this.credentialRepository.create({
+      const credentialDetail = await this.credentialRepository.create({
         appId: appDetail.appId,
         credentialId: signedCredential.id,
         issuerDid,
@@ -253,14 +258,25 @@ export class CredentialService {
         transactionHash: credentialStatusRegistrationResult
           ? credentialStatusRegistrationResult.transactionHash
           : '',
-        type: signedCredential.type[1], // TODO : MAYBE REMOVE HARDCODING MAYBE NOT
+        type: { schemaType: signedCredential.type[1], schemaId }, // TODO : MAYBE REMOVE HARDCODING MAYBE NOT
+        registerCredentialStatus: registerCredentialStatus
+          ? registerCredentialStatus
+          : false,
       });
       Logger.log('create() method: ends....', 'CredentialService');
+
+      const metadata = {
+        credentialId: credentialDetail.credentialId,
+        persist: credentialDetail.persist,
+        type: credentialDetail.type,
+        issuerDid: credentialDetail.issuerDid,
+        registerCredentialStatus: credentialDetail.registerCredentialStatus,
+      } as ResolveCredentialMetadata;
 
       return {
         credentialDocument: signedCredential,
         credentialStatus: credStatusTemp,
-        persist,
+        metadata,
       };
     } catch (e) {
       throw new BadRequestException([e.message]);
@@ -316,22 +332,56 @@ export class CredentialService {
       'resolveCredential() method: before initialising HypersignVerifiableCredential',
       'CredentialService',
     );
-    const hypersignCredential = new HypersignVerifiableCredential();
-    let credentialStatus;
-    try {
-      credentialStatus = await hypersignCredential.resolveCredentialStatus({
-        credentialId,
-      });
-    } catch (e) {
-      credentialStatus = undefined;
+
+    const metadata = {
+      credentialId: credentialDetail.credentialId,
+      persist: credentialDetail.persist,
+      type: credentialDetail.type,
+      issuerDid: credentialDetail.issuerDid,
+      registerCredentialStatus: credentialDetail.registerCredentialStatus,
+    } as ResolveCredentialMetadata;
+    let credentialStatus = undefined;
+    // If user had registered the credential on the blockchain
+    // Only then we will go ahead with credential status retrival
+    const shouldRetriveCredential = credentialDetail.registerCredentialStatus
+      ? credentialDetail.registerCredentialStatus
+      : true; // making default true for backwards compatibility
+    if (shouldRetriveCredential) {
+      /// First check this transaction was successful in lcoal db or there was some error
+      const statusResponse = await this.statusService.findBySsiId(credentialId);
+      let wasTransactionSuccess = false;
+      if (statusResponse) {
+        const firstResponse = statusResponse[0];
+        if (
+          firstResponse &&
+          firstResponse.data &&
+          firstResponse.totalCount > 0
+        ) {
+          metadata['transactionStatus'] = firstResponse.data;
+          if (firstResponse.data.findIndex((x) => x['status'] == 0) >= 0) {
+            wasTransactionSuccess = true;
+          }
+        }
+      }
+
+      /// Retrive status from the blockchain only when status = 0, otherwise skip
+      if (wasTransactionSuccess) {
+        try {
+          const hypersignCredential = new HypersignVerifiableCredential();
+          credentialStatus = await hypersignCredential.resolveCredentialStatus({
+            credentialId,
+          });
+        } catch (e) {
+          credentialStatus = undefined;
+        }
+        Logger.log('resolveCredential() method: ends....', 'CredentialService');
+      }
     }
-    Logger.log('resolveCredential() method: ends....', 'CredentialService');
 
     return {
       credentialDocument: credential ? credential : undefined,
       credentialStatus,
-      persist: credentialDetail.persist,
-      retrieveCredential,
+      metadata,
     };
   }
 

@@ -205,7 +205,6 @@ export class SchemaService {
     );
 
     const statusResponse = await this.statusService.findBySsiId(schemaId);
-    Logger.log(statusResponse);
     if (statusResponse) {
       const firstResponse = statusResponse[0];
       if (firstResponse && firstResponse.data) {
