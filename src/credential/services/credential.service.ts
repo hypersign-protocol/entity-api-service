@@ -355,7 +355,7 @@ export class CredentialService {
         if (
           firstResponse &&
           firstResponse.data &&
-          firstResponse.totalCount > 0
+          firstResponse.totalCount.length > 0
         ) {
           metadata['transactionStatus'] = firstResponse.data;
           if (firstResponse.data.findIndex((x) => x['status'] == 0) >= 0) {
@@ -364,6 +364,7 @@ export class CredentialService {
         }
       }
 
+      console.log({ wasTransactionSuccess });
       /// Retrive status from the blockchain only when status = 0, otherwise skip
       if (wasTransactionSuccess) {
         try {
