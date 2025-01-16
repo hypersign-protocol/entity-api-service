@@ -5,7 +5,9 @@ import { IsVcId } from 'src/utils/customDecorator/vc.decorator';
 
 export type CredentialModel = Credential & Document;
 
-@Schema()
+@Schema({
+  timestamps: true,
+})
 export class Credential {
   @IsString()
   @Prop({ required: true })
