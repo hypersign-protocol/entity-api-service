@@ -34,6 +34,7 @@ import {
   ApiQuery,
   ApiHeader,
   ApiOkResponse,
+  ApiExcludeEndpoint,
 } from '@nestjs/swagger';
 import { Schemas } from '../schemas/schemas.schema';
 import { SchemaResponseInterceptor } from '../interceptors/transformResponse.interseptor';
@@ -157,7 +158,7 @@ export class SchemaController {
 
     return this.schemaService.resolveSchema(schemaId);
   }
-
+  @ApiExcludeEndpoint()
   @Post('/register')
   @ApiOkResponse({
     description: 'Registered schema successfully',

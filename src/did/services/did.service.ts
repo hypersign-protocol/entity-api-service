@@ -899,86 +899,17 @@ export class DidService {
   async updateDid(
     updateDidDto: UpdateDidDto,
     appDetail,
-  ): Promise<{ transactionHash; didDocument: Did }> {
+  ): Promise<{
+    transactionHash?: string;
+    didDocument?: Did;
+    name?: string;
+    did?: string;
+  }> {
     Logger.log('updateDid() method: starts....', 'DidService');
-    if (
-      updateDidDto.didDocument['id'] == undefined ||
-      updateDidDto.didDocument['id'] == ''
-    ) {
-      throw new BadRequestException('Invalid didDoc');
-    }
-
     let updatedDid;
-    Logger.debug(
-      `updateDid() method: verificationMethod: ${updateDidDto.verificationMethodId}`,
-      'DidService',
-    );
-    const hasKeyAgreementType =
-      updateDidDto.didDocument.verificationMethod.some(
-        (VM) =>
-          VM.type === IKeyType.X25519KeyAgreementKey2020 ||
-          VM.type === IKeyType.X25519KeyAgreementKeyEIP5630,
-      );
-    if (!hasKeyAgreementType) {
-      updateDidDto.didDocument.keyAgreement = [];
-    }
-    if (!updateDidDto.verificationMethodId) {
-      const did = updateDidDto.didDocument['id'];
-      const { edvId, kmsId } = appDetail;
-
-      const mnemonic = await getAppMenemonic(kmsId);
-      const hypersignDid = await this.didSSIService.initiateHypersignDid(
-        mnemonic,
-        this.config.get('NETWORK') ? this.config.get('NETWORK') : 'testnet',
-      );
-
-      const didInfo = await this.didRepositiory.findOne({
-        appId: appDetail.appId,
-        did,
-      });
-      const { signInfos } = updateDidDto;
-
-      // If signature is passed then no need to check if it is present in db or not
-      if (!signInfos && (!didInfo || didInfo == null || didInfo == undefined)) {
-        throw new NotFoundException([
-          `${did} not found`,
-          `${did} is not owned by the appId ${appDetail.appId}`,
-          `Resource not found`,
-        ]);
-      }
-      const { didDocumentMetadata: updatedDidDocMetaData } =
-        await hypersignDid.resolve({ did });
-      if (updatedDidDocMetaData === null) {
-        throw new NotFoundException([`${did} is not registered on the chain`]);
-      }
-      try {
-        if (!updateDidDto.deactivate) {
-          Logger.log(
-            'updateDid() method: before calling hypersignDid.updateByClientSpec to update did',
-            'DidService',
-          );
-          updatedDid = await hypersignDid.updateByClientSpec({
-            didDocument: updateDidDto.didDocument as Did,
-            signInfos,
-            versionId: updatedDidDocMetaData.versionId,
-          });
-        } else {
-          Logger.log(
-            'updateDid() method: before calling hypersignDid.deactivateByClientSpec to deactivate did',
-            'DidService',
-          );
-          updatedDid = await hypersignDid.deactivateByClientSpec({
-            didDocument: updateDidDto.didDocument as Did,
-            signInfos,
-            versionId: updatedDidDocMetaData.versionId,
-          });
-        }
-      } catch (error) {
-        throw new BadRequestException([error.message]);
-      }
-    } else {
-      const { verificationMethodId } = updateDidDto;
-      const didOfVmId = verificationMethodId?.split('#')[0];
+    const { name, didDocument } = updateDidDto;
+    const did = updateDidDto?.did || updateDidDto?.didDocument?.id;
+    if (didDocument) {
       if (
         updateDidDto.didDocument['id'] == undefined ||
         updateDidDto.didDocument['id'] == ''
@@ -986,133 +917,221 @@ export class DidService {
         throw new BadRequestException('Invalid didDoc');
       }
 
-      const did = updateDidDto.didDocument['id'];
-      const { edvId, kmsId } = appDetail;
-
-      const { mnemonic: appMenemonic } =
-        await global.kmsVault.getDecryptedDocument(kmsId);
-      const namespace = this.config.get('NETWORK')
-        ? this.config.get('NETWORK')
-        : 'testnet';
-
-      const hypersignDid = await this.didSSIService.initiateHypersignDid(
-        appMenemonic,
-        namespace,
+      Logger.debug(
+        `updateDid() method: verificationMethod: ${updateDidDto.verificationMethodId}`,
+        'DidService',
       );
-
-      const didInfo = await this.didRepositiory.findOne({
-        appId: appDetail.appId,
-        did: didOfVmId,
-      });
-      if (!didInfo || didInfo == null) {
-        throw new NotFoundException([
-          `${verificationMethodId} not found`,
-          `${verificationMethodId} is not owned by the appId ${appDetail.appId}`,
-          `Resource not found`,
-        ]);
+      const hasKeyAgreementType =
+        updateDidDto.didDocument.verificationMethod.some(
+          (VM) =>
+            VM.type === IKeyType.X25519KeyAgreementKey2020 ||
+            VM.type === IKeyType.X25519KeyAgreementKeyEIP5630,
+        );
+      if (!hasKeyAgreementType) {
+        updateDidDto.didDocument.keyAgreement = [];
       }
-
-      const { didDocument: resolvedDid, didDocumentMetadata } =
-        await hypersignDid.resolve({ did: didOfVmId });
-
-      if (didDocumentMetadata === null) {
-        throw new NotFoundException([
-          `${didOfVmId} is not registered on the chain`,
-        ]);
-      }
-
-      const { didDocumentMetadata: updatedDidDocMetaData } =
-        await hypersignDid.resolve({ did });
-      if (updatedDidDocMetaData === null) {
-        throw new NotFoundException([`${did} is not registered on the chain`]);
-      }
-
-      const appVault = await getAppVault(kmsId, edvId);
-      const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
-        didInfo.kmsId,
-      );
-      const seed = await this.hidWallet.getSeedFromMnemonic(userMnemonic);
-      const { privateKeyMultibase } = await hypersignDid.generateKeys({
-        seed,
-      });
-
-      try {
-        const { wallet, address } = await this.hidWallet.generateWallet(
-          appMenemonic,
+      if (!updateDidDto.verificationMethodId) {
+        const did = updateDidDto.didDocument['id'];
+        const { edvId, kmsId } = appDetail;
+        const mnemonic = await getAppMenemonic(kmsId);
+        const hypersignDid = await this.didSSIService.initiateHypersignDid(
+          mnemonic,
+          this.config.get('NETWORK') ? this.config.get('NETWORK') : 'testnet',
         );
 
-        if (!updateDidDto.deactivate) {
-          Logger.debug(
-            'updateDid() method: before calling hypersignDid.update to update did',
-            'DidService',
-          );
+        const didInfo = await this.didRepositiory.findOne({
+          appId: appDetail.appId,
+          did,
+        });
+        const { signInfos } = updateDidDto;
 
-          if ((await this.checkAllowence(address)) == false) {
-            updatedDid = await hypersignDid.update({
-              didDocument: updateDidDto.didDocument as Did,
-              privateKeyMultibase,
-              verificationMethodId: resolvedDid['verificationMethod'][0].id,
-              versionId: updatedDidDocMetaData.versionId,
-              readonly: false,
-            });
-          } else {
-            updatedDid = await hypersignDid.update({
-              didDocument: updateDidDto.didDocument as Did,
-              privateKeyMultibase,
-              verificationMethodId: resolvedDid['verificationMethod'][0].id,
-              versionId: updatedDidDocMetaData.versionId,
-              readonly: true,
-            });
-            await this.txnService.sendDIDUpdate(
-              updatedDid.didDocument,
-              updatedDid.signInfos,
-              updatedDid.versionId,
-              appMenemonic,
-              appDetail,
-            );
-          }
-        } else {
-          Logger.debug(
-            'updateDid() method: before calling hypersignDid.deactivate to deactivate did',
-            'DidService',
-          );
-
-          if ((await this.checkAllowence(address)) == false) {
-            updatedDid = await hypersignDid.deactivate({
-              didDocument: updateDidDto.didDocument as Did,
-              privateKeyMultibase,
-              verificationMethodId: resolvedDid['verificationMethod'][0].id,
-              versionId: updatedDidDocMetaData.versionId,
-            });
-          } else {
-            updatedDid = await hypersignDid.update({
-              didDocument: updateDidDto.didDocument as Did,
-              privateKeyMultibase,
-              verificationMethodId: resolvedDid['verificationMethod'][0].id,
-              versionId: updatedDidDocMetaData.versionId,
-              readonly: true,
-            });
-            await this.txnService.sendDIDDeactivate(
-              updatedDid.didDocument,
-              updatedDid.signInfos,
-              updatedDid.versionId,
-              appMenemonic,
-              appDetail,
-            );
-          }
+        // If signature is passed then no need to check if it is present in db or not
+        if (
+          !signInfos &&
+          (!didInfo || didInfo == null || didInfo == undefined)
+        ) {
+          throw new NotFoundException([
+            `${did} not found`,
+            `${did} is not owned by the appId ${appDetail.appId}`,
+            `Resource not found`,
+          ]);
         }
-      } catch (error) {
-        Logger.error(
-          `updateDid() method: Error: ${error.message}`,
-          'DidService',
+        const { didDocumentMetadata: updatedDidDocMetaData } =
+          await hypersignDid.resolve({ did });
+        if (updatedDidDocMetaData === null) {
+          throw new NotFoundException([
+            `${did} is not registered on the chain`,
+          ]);
+        }
+        try {
+          if (!updateDidDto.deactivate) {
+            Logger.log(
+              'updateDid() method: before calling hypersignDid.updateByClientSpec to update did',
+              'DidService',
+            );
+            updatedDid = await hypersignDid.updateByClientSpec({
+              didDocument: updateDidDto.didDocument as Did,
+              signInfos,
+              versionId: updatedDidDocMetaData.versionId,
+            });
+          } else {
+            Logger.log(
+              'updateDid() method: before calling hypersignDid.deactivateByClientSpec to deactivate did',
+              'DidService',
+            );
+            updatedDid = await hypersignDid.deactivateByClientSpec({
+              didDocument: updateDidDto.didDocument as Did,
+              signInfos,
+              versionId: updatedDidDocMetaData.versionId,
+            });
+          }
+        } catch (error) {
+          throw new BadRequestException([error.message]);
+        }
+      } else {
+        const { verificationMethodId } = updateDidDto;
+        const didOfVmId = verificationMethodId?.split('#')[0];
+        if (
+          updateDidDto.didDocument['id'] == undefined ||
+          updateDidDto.didDocument['id'] == ''
+        ) {
+          throw new BadRequestException('Invalid didDoc');
+        }
+
+        const did = updateDidDto.didDocument['id'];
+        const { edvId, kmsId } = appDetail;
+
+        const { mnemonic: appMenemonic } =
+          await global.kmsVault.getDecryptedDocument(kmsId);
+        const namespace = this.config.get('NETWORK')
+          ? this.config.get('NETWORK')
+          : 'testnet';
+
+        const hypersignDid = await this.didSSIService.initiateHypersignDid(
+          appMenemonic,
+          namespace,
         );
-        throw new BadRequestException([error.message]);
+
+        const didInfo = await this.didRepositiory.findOne({
+          appId: appDetail.appId,
+          did: didOfVmId,
+        });
+        if (!didInfo || didInfo == null) {
+          throw new NotFoundException([
+            `${verificationMethodId} not found`,
+            `${verificationMethodId} is not owned by the appId ${appDetail.appId}`,
+            `Resource not found`,
+          ]);
+        }
+
+        const { didDocument: resolvedDid, didDocumentMetadata } =
+          await hypersignDid.resolve({ did: didOfVmId });
+
+        if (didDocumentMetadata === null) {
+          throw new NotFoundException([
+            `${didOfVmId} is not registered on the chain`,
+          ]);
+        }
+
+        const { didDocumentMetadata: updatedDidDocMetaData } =
+          await hypersignDid.resolve({ did });
+        if (updatedDidDocMetaData === null) {
+          throw new NotFoundException([
+            `${did} is not registered on the chain`,
+          ]);
+        }
+
+        const appVault = await getAppVault(kmsId, edvId);
+        const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
+          didInfo.kmsId,
+        );
+        const seed = await this.hidWallet.getSeedFromMnemonic(userMnemonic);
+        const { privateKeyMultibase } = await hypersignDid.generateKeys({
+          seed,
+        });
+
+        try {
+          const { wallet, address } = await this.hidWallet.generateWallet(
+            appMenemonic,
+          );
+
+          if (!updateDidDto.deactivate) {
+            Logger.debug(
+              'updateDid() method: before calling hypersignDid.update to update did',
+              'DidService',
+            );
+
+            if ((await this.checkAllowence(address)) == false) {
+              updatedDid = await hypersignDid.update({
+                didDocument: updateDidDto.didDocument as Did,
+                privateKeyMultibase,
+                verificationMethodId: resolvedDid['verificationMethod'][0].id,
+                versionId: updatedDidDocMetaData.versionId,
+                readonly: false,
+              });
+            } else {
+              updatedDid = await hypersignDid.update({
+                didDocument: updateDidDto.didDocument as Did,
+                privateKeyMultibase,
+                verificationMethodId: resolvedDid['verificationMethod'][0].id,
+                versionId: updatedDidDocMetaData.versionId,
+                readonly: true,
+              });
+              await this.txnService.sendDIDUpdate(
+                updatedDid.didDocument,
+                updatedDid.signInfos,
+                updatedDid.versionId,
+                appMenemonic,
+                appDetail,
+              );
+            }
+          } else {
+            Logger.debug(
+              'updateDid() method: before calling hypersignDid.deactivate to deactivate did',
+              'DidService',
+            );
+
+            if ((await this.checkAllowence(address)) == false) {
+              updatedDid = await hypersignDid.deactivate({
+                didDocument: updateDidDto.didDocument as Did,
+                privateKeyMultibase,
+                verificationMethodId: resolvedDid['verificationMethod'][0].id,
+                versionId: updatedDidDocMetaData.versionId,
+              });
+            } else {
+              updatedDid = await hypersignDid.update({
+                didDocument: updateDidDto.didDocument as Did,
+                privateKeyMultibase,
+                verificationMethodId: resolvedDid['verificationMethod'][0].id,
+                versionId: updatedDidDocMetaData.versionId,
+                readonly: true,
+              });
+              await this.txnService.sendDIDDeactivate(
+                updatedDid.didDocument,
+                updatedDid.signInfos,
+                updatedDid.versionId,
+                appMenemonic,
+                appDetail,
+              );
+            }
+          }
+        } catch (error) {
+          Logger.error(
+            `updateDid() method: Error: ${error.message}`,
+            'DidService',
+          );
+          throw new BadRequestException([error.message]);
+        }
       }
     }
-
+    if (name) {
+      this.didRepositiory.findOneAndUpdate({ did }, { name });
+    }
     return {
-      transactionHash: updatedDid.transactionHash,
-      didDocument: updateDidDto.didDocument,
+      transactionHash: updatedDid?.transactionHash,
+      didDocument: updateDidDto?.didDocument,
+      did,
+      name: updateDidDto.name,
     };
   }
 

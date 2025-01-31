@@ -22,7 +22,11 @@ import {
   TxnHash,
   CreateDidResponse,
 } from '../dto/create-did.dto';
-import { UpdateDidDto, ResolvedDid } from '../dto/update-did.dto';
+import {
+  UpdateDidDto,
+  ResolvedDid,
+  UpdateDidResp,
+} from '../dto/update-did.dto';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiNotFoundResponse,
@@ -335,10 +339,9 @@ export class DidController {
   }
 
   @Patch()
-  @UsePipes(ValidationPipe)
   @ApiOkResponse({
     description: 'DID Updated',
-    type: TxnHash,
+    type: UpdateDidResp,
   })
   @ApiBadRequestResponse({
     status: 400,
@@ -360,6 +363,8 @@ export class DidController {
     description: 'Origin as you set in application cors',
     required: false,
   })
+  @UsePipes(ValidationPipe)
+  @UsePipes(new AtLeastOneParamPipe(['name', 'didDocument']))
   updateDid(
     @Headers('Authorization') authorization: string,
     @Req() req: any,
