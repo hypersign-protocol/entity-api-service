@@ -39,7 +39,7 @@ export class CredentialService {
     private readonly didRepositiory: DidRepository,
     private readonly txnService: TxSendModuleService,
     private readonly statusService: StatusService,
-  ) { }
+  ) {}
 
   async checkAllowence(address) {
     const url =
@@ -399,8 +399,8 @@ export class CredentialService {
       status === 'SUSPEND'
         ? 'SUSPENDED'
         : status === 'REVOKE'
-          ? 'REVOKED'
-          : 'LIVE';
+        ? 'REVOKED'
+        : 'LIVE';
     const didOfvmId = verificationMethodId.split('#')[0];
 
     const { edvId, kmsId } = appDetail;
@@ -443,8 +443,8 @@ export class CredentialService {
       const nameSpace = namespace
         ? namespace
         : this.config.get('NETWORK')
-          ? this.config.get('NETWORK')
-          : namespace;
+        ? this.config.get('NETWORK')
+        : namespace;
       if (
         verificationMethod &&
         verificationMethod.type === IKeyType.BabyJubJubKey2021
@@ -574,7 +574,7 @@ export class CredentialService {
       if (
         verifyCredentialDto.credentialDocument &&
         verifyCredentialDto.credentialDocument.proof.type ===
-        SupportedSignatureType.BJJSignature2021
+          SupportedSignatureType.BJJSignature2021
       ) {
         verificationResult = await hypersignCredential.bjjVC.verify({
           credential: verifyCredentialDto.credentialDocument as any, // will fix it latter

@@ -43,7 +43,7 @@ export class DidService {
     private readonly didSSIService: DidSSIService,
     private readonly config: ConfigService,
     private readonly txnService: TxSendModuleService,
-  ) { }
+  ) {}
 
   async checkAllowence(address) {
     const url =
@@ -115,7 +115,7 @@ export class DidService {
         'options.register is true for keyType ' +
           IKeyType.EcdsaSecp256k1RecoveryMethod2020,
         IKeyType.EcdsaSecp256k1RecoveryMethod2020 +
-        ' doesnot support register without signature being passed',
+          ' doesnot support register without signature being passed',
         'options.register:false is strongly recomended',
       ]);
     }
@@ -275,7 +275,7 @@ export class DidService {
       if (!insertedDoc) {
         throw new Error(
           'Could not insert document for userCredential.walletAddress' +
-          userCredential.walletAddress,
+            userCredential.walletAddress,
         );
       }
       const { id: userKMSId } = insertedDoc;
@@ -432,7 +432,7 @@ export class DidService {
       if (!insertedDoc) {
         throw new Error(
           'Could not insert document for userCredential.walletAddress' +
-          userCredential.walletAddress,
+            userCredential.walletAddress,
         );
       }
       const { id: userKMSId } = insertedDoc;
