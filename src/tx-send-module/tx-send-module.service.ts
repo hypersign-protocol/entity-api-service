@@ -307,6 +307,11 @@ export class TxSendModuleService {
     granteeMnemonic: any,
     appDetail,
   ) {
+    Logger.log(
+      'Inside  sendDIDDeactivate to deactivate the did.',
+      'TxSendModuleService',
+    );
+
     if (!this.channel) {
       await this.connect();
     }
