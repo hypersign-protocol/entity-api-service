@@ -18,6 +18,7 @@ import { SchemaModule } from './schema/schema.module';
 import { PresentationModule } from './presentation/presentation.module';
 import { CredentialModule } from './credential/credential.module';
 import { StatusModule } from './status/status.module';
+import { CreditManagerModule } from './credit-manager/credit-manager.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.use(json({ limit: '10mb' }));
@@ -131,6 +132,7 @@ async function bootstrap() {
         CredentialModule,
         PresentationModule,
         StatusModule,
+        CreditManagerModule,
       ], // don't include, say, BearsModule
     });
 
