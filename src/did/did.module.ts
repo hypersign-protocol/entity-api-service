@@ -24,8 +24,14 @@ import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 import { didProviders } from './providers/did.provider';
 import { JwtStrategy } from '../utils/jwt.strategy';
 import { TxSendModuleModule } from 'src/tx-send-module/tx-send-module.module';
+import { CreditManagerModule } from 'src/credit-manager/credit-manager.module';
 @Module({
-  imports: [EdvModule, HidWalletModule, TxSendModuleModule],
+  imports: [
+    EdvModule,
+    HidWalletModule,
+    TxSendModuleModule,
+    CreditManagerModule,
+  ],
   controllers: [DidController],
   providers: [
     JwtStrategy,

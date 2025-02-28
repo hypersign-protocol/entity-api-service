@@ -10,7 +10,7 @@ export class AppLoggerMiddleware implements NestMiddleware {
   constructor(
     private readonly configService: ConfigService,
     private readonly logStore: LogService,
-  ) { }
+  ) {}
   private logger = new Logger('HTTP');
 
   use(request: Request, response: Response, next: NextFunction): void {

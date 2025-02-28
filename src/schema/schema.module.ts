@@ -20,9 +20,10 @@ import { StatusService } from 'src/status/status.service';
 import { StatusModule } from 'src/status/status.module';
 import { TxnStatusRepository } from 'src/status/repository/status.repository';
 import { statusProviders } from 'src/status/providers/registration-status.provider';
+import { CreditManagerModule } from 'src/credit-manager/credit-manager.module';
 
 @Module({
-  imports: [DidModule, TxSendModuleModule, StatusModule],
+  imports: [DidModule, TxSendModuleModule, StatusModule, CreditManagerModule],
   controllers: [SchemaController],
   providers: [
     SchemaService,

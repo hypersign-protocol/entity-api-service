@@ -41,11 +41,12 @@ import { SchemaResponseInterceptor } from '../interceptors/transformResponse.int
 import { GetSchemaList } from '../dto/get-schema.dto';
 import { RegisterSchemaDto } from '../dto/register-schema.dto';
 import { TxnHash } from 'src/did/dto/create-did.dto';
+import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Schema')
 @Controller('schema')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), ReduceCreditGuard)
 export class SchemaController {
   constructor(private readonly schemaService: SchemaService) {}
 
