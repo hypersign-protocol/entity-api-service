@@ -56,4 +56,21 @@ export class CreditManagerService {
     }
     return { attestationCost, creditAmountRequired, hasSufficientFund: true };
   }
+  async getCreditDetailFromPath(apiMethod, apiPath) {
+    const { storageType, attestationType, method } = await getApiDetail({
+      method: apiMethod,
+      url: apiPath,
+    });
+    const apiCost = method
+      ? await this.apiCreditService.calculateCost(method)
+      : 0;
+    const storageCost = storageType
+      ? await this.storageService.calculateCost(storageType)
+      : 0;
+    const attestationCost = attestationType
+      ? await this.attestationCreditService.calculateCost(attestationType)
+      : '0';
+    const creditAmountRequired = apiCost + storageCost;
+    return { attestationCost, creditAmountRequired };
+  }
 }

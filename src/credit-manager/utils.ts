@@ -107,5 +107,5 @@ export function getApiDetail(req): ApiDetail {
 }
 
 export const constant = {
-    AUTHZ_URL: 'https://api.eiko.zone/api/v1/credits/authz',
+  AUTHZ_URL: 'https://api.eiko.zone/api/v1/credits/authz',
 };

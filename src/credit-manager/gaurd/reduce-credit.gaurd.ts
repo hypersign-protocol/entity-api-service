@@ -51,8 +51,8 @@ export class ReduceCreditGuard implements CanActivate {
             { _id: activeCredit._id },
             {
               used: activeCredit.used + creditDetails.creditAmountRequired,
-              [`credit.amount`]:
-                Number(activeCredit?.credit?.amount) -
+              [`credit.used`]:
+                Number(activeCredit?.credit?.used || 0) +
                 Number(creditDetails.attestationCost),
             },
           );

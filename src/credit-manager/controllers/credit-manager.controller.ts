@@ -25,7 +25,6 @@ import {
 import {
   createCreditResponse,
   ActivateCredtiResponse,
-  CreateCreditManagerDto,
 } from '../dto/create-credit-manager.dto';
 import { AllExceptionsFilter } from 'src/utils/utils';
 import {
@@ -34,14 +33,15 @@ import {
   CreditUnAuthorizeError,
 } from '../dto/error-credit.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { CreditAuthGuard } from '../gaurd/credit-token.gaurd';
 
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Credit')
 @Controller('credit')
 export class CreditManagerController {
   constructor(private readonly creditManagerService: CreditService) {}
-  // @ApiBearerAuth('Authorization')
-  // @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth('Authorization')
+  @UseGuards(CreditAuthGuard)
   @ApiCreatedResponse({
     description: 'Credit detail is added successfully',
     type: createCreditResponse,
@@ -59,12 +59,12 @@ export class CreditManagerController {
     type: CreditUnAuthorizeError,
   })
   @Post()
-  AddNewCreditDetail(@Body() creditManagerDto: CreateCreditManagerDto) {
+  AddNewCreditDetail(@Req() req) {
     Logger.log(
       'AddNewCreditDetail() method to add credit detail',
       'CreditManagerController',
     );
-    return this.creditManagerService.addCreditDetail(creditManagerDto);
+    return this.creditManagerService.addCreditDetail(req.creditDetail);
   }
   @ApiBearerAuth('Authorization')
   @UseGuards(AuthGuard('jwt'))

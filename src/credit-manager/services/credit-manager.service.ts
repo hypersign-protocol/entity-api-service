@@ -38,6 +38,7 @@ export class CreditService {
       grantDetail = await this.grantAdminAllowanceForTxFee(
         createCreditManagerDto.serviceId,
       );
+      grantDetail['credit']['used'] = 0;
     }
     const newCreditDetail = {
       ...createCreditManagerDto,
@@ -89,6 +90,7 @@ export class CreditService {
         creditDocument.serviceId,
       );
       if (grantDetail) {
+        grantDetail['credit']['used'] = 0;
         (paramsToUpdate['credit'] = grantDetail?.credit),
           (paramsToUpdate['creditScope'] = grantDetail?.creditScope);
       }

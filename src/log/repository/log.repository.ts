@@ -19,4 +19,7 @@ export class LogRepository {
   async findLogBetweenDates(filterQuery: FilterQuery<LogDoc>): Promise<Log[]> {
     return this.logModel.find(filterQuery);
   }
+  async findDataBasedOnAgggregationPipeline(pipeine) {
+    return this.logModel.aggregate(pipeine);
+  }
 }
