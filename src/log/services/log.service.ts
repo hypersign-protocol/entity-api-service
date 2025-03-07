@@ -114,4 +114,55 @@ export class LogService {
 
     return updatedServiceDetails;
   }
+  async findDetailedLogBetweenDates(
+    startDate: Date,
+    endDate: Date,
+    appId: string,
+  ): Promise<any> {
+    Logger.log(
+      `Finding log by appId : 
+    ${appId} and group by session path
+    `,
+      'LogService',
+    );
+    const pipeline = [
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            path: "$path",
+            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.path",
+          data: {
+            $push: {
+              k: "$_id.date",
+              v: "$count"
+            }
+          },
+          quantity: { $sum: '$count' }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          apiPath: '$_id',
+          data: { $arrayToObject: "$data" },
+          quantity: 1,
+        }
+      }
+
+    ];
+    return this.logRepo.findDataBasedOnAgggregationPipeline(pipeline);
+
+  }
 }

@@ -1,11 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
   UseFilters,
   Query,
   Req,
@@ -15,7 +10,6 @@ import { AllExceptionsFilter } from 'src/utils/utils';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiHeader,
   ApiOkResponse,
   ApiQuery,
   ApiTags,
@@ -106,80 +100,80 @@ export class UsageController {
 
     return response;
   }
-  // @Get('/detail')
-  // @ApiOkResponse({
-  //   description: 'Detail of api call made',
-  //   // type: FormatedUsageSessionDetailResp,
-  // })
-  // @ApiBadRequestResponse({
-  //   description: 'Error has occurred at the time sending verification result',
-  //   // type: ResultErrorResponse,
-  // })
-  // @ApiUnauthorizedResponse({
-  //   description: 'Authorization token is invalid or expired.',
-  //   // type: ResultUnauthorizationErrorResponse,
-  // })
-  // @ApiQuery({
-  //   name: 'serviceId',
-  //   description: 'Service Id',
-  //   required: false,
-  // })
-  // @ApiQuery({
-  //   name: 'startDate',
-  //   required: false,
-  //   type: Date,
-  // })
-  // @ApiQuery({
-  //   name: 'endDate',
-  //   required: false,
-  //   type: Date,
-  // })
-  // async getUsageDetailByDate(
-  //   @Query('serviceId') appIdParam: string,
-  //   @Query('startDate') startDateParam: Date,
-  //   @Query('endDate') endDateParam: Date,
-  //   @Req() req, // : Promise<UsageResponseDto>
-  // ) {
-  //   let appId;
-  //   if (!appIdParam) {
-  //     appId = req.app.appId;
-  //   } else {
-  //     appId = appIdParam;
-  //   }
+  @Get('/detail')
+  @ApiOkResponse({
+    description: 'Detail of api call made',
+    // type: FormatedUsageSessionDetailResp,
+  })
+  @ApiBadRequestResponse({
+    description: 'Error has occurred at the time sending verification result',
+    // type: ResultErrorResponse,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Authorization token is invalid or expired.',
+    // type: ResultUnauthorizationErrorResponse,
+  })
+  @ApiQuery({
+    name: 'serviceId',
+    description: 'Service Id',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: Date,
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: Date,
+  })
+  async getUsageDetailByDate(
+    @Query('serviceId') appIdParam: string,
+    @Query('startDate') startDateParam: Date,
+    @Query('endDate') endDateParam: Date,
+    @Req() req, // : Promise<UsageResponseDto>
+  ) {
+    let appId;
+    if (!appIdParam) {
+      appId = req.app.appId;
+    } else {
+      appId = appIdParam;
+    }
 
-  //   let startDate;
-  //   let endDate;
+    let startDate;
+    let endDate;
 
-  //   const today = new Date();
-  //   if (!startDateParam) {
-  //     const day = 1;
-  //     const month = today.getMonth();
-  //     const year = today.getFullYear();
-  //     startDate = new Date(year, month, day);
-  //   } else {
-  //     startDate = new Date(startDateParam);
-  //   }
+    const today = new Date();
+    if (!startDateParam) {
+      const day = 1;
+      const month = today.getMonth();
+      const year = today.getFullYear();
+      startDate = new Date(year, month, day);
+    } else {
+      startDate = new Date(startDateParam);
+    }
 
-  //   if (!endDateParam) {
-  //     endDate = today;
-  //   } else {
-  //     endDate = new Date(endDateParam);
-  //   }
+    if (!endDateParam) {
+      endDate = today;
+    } else {
+      endDate = new Date(endDateParam);
+    }
 
-  //   const serviceDetails = await this.logService.findDetailedLogBetweenDates(
-  //     startDate,
-  //     endDate,
-  //     appId,
-  //   );
-  //   const response =
-  //     // : UsageResponseDto =
-  //     {
-  //       serviceId: appId,
-  //       startDate,
-  //       endDate,
-  //       serviceDetails,
-  //     };
+    const serviceDetails = await this.logService.findDetailedLogBetweenDates(
+      startDate,
+      endDate,
+      appId,
+    );
+    const response =
+      // : UsageResponseDto =
+      {
+        serviceId: appId,
+        startDate,
+        endDate,
+        serviceDetails,
+      };
 
-  //   return response;
-  // }
+    return response;
+  }
 }
