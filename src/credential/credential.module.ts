@@ -22,6 +22,8 @@ import { StatusService } from 'src/status/status.service';
 import { TxnStatusRepository } from 'src/status/repository/status.repository';
 import { statusProviders } from 'src/status/providers/registration-status.provider';
 import { CreditManagerModule } from 'src/credit-manager/credit-manager.module';
+import { AppLoggerMiddleware } from 'src/utils/interceptor/http-interceptor';
+import { LogModule } from 'src/log/log.module';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { CreditManagerModule } from 'src/credit-manager/credit-manager.module';
     TxSendModuleModule,
     StatusModule,
     CreditManagerModule,
+    LogModule,
   ],
   controllers: [CredentialController],
   providers: [
@@ -55,5 +58,6 @@ export class CredentialModule implements NestModule {
         { path: 'credential/:credentialId', method: RequestMethod.GET },
       )
       .forRoutes(CredentialController);
+    consumer.apply(AppLoggerMiddleware).forRoutes(CredentialController);
   }
 }

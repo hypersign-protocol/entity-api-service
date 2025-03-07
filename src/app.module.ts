@@ -33,8 +33,4 @@ import { UsageModule } from './usage/usage.module';
   controllers: [],
   providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(AppLoggerMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}

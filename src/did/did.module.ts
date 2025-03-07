@@ -25,12 +25,15 @@ import { didProviders } from './providers/did.provider';
 import { JwtStrategy } from '../utils/jwt.strategy';
 import { TxSendModuleModule } from 'src/tx-send-module/tx-send-module.module';
 import { CreditManagerModule } from 'src/credit-manager/credit-manager.module';
+import { AppLoggerMiddleware } from 'src/utils/interceptor/http-interceptor';
+import { LogModule } from 'src/log/log.module';
 @Module({
   imports: [
     EdvModule,
     HidWalletModule,
     TxSendModuleModule,
     CreditManagerModule,
+    LogModule,
   ],
   controllers: [DidController],
   providers: [
@@ -61,5 +64,6 @@ export class DidModule implements NestModule {
         { path: 'did/:did', method: RequestMethod.GET },
       )
       .forRoutes(DidController);
+    consumer.apply(AppLoggerMiddleware).forRoutes(DidController);
   }
 }

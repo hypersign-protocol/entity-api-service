@@ -10,6 +10,7 @@ import { AllExceptionsFilter } from 'src/utils/utils';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiQuery,
   ApiTags,
@@ -17,7 +18,15 @@ import {
 } from '@nestjs/swagger';
 import { LogService } from 'src/log/services/log.service';
 import { AuthGuard } from '@nestjs/passport';
-import { FetchUsageRespDetail } from '../dto/create-usage.dto';
+import {
+  FetchDetailUsageDto,
+  FetchUsageRespDetail,
+} from '../dto/create-usage.dto';
+import {
+  UsageError,
+  UsageNotFoundError,
+  UsageUnAuthorizeError,
+} from '../dto/error-usage.dto';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Utilities')
 @ApiBearerAuth('Authorization')
@@ -32,12 +41,16 @@ export class UsageController {
     type: FetchUsageRespDetail,
   })
   @ApiBadRequestResponse({
-    description: 'Error has occurred at the time sending verification result',
-    // type: ResultErrorResponse,
+    description: 'Error has occurred at the time of fething usage detail',
+    type: UsageError,
+  })
+  @ApiNotFoundResponse({
+    description: 'No usage detail found',
+    type: UsageNotFoundError,
   })
   @ApiUnauthorizedResponse({
     description: 'Authorization token is invalid or expired.',
-    // type: ResultUnauthorizationErrorResponse,
+    type: UsageUnAuthorizeError,
   })
   @ApiQuery({
     name: 'serviceId',
@@ -58,8 +71,8 @@ export class UsageController {
     @Query('serviceId') appIdParam: string,
     @Query('startDate') startDateParam: Date,
     @Query('endDate') endDateParam: Date,
-    @Req() req, // : Promise<UsageResponseDto>
-  ) {
+    @Req() req,
+  ): Promise<FetchUsageRespDetail> {
     let appId;
     if (!appIdParam) {
       appId = req.app.appId;
@@ -104,15 +117,19 @@ export class UsageController {
   @Get('/detail')
   @ApiOkResponse({
     description: 'Detail of api call made',
-    // type: FormatedUsageSessionDetailResp,
+    type: FetchDetailUsageDto,
   })
   @ApiBadRequestResponse({
-    description: 'Error has occurred at the time sending verification result',
-    // type: ResultErrorResponse,
+    description: 'Error has occurred at the time of fething usage detail',
+    type: UsageError,
+  })
+  @ApiNotFoundResponse({
+    description: 'No usage detail found',
+    type: UsageNotFoundError,
   })
   @ApiUnauthorizedResponse({
     description: 'Authorization token is invalid or expired.',
-    // type: ResultUnauthorizationErrorResponse,
+    type: UsageUnAuthorizeError,
   })
   @ApiQuery({
     name: 'serviceId',
@@ -133,8 +150,8 @@ export class UsageController {
     @Query('serviceId') appIdParam: string,
     @Query('startDate') startDateParam: Date,
     @Query('endDate') endDateParam: Date,
-    @Req() req, // : Promise<UsageResponseDto>
-  ) {
+    @Req() req,
+  ): Promise<FetchDetailUsageDto> {
     let appId;
     if (!appIdParam) {
       appId = req.app.appId;

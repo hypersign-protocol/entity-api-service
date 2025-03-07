@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { CreditManagerController } from './controllers/credit-manager.controller';
 import { creditSchemaProviders } from './schema/credit.provider';
 import { CreditService } from './services/credit-manager.service';
@@ -9,6 +9,7 @@ import { CreditManagerService } from './managers/credit-manager.service';
 import { ApiCreditService } from './services/api-credit.service';
 import { StorageCreditService } from './services/storage-credit.service';
 import { AttestationCreditService } from './services/attestation-credit.service';
+import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
 
 @Module({
   imports: [],
@@ -26,4 +27,10 @@ import { AttestationCreditService } from './services/attestation-credit.service'
   ],
   exports: [CreditService, CreditManagerRepository, CreditManagerService],
 })
-export class CreditManagerModule {}
+export class CreditManagerModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(WhitelistSSICorsMiddleware)
+      .forRoutes(CreditManagerController);
+  }
+}

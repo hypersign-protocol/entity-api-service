@@ -49,6 +49,7 @@ export class ServiceDetails {
   })
   offchainAmount: number;
 }
+
 export class FetchUsageRespDetail {
   @ApiProperty({
     name: 'startDate',
@@ -71,4 +72,49 @@ export class FetchUsageRespDetail {
   @Type(() => ServiceDetails)
   @ValidateNested({ each: true })
   serviceDetails: ServiceDetails;
+}
+export class DetailedServiceUsage {
+  @ApiProperty({
+    name: 'apiPath',
+    description: 'Api path',
+    example: '/api/v1/credential?page=1&limit=100',
+  })
+  apiPath: string;
+
+  @ApiProperty({
+    name: 'quantity',
+    description: 'Number of api call for specific path.',
+    example: 4,
+  })
+  quantity: number;
+
+  @ApiProperty({
+    name: 'data',
+    description: 'detailed date wise data and quantity',
+    example: { '2025-03-07': 4 },
+  })
+  data: object;
+}
+export class FetchDetailUsageDto {
+  @ApiProperty({
+    name: 'startDate',
+    description: 'Date from where usage detail is to be fetched',
+    example: '2025-02-28T18:30:00.000Z',
+  })
+  startDate: Date;
+  @ApiProperty({
+    name: 'endDate',
+    description: 'Date till which we have to fetch detail',
+    example: '2025-03-07T04:28:10.362Z',
+  })
+  endDate: Date;
+  @ApiProperty({
+    name: 'serviceDetails',
+    description: 'Detailed service description',
+    type: DetailedServiceUsage,
+    isArray: true,
+  })
+  @Type(() => DetailedServiceUsage)
+  @ValidateNested({ each: true })
+  serviceDetails: DetailedServiceUsage;
 }
