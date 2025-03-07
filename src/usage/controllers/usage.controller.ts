@@ -17,6 +17,7 @@ import {
 } from '@nestjs/swagger';
 import { LogService } from 'src/log/services/log.service';
 import { AuthGuard } from '@nestjs/passport';
+import { FetchUsageRespDetail } from '../dto/create-usage.dto';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Utilities')
 @ApiBearerAuth('Authorization')
@@ -27,8 +28,8 @@ export class UsageController {
 
   @Get()
   @ApiOkResponse({
-    description: 'Result for verification of aadhar',
-    // type: FormatedUsageResp,
+    description: 'Usage detail fetched successfully',
+    type: FetchUsageRespDetail,
   })
   @ApiBadRequestResponse({
     description: 'Error has occurred at the time sending verification result',

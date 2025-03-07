@@ -8,7 +8,7 @@ export class LogService {
   constructor(
     private readonly logRepo: LogRepository,
     private readonly creditManagerService: CreditManagerService,
-  ) { }
+  ) {}
   async createLog(log: any) {
     Logger.log(
       `Storing log to db:  ${log.method} ${log.path} ${log.statusCode} ${log.contentLenght} ${log.userAgent} ${log.appId}`,
@@ -134,35 +134,33 @@ export class LogService {
       {
         $group: {
           _id: {
-            path: "$path",
-            date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            path: '$path',
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
           },
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
       {
         $group: {
-          _id: "$_id.path",
+          _id: '$_id.path',
           data: {
             $push: {
-              k: "$_id.date",
-              v: "$count"
-            }
+              k: '$_id.date',
+              v: '$count',
+            },
           },
-          quantity: { $sum: '$count' }
-        }
+          quantity: { $sum: '$count' },
+        },
       },
       {
         $project: {
           _id: 0,
           apiPath: '$_id',
-          data: { $arrayToObject: "$data" },
+          data: { $arrayToObject: '$data' },
           quantity: 1,
-        }
-      }
-
+        },
+      },
     ];
     return this.logRepo.findDataBasedOnAgggregationPipeline(pipeline);
-
   }
 }
