@@ -49,8 +49,9 @@ import { Credential } from '../schemas/credntial.schema';
 import { GetCredentialList } from '../dto/fetch-credential.dto';
 import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
 import { TxnHash } from 'src/did/dto/create-did.dto';
+import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd';
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), ReduceCreditGuard)
 @Controller('credential')
 @ApiTags('Credential')
 export class CredentialController {

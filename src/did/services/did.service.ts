@@ -43,7 +43,7 @@ export class DidService {
     private readonly didSSIService: DidSSIService,
     private readonly config: ConfigService,
     private readonly txnService: TxSendModuleService,
-  ) {}
+  ) { }
 
   async checkAllowence(address) {
     const url =
@@ -100,22 +100,22 @@ export class DidService {
     if (!address) {
       throw new BadRequestException([
         'options.walletAddress is not passed , required for keyType ' +
-          IKeyType.EcdsaSecp256k1RecoveryMethod2020,
+        IKeyType.EcdsaSecp256k1RecoveryMethod2020,
       ]);
     }
     if (!chainId) {
       throw new BadRequestException([
         'options.chainId is not passed , required for keyType ' +
-          IKeyType.EcdsaSecp256k1RecoveryMethod2020,
+        IKeyType.EcdsaSecp256k1RecoveryMethod2020,
       ]);
     }
 
     if (register === true) {
       throw new BadRequestException([
         'options.register is true for keyType ' +
-          IKeyType.EcdsaSecp256k1RecoveryMethod2020,
+        IKeyType.EcdsaSecp256k1RecoveryMethod2020,
         IKeyType.EcdsaSecp256k1RecoveryMethod2020 +
-          ' doesnot support register without signature being passed',
+        ' doesnot support register without signature being passed',
         'options.register:false is strongly recomended',
       ]);
     }
@@ -275,7 +275,7 @@ export class DidService {
       if (!insertedDoc) {
         throw new Error(
           'Could not insert document for userCredential.walletAddress' +
-            userCredential.walletAddress,
+          userCredential.walletAddress,
         );
       }
       const { id: userKMSId } = insertedDoc;
@@ -432,7 +432,7 @@ export class DidService {
       if (!insertedDoc) {
         throw new Error(
           'Could not insert document for userCredential.walletAddress' +
-            userCredential.walletAddress,
+          userCredential.walletAddress,
         );
       }
       const { id: userKMSId } = insertedDoc;
@@ -1106,6 +1106,10 @@ export class DidService {
                 versionId: updatedDidDocMetaData.versionId,
                 readonly: true,
               });
+              Logger.log(
+                'before calling sendDIDDeactivate to deactivate the did.',
+                'DidService',
+              );
               await this.txnService.sendDIDDeactivate(
                 updatedDid.didDocument,
                 updatedDid.signInfos,

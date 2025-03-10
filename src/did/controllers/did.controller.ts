@@ -56,11 +56,12 @@ import { AtLeastOneParamPipe } from 'src/utils/Pipes/atleastOneParam.pipe';
 import { AddVMResponse, AddVerificationMethodDto } from '../dto/addVm.dto';
 import { SignDidDto, SignedDidDocument } from '../dto/sign-did.dto';
 import { VerifyDidDocResponseDto, VerifyDidDto } from '../dto/verify-did.dto';
+import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), ReduceCreditGuard)
 export class DidController {
   constructor(private readonly didService: DidService) {}
 
@@ -108,7 +109,6 @@ export class DidController {
 
     return this.didService.getDidList(appDetail, pageOption);
   }
-
   @Get('resolve/:did')
   @ApiOkResponse({
     description: 'DID Resolved',

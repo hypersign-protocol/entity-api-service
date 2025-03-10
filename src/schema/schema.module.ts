@@ -20,9 +20,18 @@ import { StatusService } from 'src/status/status.service';
 import { StatusModule } from 'src/status/status.module';
 import { TxnStatusRepository } from 'src/status/repository/status.repository';
 import { statusProviders } from 'src/status/providers/registration-status.provider';
+import { CreditManagerModule } from 'src/credit-manager/credit-manager.module';
+import { AppLoggerMiddleware } from 'src/utils/interceptor/http-interceptor';
+import { LogModule } from 'src/log/log.module';
 
 @Module({
-  imports: [DidModule, TxSendModuleModule, StatusModule],
+  imports: [
+    DidModule,
+    TxSendModuleModule,
+    StatusModule,
+    CreditManagerModule,
+    LogModule,
+  ],
   controllers: [SchemaController],
   providers: [
     SchemaService,
@@ -50,5 +59,6 @@ export class SchemaModule implements NestModule {
         { path: 'schema/:schemaId', method: RequestMethod.GET },
       )
       .forRoutes(SchemaController);
+    consumer.apply(AppLoggerMiddleware).forRoutes(SchemaController);
   }
 }
