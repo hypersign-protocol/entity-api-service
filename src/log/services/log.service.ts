@@ -129,6 +129,11 @@ export class LogService {
       {
         $match: {
           createdAt: { $gte: startDate, $lte: endDate },
+          $nor: [
+            { path: { $regex: 'usage' } },
+            { path: { $regex: 'credit' } },
+            { path: { $regex: 'presentation' } },
+          ],
         },
       },
       {
