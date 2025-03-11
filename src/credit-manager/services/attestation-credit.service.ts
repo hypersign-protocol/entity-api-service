@@ -8,6 +8,8 @@ export class AttestationCreditService {
       'Inside calculateCost to calculate credit',
       'AttestationCreditService',
     );
-    return `${CREDIT_COSTS.ATTESTATION[type]}` || '50';
+    const hidCost = CREDIT_COSTS.ATTESTATION[type] || 50;
+    const creditCost = hidCost / 10;
+    return { hidCost, creditCost };
   }
 }

@@ -27,12 +27,13 @@ export class CreditManagerService {
       : 0;
     const attestationCost = attestationType
       ? await this.attestationCreditService.calculateCost(attestationType)
-      : '0';
-    const creditAmountRequired = apiCost + storageCost;
+      : { hidCost: 0, creditCost: 0 };
+    const { hidCost, creditCost } = attestationCost;
+    const creditAmountRequired = apiCost + storageCost + creditCost;
 
     // Fetch user's active plan
     let activeCredit = await this.creditService.getActiveCredit(
-      String(attestationCost),
+      String(hidCost),
     );
 
     if (
@@ -69,8 +70,9 @@ export class CreditManagerService {
       : 0;
     const attestationCost = attestationType
       ? await this.attestationCreditService.calculateCost(attestationType)
-      : '0';
-    const creditAmountRequired = apiCost + storageCost;
-    return { attestationCost, creditAmountRequired };
+      : { hidCost: 0, creditCost: 0 };
+    const { hidCost, creditCost } = attestationCost;
+    const creditAmountRequired = apiCost + storageCost + creditCost;
+    return { hidCost, creditAmountRequired };
   }
 }
