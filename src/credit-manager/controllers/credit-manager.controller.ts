@@ -97,6 +97,7 @@ export class CreditManagerController {
   @ApiOkResponse({
     description: 'Fetched all credit detail',
     type: createCreditResponse,
+    isArray: true,
   })
   @ApiBadRequestResponse({
     description: 'Unable to fetch credit detail',
@@ -118,7 +119,7 @@ export class CreditManagerController {
   @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     description: 'The details of the credit have been successfully fetched.',
-    type: ActivateCredtiResponse,
+    type: createCreditResponse,
   })
   @ApiBadRequestResponse({
     description: 'Unable to fetch particular credit detail',

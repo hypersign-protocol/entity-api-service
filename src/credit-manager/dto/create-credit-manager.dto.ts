@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsString, Min } from 'class-validator';
+import { IsNumber, IsString, Min, ValidateNested } from 'class-validator';
 import { Status } from '../schema/credit-manager.schema';
+import { Type } from 'class-transformer';
 export enum ValidityPeriodUnit {
   DAYS = 'DAYS',
   WEEK = 'WEEK',
@@ -22,6 +23,29 @@ export class CreateCreditManagerDto {
   creditDenom: string;
 }
 
+export class Credit {
+  @ApiProperty({
+    name: 'amount',
+    description: 'Total available hid',
+    example: '5000000',
+  })
+  @IsNumber()
+  amount: number;
+  @ApiProperty({
+    name: 'denom',
+    description: 'Token denom',
+    example: 'uhid',
+  })
+  @IsNumber()
+  denom: number;
+  @ApiProperty({
+    name: 'used',
+    description: 'Total used credit',
+    example: 0,
+  })
+  @IsNumber()
+  used: number;
+}
 export class createCreditResponse {
   @ApiProperty({
     name: 'totalCredits',
@@ -30,6 +54,13 @@ export class createCreditResponse {
   })
   @IsNumber()
   totalCredits: number;
+  @ApiProperty({
+    name: 'creditDenom',
+    description: 'Token denom',
+    example: 'uHID',
+  })
+  @IsNumber()
+  creditDenom: string;
   @ApiProperty({
     name: 'used',
     description: 'Total number of credit used till now',
@@ -41,10 +72,17 @@ export class createCreditResponse {
     name: 'validityDuration',
     description:
       'The number of days the credit is valid from the date of activation',
-    example: 60,
+    example: 42,
   })
   @IsNumber()
   validityDuration: number;
+  // @ApiProperty({
+  //   name: 'expiresAt',
+  //   description: 'Time at which document is added',
+  //   example: '2025-04-22T12:50:03.984Z',
+  //   required: false
+  // })
+  // expiresAt: Date;
   @ApiProperty({
     name: 'status',
     description:
@@ -55,6 +93,34 @@ export class createCreditResponse {
   @IsString()
   status: string;
   @ApiProperty({
+    name: 'serviceId',
+    description: 'Id of the service',
+    example: 'fc0392830696e097b1d7e0607968e9dd3400',
+  })
+  @IsString()
+  serviceId: string;
+  @ApiProperty({
+    name: 'credit',
+    type: Credit,
+  })
+  @Type(() => Credit)
+  @ValidateNested()
+  credit: Credit;
+  @ApiProperty({
+    name: 'creditScope',
+    description: 'Scope that one will get',
+    example: [
+      'MsgRegisterDID',
+      'MsgDeactivateDID',
+      'MsgRegisterCredentialSchema',
+      'MsgUpdateDID',
+      'MsgUpdateCredentialStatus',
+      'MsgRegisterCredentialStatus',
+    ],
+  })
+  @IsString()
+  creditScope: Array<string>;
+  @ApiProperty({
     name: '_id',
     description: 'Unique identifier of credit detail',
     example: '66e0407bc7f8a92162d1e824',
@@ -64,14 +130,14 @@ export class createCreditResponse {
   @ApiProperty({
     name: 'createdAt',
     description: 'Time at which document is added',
-    example: '2024-09-10T12:50:03.984Z',
+    example: '2025-03-10T12:50:03.984Z',
   })
   @IsString()
   createdAt: string;
   @ApiProperty({
     name: 'updatedAt',
     description: 'Time at which document last updated',
-    example: '2024-09-10T12:50:03.984Z',
+    example: '2025-03-10T12:50:03.984Z',
   })
   @IsString()
   updatedAt: string;
@@ -91,8 +157,8 @@ export class ActivateCredtiResponse extends createCreditResponse {
     name: 'expiresAt',
     description:
       'The date and time when the credit expires. After this timestamp, the credit is no longer valid.',
-    example: '2024-11-10T12:50:03.984Z',
+    example: '2025-04-22T12:50:03.984Z',
   })
   @IsString()
-  expiresAt: string;
+  expiresAt: Date;
 }
