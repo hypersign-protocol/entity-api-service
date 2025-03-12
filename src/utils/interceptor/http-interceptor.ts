@@ -18,11 +18,18 @@ export class AppLoggerMiddleware implements NestMiddleware {
     const userAgent = request.get('user-agent') || '';
 
     response.on('close', () => {
-      const { url: path } = request;
+      let { url: path } = request;
       const { statusCode } = response;
       const contentLength = response.get('content-length');
       const app = request['app'];
       const { appId } = app as any;
+      if (path.includes('credential/issue')) {
+        const reqBody = request.body;
+        const persist = reqBody?.persist ?? true;
+        const registerCredentialStatus =
+          reqBody?.registerCredentialStatus ?? true;
+        path = `${path}?persist=${persist}&registerCredentialStatus=${registerCredentialStatus}`;
+      }
       const logData: CreateLogDto = {
         method,
         path,

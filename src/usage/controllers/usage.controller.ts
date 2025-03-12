@@ -183,14 +183,12 @@ export class UsageController {
       endDate,
       appId,
     );
-    const response =
-      // : UsageResponseDto =
-      {
-        serviceId: appId,
-        startDate,
-        endDate,
-        serviceDetails,
-      };
+    const response = {
+      serviceId: appId,
+      startDate,
+      endDate,
+      serviceDetails,
+    };
 
     return response;
   }

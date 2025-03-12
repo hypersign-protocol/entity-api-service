@@ -41,10 +41,18 @@ export function getApiDetail(req): ApiDetail {
       attestationType: ATTESTAION_TYPE.REGISTER_SCHEMA,
     };
   }
+  const [basePath, queryString] = url.split('?');
+  const queryParams = new URLSearchParams(queryString || '');
+  const persistQuery = queryParams.get('persist') === 'true';
+  const registerCredentialStatusQuery =
+    queryParams.get('registerCredentialStatus') === 'true';
+  const persist = body?.persist ?? persistQuery;
+  const registerCredentialStatus =
+    body?.registerCredentialStatus ?? registerCredentialStatusQuery;
   if (
     url.includes('/credential/issue') &&
-    body.persist === true &&
-    body.registerCredentialStatus === true
+    persist === true &&
+    registerCredentialStatus === true
   ) {
     return {
       method,
@@ -53,8 +61,8 @@ export function getApiDetail(req): ApiDetail {
     };
   } else if (
     url.includes('/credential/issue') &&
-    body.persist === false &&
-    body.registerCredentialStatus === true
+    persist === false &&
+    registerCredentialStatus === true
   ) {
     return {
       method,
@@ -63,8 +71,8 @@ export function getApiDetail(req): ApiDetail {
     };
   } else if (
     url.includes('/credential/issue') &&
-    body.persist === true &&
-    body.registerCredentialStatus === false
+    persist === true &&
+    registerCredentialStatus === false
   ) {
     return {
       method,
