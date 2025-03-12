@@ -8,7 +8,7 @@ export class LogService {
   constructor(
     private readonly logRepo: LogRepository,
     private readonly creditManagerService: CreditManagerService,
-  ) {}
+  ) { }
   async createLog(log: any) {
     Logger.log(
       `Storing log to db:  ${log.method} ${log.path} ${log.statusCode} ${log.contentLenght} ${log.userAgent} ${log.appId}`,
@@ -69,9 +69,48 @@ export class LogService {
         },
       },
       {
+        $project: {
+          method: 1,
+          normalizedPath: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $regexMatch: {
+                      input: '$path',
+                      regex: '^/api/v1/did/resolve/',
+                    },
+                  },
+                  then: '/api/v1/did/resolve',
+                },
+                {
+                  case: {
+                    $regexMatch: {
+                      input: '$path',
+                      regex: '^/api/v1/schema/sch:',
+                    },
+                  },
+                  then: '/api/v1/schema/resolve',
+                },
+                {
+                  case: {
+                    $regexMatch: {
+                      input: '$path',
+                      regex: '^/api/v1/credential/vc:',
+                    },
+                  },
+                  then: '/api/v1/credential/resolve',
+                },
+              ],
+              default: '$path', // If no match, keep the original path
+            },
+          },
+        },
+      },
+      {
         $group: {
           _id: {
-            path: '$path',
+            path: '$normalizedPath',
             method: '$method',
           },
           count: { $sum: 1 },
@@ -86,9 +125,9 @@ export class LogService {
         },
       },
     ];
+
     const serviceDetails =
       await this.logRepo.findDataBasedOnAgggregationPipeline(pipeline);
-
     const updatedServiceDetails = await Promise.all(
       serviceDetails.map(async (x) => {
         x['apiPath'] = x['apiPath'];
@@ -98,7 +137,7 @@ export class LogService {
             x['method'],
             x['apiPath'],
           );
-        (x['onchain_unit_cost'] = x['unit_cost']['attestationCost']),
+        (x['onchain_unit_cost'] = x['unit_cost']['hidCost']),
           (x['offchain_unit_cost'] = x['unit_cost']['creditAmountRequired']);
         x['onchainAmount'] = Number(
           (x['onchain_unit_cost'] * x['quantity']).toFixed(2),
@@ -129,6 +168,7 @@ export class LogService {
       {
         $match: {
           createdAt: { $gte: startDate, $lte: endDate },
+          path: { $exists: true, $ne: null },
           $nor: [
             { path: { $regex: 'usage' } },
             { path: { $regex: 'credit' } },
@@ -137,11 +177,58 @@ export class LogService {
         },
       },
       {
+        $project: {
+          method: 1,
+          createdAt: 1,
+          path: { $ifNull: ['$path', 'unknown'] },
+          normalizedPath: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $regexMatch: {
+                      input: '$path',
+                      regex: '^/api/v1/did/resolve/',
+                    },
+                  },
+                  then: '/api/v1/did/resolve',
+                },
+                {
+                  case: {
+                    $regexMatch: {
+                      input: '$path',
+                      regex: '^/api/v1/schema/sch:',
+                    },
+                  },
+                  then: '/api/v1/schema/resolve',
+                },
+                {
+                  case: {
+                    $regexMatch: {
+                      input: '$path',
+                      regex: '^/api/v1/credential(/|$)',
+                    },
+                  },
+                  then: '/api/v1/credential/resolve',
+                },
+              ],
+              default: '$path', // Keep original path if no match
+            },
+          },
+        },
+      },
+      {
         $group: {
           _id: {
-            path: '$path',
-            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            path: '$normalizedPath',
+            date: {
+              $ifNull: [
+                { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                'unknown-date',
+              ],
+            },
           },
+
           count: { $sum: 1 },
         },
       },
