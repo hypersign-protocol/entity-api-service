@@ -13,7 +13,7 @@ export class ReduceCreditGuard implements CanActivate {
   constructor(
     private readonly creditManagerService: CreditManagerService,
     private readonly creditService: CreditService,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
@@ -47,13 +47,13 @@ export class ReduceCreditGuard implements CanActivate {
           'ReduceCreditGuard',
         );
         try {
-          this.creditService.updateCreditDetail(
+          await this.creditService.updateCreditDetail(
             { _id: activeCredit._id },
             {
-              used: activeCredit.used + creditDetails.creditAmountRequired,
-              [`credit.used`]:
-                Number(activeCredit?.credit?.used || 0) +
-                Number(creditDetails.attestationCost.hidCost),
+              $inc: {
+                used: creditDetails.creditAmountRequired,
+                [`credit.used`]: Number(creditDetails.attestationCost.hidCost),
+              },
             },
           );
           Logger.log('Credits deducted successfully', 'ReduceCreditGuard');

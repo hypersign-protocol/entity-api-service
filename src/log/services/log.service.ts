@@ -8,7 +8,7 @@ export class LogService {
   constructor(
     private readonly logRepo: LogRepository,
     private readonly creditManagerService: CreditManagerService,
-  ) { }
+  ) {}
   async createLog(log: any) {
     Logger.log(
       `Storing log to db:  ${log.method} ${log.path} ${log.statusCode} ${log.contentLenght} ${log.userAgent} ${log.appId}`,
@@ -206,13 +206,13 @@ export class LogService {
                   case: {
                     $regexMatch: {
                       input: '$path',
-                      regex: '^/api/v1/credential(/|$)',
+                      regex: '^/api/v1/credential/vc:',
                     },
                   },
                   then: '/api/v1/credential/resolve',
                 },
               ],
-              default: '$path', // Keep original path if no match
+              default: '$path',
             },
           },
         },
