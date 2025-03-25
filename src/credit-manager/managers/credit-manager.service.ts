@@ -32,7 +32,7 @@ export class CreditManagerService {
     const creditAmountRequired = apiCost + storageCost + creditCost;
 
     // Fetch user's active plan
-    let activeCredit = await this.creditService.getActiveCredit(
+    const activeCredit = await this.creditService.getActiveCredit(
       String(hidCost),
     );
 
