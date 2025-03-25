@@ -10,10 +10,13 @@ import { CreditService } from '../services/credit-manager.service';
 
 @Injectable()
 export class ReduceCreditGuard implements CanActivate {
+  private readonly exemptedOrigin = 'https://entity.dashboard.hypersign.id';
+  // private readonly exemptedOrigin = 'http://localhost:9001';
+
   constructor(
     private readonly creditManagerService: CreditManagerService,
     private readonly creditService: CreditService,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
@@ -33,29 +36,100 @@ export class ReduceCreditGuard implements CanActivate {
       res.status(403).json({ error: 'Insufficient credits or no active plan' });
       return false;
     }
-    // let remainingCreditsNeeded = creditDetails?.creditAmountRequired || 0;
-    // let remainingHIDNeeded = creditDetails?.attestationCost || '0';
-    // Request is processed successfully, deduct credits
-    /**
-     * To Do
-     * handle the case where active plan has some credit but not equal to credit required. and user has some valid inactive plan
-     */
     res.on('finish', async () => {
-      if (res.statusCode >= 200 && res.statusCode < 300) {
+      if (res.statusCode >= 200 && res.statusCode < 400) {
         Logger.log(
           'Request successful. Deducting credits now...',
           'ReduceCreditGuard',
         );
-        try {
-          await this.creditService.updateCreditDetail(
-            { _id: activeCredit._id },
-            {
-              $inc: {
-                used: creditDetails.creditAmountRequired,
-                [`credit.used`]: Number(creditDetails.attestationCost.hidCost),
-              },
-            },
+        const origin = req.headers.origin || req.headers.referer || '';
+        if (req.method === 'GET' && origin?.startsWith(this.exemptedOrigin)) {
+          Logger.log(
+            `Skipping credit deduction for ${req.method} request from ${origin}`,
+            'ReduceCreditGuard',
           );
+          return;
+        }
+        try {
+          let remainingCreditsNeeded = creditDetails.creditAmountRequired;
+          let remainingHIDNeeded = Number(
+            creditDetails.attestationCost.hidCost,
+          );
+          const availableCredits =
+            activeCredit.totalCredits - activeCredit.used;
+          const availableHID =
+            Number(activeCredit.credit.amount) - activeCredit.credit.used;
+          if (
+            availableCredits < remainingCreditsNeeded ||
+            availableHID < remainingHIDNeeded
+          ) {
+            const deductedCredits = Math.min(
+              remainingCreditsNeeded,
+              availableCredits,
+            );
+            const deductedHID = Math.min(remainingHIDNeeded, availableHID);
+            remainingCreditsNeeded -= deductedCredits;
+            remainingHIDNeeded -= deductedHID;
+
+            if (remainingCreditsNeeded > 0) {
+              const inactiveCreditPlan =
+                await this.creditService.getNextAvailableCredit(
+                  `${remainingHIDNeeded}`,
+                );
+              if (inactiveCreditPlan) {
+                Logger.log(
+                  `Activating new credit plan: ${inactiveCreditPlan._id}`,
+                  'ReduceCreditGuard',
+                );
+                await this.creditService.activateCredit(inactiveCreditPlan._id);
+                await this.creditService.updateCreditDetail(
+                  { _id: activeCredit._id },
+                  {
+                    $inc: {
+                      used: deductedCredits,
+                      [`credit.used`]: deductedHID,
+                    },
+                    status: 'Inactive',
+                  },
+                );
+                Logger.log(
+                  `Deducted ${deductedCredits} credits and ${deductedHID} HID from active plan`,
+                  'ReduceCreditGuard',
+                );
+                await this.creditService.updateCreditDetail(
+                  { _id: inactiveCreditPlan._id },
+                  {
+                    $inc: {
+                      used: remainingCreditsNeeded,
+                      [`credit.used`]: remainingHIDNeeded,
+                    },
+                  },
+                );
+                Logger.log(
+                  `Deducted remaining ${remainingCreditsNeeded} credits from new plan`,
+                  'ReduceCreditGuard',
+                );
+                remainingCreditsNeeded = 0;
+              } else {
+                Logger.error(
+                  'No inactive credit plan available to activate.',
+                  'ReduceCreditGuard',
+                );
+              }
+            }
+          } else {
+            await this.creditService.updateCreditDetail(
+              { _id: activeCredit._id },
+              {
+                $inc: {
+                  used: creditDetails.creditAmountRequired,
+                  [`credit.used`]: Number(
+                    creditDetails.attestationCost.hidCost,
+                  ),
+                },
+              },
+            );
+          }
           Logger.log('Credits deducted successfully', 'ReduceCreditGuard');
         } catch (error) {
           Logger.error(

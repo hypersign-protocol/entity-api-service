@@ -46,10 +46,7 @@ export class CreditManagerService {
       const availableCredit = await this.creditService.getNextAvailableCredit(
         String(attestationCost),
       );
-      if (availableCredit) {
-        await this.creditService.activateCredit(availableCredit._id.toString());
-        activeCredit = availableCredit;
-      } else {
+      if (!availableCredit) {
         throw new BadRequestException([
           'No credits found or credit exhausted. Please contact the admin',
         ]);
