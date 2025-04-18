@@ -810,6 +810,7 @@ export class DidService {
       );
     }
     return {
+      name: didInfo?.name || '',
       did: registerDidData.did,
       registrationStatus: registerDidData.registrationStatus,
       transactionHash: registerDidData.transactionHash,

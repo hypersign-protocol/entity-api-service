@@ -32,7 +32,7 @@ export class CreditManagerService {
     const creditAmountRequired = apiCost + storageCost + creditCost;
 
     // Fetch user's active plan
-    let activeCredit = await this.creditService.getActiveCredit(
+    const activeCredit = await this.creditService.getActiveCredit(
       String(hidCost),
     );
 
@@ -46,10 +46,7 @@ export class CreditManagerService {
       const availableCredit = await this.creditService.getNextAvailableCredit(
         String(attestationCost),
       );
-      if (availableCredit) {
-        await this.creditService.activateCredit(availableCredit._id.toString());
-        activeCredit = availableCredit;
-      } else {
+      if (!availableCredit) {
         throw new BadRequestException([
           'No credits found or credit exhausted. Please contact the admin',
         ]);
