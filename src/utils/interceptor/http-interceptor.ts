@@ -40,10 +40,10 @@ export class AppLoggerMiddleware implements NestMiddleware {
       };
 
       if (
-        request.body.QueryRequest &&
+        request?.body?.QueryRequest &&
         (statusCode === 201 || statusCode === 200)
       ) {
-        logData.dataRequest = btoa(JSON.stringify(request.body.QueryRequest));
+        logData.dataRequest = btoa(JSON.stringify(request?.body?.QueryRequest));
       }
       this.logStore.createLog(logData);
     });
