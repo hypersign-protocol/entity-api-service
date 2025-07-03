@@ -109,6 +109,8 @@ jobs:
     - name: "Replace secrets"
       run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__MNEMONIC__#${{ secrets.MNEMONIC }}#" {} \;
     - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__Tx_Query_API__#${{ secrets.Tx_Query_API }}#" {} \;  
+    - name: "Replace secrets"
       run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__JWT_SECRET__#${{ secrets.JWT_SECRET }}#" {} \;
     - name: "Replace secrets"
       run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_URL__/${{ secrets.GOOGLE_ARTIFACT_URL }}/g'' {} \;

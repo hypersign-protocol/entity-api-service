@@ -62,6 +62,8 @@ spec:
           value: __JWT_SECRET__
         - name: GLOBAL_TXN_CONTROLLER_QUEUE
           value: __GLOBAL_TXN_CONTROLLER_QUEUE__
+        - name: Tx_Query_API
+          value: __Tx_Query_API__
         - name: RABBIT_MQ_URI
           value: __RABBIT_MQ_URI__
         - name: WHITELISTED_CORS

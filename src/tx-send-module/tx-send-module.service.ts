@@ -44,6 +44,9 @@ export class TxSendModuleService {
       podName: 'txn-dynamic',
       granteeWalletAddress: address,
       tenent: appDetail.subdomain,
+      Tx_Query_API:
+        this.configService.get('Tx_Query_API') ||
+        'https://hypersign-testnet-api.polkachu.com/cosmos/tx/v1beta1/txs/',
     };
 
     await this.channel.assertQueue('GLOBAL_TXN_CONTROLLER_QUEUE', {
