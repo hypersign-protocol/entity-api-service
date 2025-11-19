@@ -1,6 +1,7 @@
-FROM node:18
+FROM node:20.19
 WORKDIR /usr/src/app
 COPY ./package.json .
+COPY ./package-lock.json .
 RUN npx patch-package -y 
 
 COPY ./tsconfig.json .
