@@ -36,10 +36,11 @@ export class CredentialRepository {
         $facet: {
           totalCount: [{ $count: 'total' }],
           data: [
+            { $sort: { createdAt: -1 } },
             { $skip: credentialFilterQuery.paginationOption.skip },
             { $limit: credentialFilterQuery.paginationOption.limit },
             {
-              $project: { credentialId: 1, _id: 0 },
+              $project: { credentialId: 1, _id: 0, createdAt: 1 },
             },
           ],
         },
