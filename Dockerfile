@@ -5,8 +5,6 @@ COPY ./yarn.lock .
 
 COPY ./tsconfig.json .
 
-ENV NODE_OPTIONS="--openssl-legacy-provider   --max-old-space-size=4096"
-
 RUN yarn install --frozen-lockfile
 COPY . .
 RUN yarn build
